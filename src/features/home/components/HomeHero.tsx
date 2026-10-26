@@ -9,7 +9,7 @@ export function HomeHero() {
         <span className="home-title-mask mt-2 block text-primary"><span className="home-title-line home-title-line-delayed block">分得漂亮<span className="text-foreground">。</span></span></span>
       </h1>
       <div className="home-hero-description mt-8 flex items-start gap-4 sm:mt-10">
-        <Asterisk aria-hidden="true" className="home-hero-asterisk mt-1 size-7 shrink-0 text-primary" strokeWidth={1.5} />
+        <Asterisk aria-hidden="true" className="mt-1 size-7 shrink-0 text-primary" strokeWidth={1.5} />
         <p className="max-w-sm text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8">LineNest — 让创作更顺手<br /><span className="text-[11px] tracking-[0.12em]">MADE FOR YOUR FLOW</span></p>
       </div>
     </div>
