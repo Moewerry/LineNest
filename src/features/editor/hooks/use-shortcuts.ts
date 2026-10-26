@@ -38,6 +38,7 @@ export function useShortcuts(enabled = true) {
       else if (!mod && key === 'h') state.setTool('pan')
       else if (!mod && key === 'l') state.setTool('line')
       else if (!mod && key === 'c') state.setTool('crop')
+      else if (!mod && key === 'b') state.setTool('fill')
     }
     window.addEventListener('keydown', handle)
     return () => window.removeEventListener('keydown', handle)

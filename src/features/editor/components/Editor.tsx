@@ -56,7 +56,7 @@ export function Editor() {
     if (loading.current || pending) return
     try { validateImage(file) } catch (error) { toast.error((error as Error).message); return }
     const { doc } = useEditor.getState().present
-    if (doc.roots.length || doc.crop) setPending(file)
+    if (doc.roots.length || doc.crop || doc.marks?.length) setPending(file)
     else void load(file)
   }
   const { dragging, dropHandlers } = useImageDrop(requestImport, busy || !!pending)
@@ -68,6 +68,6 @@ export function Editor() {
     {!image && <CanvasEmptyState onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
     {image && dragging && <ImageDropOverlay />}
     <input ref={input} type="file" className="hidden" aria-label="导入图片" accept="image/png,image/jpeg,image/webp,image/avif" onChange={e => { const file = e.target.files?.[0]; if (file) requestImport(file); e.target.value = '' }} />
-    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条和裁剪选区将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => { const file = pending; setPending(null); if (file) void load(file) }}>替换图片</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条、裁剪选区和区域标记将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => { const file = pending; setPending(null); if (file) void load(file) }}>替换图片</Button></DialogFooter></DialogContent></Dialog>
   </main>
 }

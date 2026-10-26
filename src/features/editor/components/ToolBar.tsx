@@ -1,4 +1,4 @@
-import { Crop, Hand, MousePointer2, Slash, Grid2X2 } from 'lucide-react'
+import { Crop, Hand, MousePointer2, Slash, Grid2X2, PaintBucket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useEditor } from '../model/store'
@@ -9,6 +9,7 @@ const tools = [
   { id: 'pan', label: '拖动画布 · H', icon: Hand },
   { id: 'line', label: '画线 · L', icon: Slash },
   { id: 'crop', label: '裁剪选区 · C', icon: Crop },
+  { id: 'fill', label: '油漆桶 · B（标记需要裁切的区域）', icon: PaintBucket },
 ] satisfies { id: Tool; label: string; icon: typeof Crop }[]
 export function ToolBar({ busy }: { busy: boolean }) {
   const tool = useEditor(s => s.tool), ready = useEditor(s => !!s.present.doc.image)

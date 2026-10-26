@@ -16,6 +16,11 @@ import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 import { CanvasModeStatus } from './CanvasModeStatus'
 import { displaySegment } from '../geometry/display-segment'
 import { CanvasViewControls } from './CanvasViewControls'
+import { toast } from 'sonner'
+import { FillSettings } from '@/features/fill/FillSettings'
+import { RegionMarkLayer } from '@/features/fill/RegionMarkLayer'
+import { containsPoint } from '@/features/fill/geometry'
+import { useFillRegions } from '@/features/fill/use-fill-regions'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -35,6 +40,8 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   const spaceRef = useRef(false)
   const [horizontal, setHorizontal] = useState(false)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
+  const fillAction = useEditor(s => s.fillAction)
+  const fillRegions = useFillRegions(snapshot.doc, tool === 'fill' && fillAction === 'mark' && !busy)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
   const viewport: Box = { x: (RULER_SIZE - view.x) / view.scale, y: (RULER_SIZE - view.y) / view.scale, width: Math.max(0, size.width - RULER_SIZE) / view.scale, height: Math.max(0, size.height - RULER_SIZE) / view.scale }
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value) }
@@ -108,6 +115,16 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
       return
     }
     const hit = event.target.id()
+    if (tool === 'fill') {
+      if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey || !inBox(p, { x: 0, y: 0, width: image.width, height: image.height })) return
+      if (fillAction === 'erase') { state.eraseRegionMark(p); return }
+      if (!fillRegions.ready) return
+      const region = fillRegions.regions.find(candidate => containsPoint(candidate.rings, p))
+      if (!region) return
+      try { state.markRegion(region.rings, region.label) }
+      catch (error) { toast.error(error instanceof Error ? error.message : '无法标记区域') }
+      return
+    }
     if (tool === 'split') {
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
       if (p.x <= 0 || p.x >= image.width || p.y <= 0 || p.y >= image.height) return
@@ -205,6 +222,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
     }} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
+        <RegionMarkLayer marks={snapshot.doc.marks ?? []} scale={view.scale} />
         {snapshot.doc.crop && <Rect {...snapshot.doc.crop} stroke={canvasColors.selection} strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
         {gesture?.type === 'line' && <>
           <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.lineHalo} strokeWidth={4.5 / view.scale} lineCap="round" listening={false} />
@@ -218,10 +236,13 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
       <div className="pointer-events-none absolute left-10 right-5 top-10 flex flex-wrap items-start gap-2">
-        <CanvasModeStatus tool={tool} horizontal={horizontal} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
+        <div className="flex min-w-0 max-w-full flex-col gap-2">
+          <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
+          {tool === 'fill' && <FillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
+        </div>
         {snapshot.scope && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button>}
       </div>
-      <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}</div>
+      <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}{snapshot.doc.marks?.length ? ` · 标记 ${snapshot.doc.marks.length} 块` : ''}</div>
       <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} onZoom={zoom} onFit={fit} onRotate={onRotateImage} />
     </>}
   </div></CanvasContextMenu>

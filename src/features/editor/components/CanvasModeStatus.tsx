@@ -1,4 +1,4 @@
-import { Crop, Grid2X2, Hand, MousePointer2, Slash } from 'lucide-react'
+import { Crop, Grid2X2, Hand, MousePointer2, PaintBucket, Slash } from 'lucide-react'
 import type { Tool } from '../model/types'
 
 const modes = {
@@ -7,14 +7,15 @@ const modes = {
   pan: { label: '拖动画布模式', hint: '按住左键拖动画布 · S 返回分割线', icon: Hand },
   line: { label: '自由画线模式', hint: '按住左键拖动画线 · V 选择微调', icon: Slash },
   crop: { label: '裁剪模式', hint: '按住左键框选裁剪范围', icon: Crop },
+  fill: { label: '油漆桶 · 裁切标记', hint: '单击区域标记 · Ctrl+Z 撤销', icon: PaintBucket },
 } satisfies Record<Tool, { label: string; hint: string; icon: typeof Hand }>
 
-export function CanvasModeStatus({ tool, panSource, horizontal }: { tool: Tool; panSource: 'space' | 'middle' | null; horizontal: boolean }) {
+export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false }: { tool: Tool; panSource: 'space' | 'middle' | null; horizontal: boolean; erasing?: boolean }) {
   const mode = modes[tool], temporary = tool !== 'pan' && panSource !== null
   const Icon = temporary ? Hand : mode.icon
   const hint = temporary
     ? panSource === 'middle' ? `按住鼠标中键拖动 · 松开返回${mode.label}` : `按住左键拖动 · 松开空格返回${mode.label}`
-    : tool === 'split' && horizontal ? '单击添加横线 · 松开 W 恢复竖线' : mode.hint
+    : tool === 'fill' && erasing ? '单击已标记区域清除 · Ctrl+Z 撤销' : tool === 'split' && horizontal ? '单击添加横线 · 松开 W 恢复竖线' : mode.hint
 
   return <div id="canvas-mode-status" role="status" aria-atomic="true" className="flex items-center gap-3 rounded-xl border bg-card/95 px-3 py-2 shadow-sm">
     <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon aria-hidden="true" className="size-4" /></span>

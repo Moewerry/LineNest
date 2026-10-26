@@ -48,7 +48,7 @@ export function HomeImageImport({ children }: { children: ReactNode }) {
       return
     }
     const { doc } = useEditor.getState().present
-    if (doc.roots.length || doc.crop) setPending(file)
+    if (doc.roots.length || doc.crop || doc.marks?.length) setPending(file)
     else void load(file)
   }
 
@@ -64,7 +64,7 @@ export function HomeImageImport({ children }: { children: ReactNode }) {
       event.target.value = ''
       if (file) requestImport(file)
     }} />
-    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条和裁剪选区将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => {
+    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条、裁剪选区和区域标记将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => {
       const file = pending
       setPending(null)
       if (file) void load(file)
