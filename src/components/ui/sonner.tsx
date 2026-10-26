@@ -13,7 +13,7 @@ export function Toaster({ className, style, ...props }: ToasterProps) {
       duration={5000}
       closeButton
       richColors
-      className={cn('toaster', className)}
+      className={cn('toaster max-[600px]:!w-[calc(100%-var(--mobile-offset-left)-var(--mobile-offset-right))]', className)}
       icons={{
         success: <CircleCheck className="size-5 text-[var(--notification-success-icon)]" aria-hidden="true" />,
         error: <CircleX className="size-5 text-[var(--notification-error-icon)]" aria-hidden="true" />,
@@ -44,7 +44,7 @@ export function Toaster({ className, style, ...props }: ToasterProps) {
       toastOptions={{
         closeButtonAriaLabel: '关闭提示',
         classNames: {
-          toast: '!gap-3 !shadow-[0_8px_28px_rgb(48_41_30_/_0.10)]',
+          toast: '!left-auto !w-max !max-w-full !gap-3 !shadow-[0_8px_28px_rgb(48_41_30_/_0.10)]',
           title: 'text-sm leading-relaxed font-medium',
           description: 'text-xs leading-relaxed',
         },
