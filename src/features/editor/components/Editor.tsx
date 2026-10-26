@@ -15,6 +15,7 @@ import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useImageDrop } from '@/hooks/use-image-drop'
 import { ImageDropOverlay } from '@/components/ImageDropOverlay'
 import { CanvasEmptyState } from './CanvasEmptyState'
+import '../editor-theme.css'
 
 export function Editor() {
   const [busy, setBusy] = useState(false), [pending, setPending] = useState<File | null>(null)
@@ -41,7 +42,7 @@ export function Editor() {
     else void load(file)
   }
   const { dragging, dropHandlers } = useImageDrop(requestImport, busy || !!pending)
-  return <main className="relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden" {...dropHandlers}>
+  return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground" {...dropHandlers}>
     <div inert={!image} aria-hidden={!image ? true : undefined} className="flex min-h-0 flex-1 flex-col">
       <TopBar onImport={requestImport} busy={busy}><TemplateDialog disabled={busy} /><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起对象面板' : '打开对象面板'} aria-pressed={panelOpen} title={panelOpen ? '收起对象面板' : '打开对象面板'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
       <div className="flex min-h-0 flex-1"><ToolBar /><EditorCanvas busy={busy} />{panelOpen && <ObjectPanel />}</div>
