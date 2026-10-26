@@ -114,10 +114,13 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     }
     updateGesture(null)
   }
-  const zoom = (factor: number, p = { x: size.width / 2, y: size.height / 2 }) => setView(v => {
-    const scale = Math.min(8, Math.max(0.01, v.scale * factor)), ratio = scale / v.scale
-    return { scale, x: p.x - (p.x - v.x) * ratio, y: p.y - (p.y - v.y) * ratio }
-  })
+  const zoom = (factor: number, p = { x: size.width / 2, y: size.height / 2 }) => {
+    updateGesture(null)
+    setView(v => {
+      const scale = Math.min(8, Math.max(0.01, v.scale * factor)), ratio = scale / v.scale
+      return { scale, x: p.x - (p.x - v.x) * ratio, y: p.y - (p.y - v.y) * ratio }
+    })
+  }
   const delta = gesture?.type === 'move' ? { x: gesture.current.x - gesture.start.x, y: gesture.current.y - gesture.start.y } : zero
   const marquee: Box | null = gesture && (gesture.type === 'box' || gesture.type === 'crop') ? boxBetween(gesture.start, gesture.current) : null
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null

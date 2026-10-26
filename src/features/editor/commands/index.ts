@@ -102,6 +102,7 @@ export function toggleLock(id: string) {
     if (!node || (node.parentId && isLocked(s.doc, node.parentId))) return
     node.locked = !node.locked
     s.selected = s.selected.filter(selected => !isLocked(s.doc, selected))
+    while (s.scope && isLocked(s.doc, s.scope)) s.scope = s.doc.nodes[s.scope].parentId
   })
 }
 export function lockSelection() {
