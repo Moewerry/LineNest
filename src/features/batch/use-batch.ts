@@ -6,6 +6,7 @@ import { validateImage } from '@/lib/images'
 import { importTemplate } from '@/features/templates/portable'
 import { validateLineTemplate } from '@/features/templates/layout'
 import { exportBatch } from './export'
+import type { Point } from '@/features/editor/model/types'
 import type { BatchFit, BatchItem, BatchTemplate } from './types'
 
 const message = (error: unknown) => error instanceof Error ? error.message : '操作失败'
@@ -109,6 +110,21 @@ export function useBatch(initialTemplate: string | null) {
     setItems(rows => rows.map(row => row.id === id ? { ...row, [axis]: Math.round(Math.max(-16384, Math.min(16384, value))) } : row))
   }
   const changeFit = (value: BatchFit) => { if (!operation.current) { invalidate(); setFit(value) } }
+  const updateLineOffset = (id: string, lineId: string, offset: Point) => {
+    if (operation.current || !Number.isFinite(offset.x) || !Number.isFinite(offset.y)) return
+    const item = items.find(row => row.id === id)
+    const chosen = templates.filter(template => selected.includes(template.id))
+    if (!item || !chosen.some(template => Object.keys(template.layout.nodes).some(nodeId => JSON.stringify([template.id, nodeId]) === lineId && template.layout.nodes[nodeId].type === 'line'))) return
+    invalidate()
+    const limit = (value: number) => Math.round(Math.max(-16384, Math.min(16384, value)))
+    setItems(rows => rows.map(row => row.id === id ? { ...row, lineOffsets: { ...row.lineOffsets, [lineId]: { x: limit(offset.x), y: limit(offset.y) } } } : row))
+  }
+  const resetPosition = (id: string) => {
+    if (operation.current) return
+    invalidate()
+    setItems(rows => rows.map(row => row.id === id ? { ...row, offsetX: 0, offsetY: 0, lineOffsets: undefined } : row))
+  }
+  const editPreview = () => { if (!operation.current) invalidate() }
   const toggleTemplate = (id: string) => { if (!operation.current) { invalidate(); setSelected(ids => ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id]) } }
   const start = async () => {
     if (operation.current) return
@@ -129,5 +145,5 @@ export function useBatch(initialTemplate: string | null) {
     } finally { operation.current = false; if (mounted.current) setRunning(false) }
   }
   return { items, templates, selected, loading, templateError, fit, importing, running, error, result,
-    addFiles, addTemplate, remove, clear, updateOffset, changeFit, toggleTemplate, start, cancel: () => abort.current?.abort() }
+    addFiles, addTemplate, remove, clear, updateOffset, updateLineOffset, resetPosition, editPreview, changeFit, toggleTemplate, start, cancel: () => abort.current?.abort() }
 }

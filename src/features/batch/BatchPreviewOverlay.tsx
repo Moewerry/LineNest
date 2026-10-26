@@ -1,8 +1,8 @@
 import { Check, Download, LoaderCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export function BatchPreviewOverlay({ running, status, total, onDownload }: {
-  running: boolean; status: string; total?: number; onDownload: () => void
+export function BatchPreviewOverlay({ running, status, total, onDownload, onEdit }: {
+  running: boolean; status: string; total?: number; onDownload: () => void; onEdit: () => void
 }) {
   if (!running && !total) return null
 
@@ -13,6 +13,6 @@ export function BatchPreviewOverlay({ running, status, total, onDownload }: {
         : <Check aria-hidden="true" className="size-10 text-primary" />}
       <p className="text-sm font-medium">{status}</p>
     </div>
-    {!running && total && <Button className="h-11 gap-2 px-6" onClick={onDownload}><Download />下载 ZIP</Button>}
+    {!running && total && <div className="flex flex-wrap justify-center gap-2"><Button variant="outline" className="h-11" onClick={onEdit}>继续调整</Button><Button className="h-11 gap-2 px-6" onClick={onDownload}><Download />下载 ZIP</Button></div>}
   </div>
 }

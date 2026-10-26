@@ -1,4 +1,5 @@
 import type { TemplateRecord } from '@/lib/db'
+import type { Point } from '@/features/editor/model/types'
 
 export type BatchFit = 'relative' | 'original'
 export type BatchItem = {
@@ -9,6 +10,7 @@ export type BatchItem = {
   height: number
   offsetX: number
   offsetY: number
+  lineOffsets?: Record<string, Point>
   status: 'ready' | 'working' | 'done' | 'error'
   error?: string
   count?: number
