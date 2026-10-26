@@ -4,18 +4,20 @@ import type Konva from 'konva'
 import { ImagePlus, Maximize, Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getImageAsset } from '@/lib/images'
-import { boxBetween, childrenOf, containsLocked, inBox, isLocked, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
-import { useEditor } from '../model/store'
+import { bounds, boxBetween, childrenOf, containsLocked, inBox, isLocked, rotationAround, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
+import { transformSelection, useEditor } from '../model/store'
 import type { Box, Point } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
 import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
-import { enterGroup, leaveGroup } from '../commands'
+import { enterGroup, leaveGroup, rotateSelection } from '../commands'
+import { CanvasContextMenu } from './CanvasContextMenu'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
   | { type: 'move' | 'pan' }
   | { type: 'endpoint'; id: string; end: 'start' | 'end' }
+  | { type: 'rotate'; center: Point; initialAngle: number }
 )
 const zero = { x: 0, y: 0 }
 
@@ -69,6 +71,12 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     const p = pointer(), start = clamp(p), state = useEditor.getState()
     if (space || event.evt.button === 1) { event.evt.preventDefault(); updateGesture({ type: 'pan', start: p, current: p }); return }
     const hit = event.target.id()
+    if (hit === 'rotate-handle') {
+      const box = bounds(snapshot.doc, snapshot.selected)
+      if (!box || snapshot.selected.some(id => containsLocked(snapshot.doc, id))) return
+      const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+      updateGesture({ type: 'rotate', center, initialAngle: Math.atan2(p.y - center.y, p.x - center.x), start: p, current: p }); return
+    }
     if (tool === 'crop') {
       if (!inBox(p, { x: 0, y: 0, width: image.width, height: image.height })) return
       updateGesture({ type: tool, start, current: start, additive: false }); return
@@ -106,6 +114,7 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     if (active.type === 'line' && distance > 3 && image && segmentIntersectsBox(start, current, { x: 0, y: 0, width: image.width, height: image.height })) state.addLine(start, current)
     if (active.type === 'move' && distance > 1) state.move({ x: current.x - start.x, y: current.y - start.y })
     if (active.type === 'endpoint' && distance > 1) state.endpoint(active.id, active.end, current)
+    if (active.type === 'rotate' && distance > 1) rotateSelection(rotationDegrees(active))
     if (active.type === 'crop' && distance > 3) {
       const b = boxBetween(start, current)
       if (b.width >= 1 && b.height >= 1) state.setCrop(b)
@@ -127,19 +136,27 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
   const delta = gesture?.type === 'move' ? { x: gesture.current.x - gesture.start.x, y: gesture.current.y - gesture.start.y } : zero
   const marquee: Box | null = gesture && (gesture.type === 'box' || gesture.type === 'crop') ? boxBetween(gesture.start, gesture.current) : null
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
-  return <div ref={container} className={`canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden ${dropping ? 'ring-2 ring-inset ring-ring' : ''}`} style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+  const preview = gesture?.type === 'rotate' ? structuredClone(snapshot) : snapshot
+  if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
+  return <CanvasContextMenu disabled={busy}><div ref={container} className={`canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden ${dropping ? 'ring-2 ring-inset ring-ring' : ''}`} style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
     onDragOver={e => { e.preventDefault(); setDropping(true) }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropping(false) }} onDrop={e => { e.preventDefault(); setDropping(false); const file = e.dataTransfer.files[0]; if (file && !busy) onDrop(file) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (tool !== 'select') return
       const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)
       if (id) { updateGesture(null); enterGroup(id) }
+    }} onContextMenu={e => {
+      updateGesture(null)
+      const hit = e.target.id(), id = hit.startsWith('endpoint:') ? hit.split(':')[2] : hit
+      const target = scopeTarget(snapshot.doc, id, snapshot.scope)
+      if (target && !snapshot.selected.includes(target)) useEditor.getState().select([target])
     }} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
-        <NodeLayer snapshot={snapshot} scale={view.scale} delta={delta} endpoint={endpoint} />
+        <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} />
         {snapshot.doc.crop && <Rect {...snapshot.doc.crop} stroke="#237a60" strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill="#a7e8cd16" listening={false} />}
         {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke="#237a60" strokeWidth={2 / view.scale} listening={false} />}
-        <SelectionLayer snapshot={snapshot} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
+      </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
+        <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
       </Group></Layer>
     </Stage> : <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"><Button size="lg" onClick={onPick} disabled={busy}><ImagePlus />{busy ? '正在读取图片' : '导入图片'}</Button><span className="text-xs text-muted-foreground">或拖入图片</span></div>}
     {image && <>
@@ -149,5 +166,10 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
         <Button variant="ghost" size="icon-sm" aria-label="缩小" onClick={() => zoom(1 / 1.2)}><Minus /></Button><span className="w-12 text-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span><Button variant="ghost" size="icon-sm" aria-label="放大" onClick={() => zoom(1.2)}><Plus /></Button><span className="mx-1 h-4 border-l" /><Button variant="ghost" size="icon-sm" aria-label="适应画布" title="适应画布" onClick={fit}><Maximize /></Button>
       </div>
     </>}
-  </div>
+  </div></CanvasContextMenu>
+}
+
+function rotationDegrees(gesture: Extract<Gesture, { type: 'rotate' }>): number {
+  const angle = (Math.atan2(gesture.current.y - gesture.center.y, gesture.current.x - gesture.center.x) - gesture.initialAngle) * 180 / Math.PI
+  return ((angle + 540) % 360) - 180
 }

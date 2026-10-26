@@ -11,9 +11,11 @@ import { ToolBar } from './ToolBar'
 import { TopBar } from './TopBar'
 import { TemplateDialog } from '@/features/templates/TemplateDialog'
 import { ExportButton } from './ExportButton'
+import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 
 export function Editor() {
   const [busy, setBusy] = useState(false), [pending, setPending] = useState<File | null>(null)
+  const [panelOpen, setPanelOpen] = useState(true)
   const input = useRef<HTMLInputElement>(null), loading = useRef(false)
   useShortcuts()
   const load = async (file: File) => {
@@ -35,8 +37,8 @@ export function Editor() {
     else void load(file)
   }
   return <main className="flex h-dvh min-w-[760px] flex-col overflow-hidden">
-    <TopBar onImport={requestImport} busy={busy}><TemplateDialog disabled={busy} /><ExportButton disabled={busy} /></TopBar>
-    <div className="flex min-h-0 flex-1"><ToolBar /><EditorCanvas onPick={() => input.current?.click()} onDrop={requestImport} busy={busy} /><ObjectPanel /></div>
+    <TopBar onImport={requestImport} busy={busy}><TemplateDialog disabled={busy} /><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起对象面板' : '打开对象面板'} aria-pressed={panelOpen} title={panelOpen ? '收起对象面板' : '打开对象面板'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
+    <div className="flex min-h-0 flex-1"><ToolBar /><EditorCanvas onPick={() => input.current?.click()} onDrop={requestImport} busy={busy} />{panelOpen && <ObjectPanel />}</div>
     <input ref={input} type="file" className="hidden" aria-label="导入图片" accept="image/png,image/jpeg,image/webp,image/avif" onChange={e => { const file = e.target.files?.[0]; if (file) requestImport(file); e.target.value = '' }} />
     <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条和裁剪选区将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => { const file = pending; setPending(null); if (file) void load(file) }}>替换图片</Button></DialogFooter></DialogContent></Dialog>
   </main>

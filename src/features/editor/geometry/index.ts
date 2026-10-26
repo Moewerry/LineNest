@@ -2,6 +2,10 @@ import type { Box, DocumentData, Matrix, Point } from '../model/types'
 
 export const identity = (): Matrix => [1, 0, 0, 1, 0, 0]
 export const translation = (x: number, y: number): Matrix => [1, 0, 0, 1, x, y]
+export function rotationAround(center: Point, degrees: number): Matrix {
+  const angle = degrees * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle)
+  return multiply(multiply(translation(center.x, center.y), [c, s, -s, c, 0, 0]), translation(-center.x, -center.y))
+}
 export function multiply(a: Matrix, b: Matrix): Matrix {
   return [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1],
     a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3],
