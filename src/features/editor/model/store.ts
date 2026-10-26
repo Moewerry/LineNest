@@ -11,6 +11,7 @@ type EditorState = {
   commit: (change: (draft: Snapshot) => void) => void
   setTool: (tool: Tool) => void
   setImage: (image: ImageInfo) => void
+  removeImage: () => void
   rotateImage: (image: ImageInfo) => void
   setFillColor: (color: string) => void
   setFillOpacity: (opacity: number) => void
@@ -53,6 +54,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     set({ tool: 'split' })
   },
   rotateImage(image) { get().commit(draft => rotateDocumentClockwise(draft.doc, image)) },
+  removeImage() { get().commit(draft => Object.assign(draft, emptySnapshot())) },
   setFillColor(color) { if (/^#[0-9a-f]{6}$/i.test(color)) set({ fillColor: color.toLowerCase() }) },
   setFillOpacity(opacity) { if (Number.isFinite(opacity)) set({ fillOpacity: Math.max(0, Math.min(1, opacity)) }) },
   setFillAction: fillAction => set({ fillAction }),

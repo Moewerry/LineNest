@@ -5,13 +5,26 @@ import { deleteSelection, duplicateSelection, enterGroup, groupSelection, leaveG
 export function isTextTarget(target: EventTarget | null) {
   return target instanceof HTMLElement && !!target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"], [data-editor-settings]')
 }
-export function useShortcuts(enabled = true) {
+export function useShortcuts(enabled = true, onMissingImage?: () => void) {
   useEffect(() => {
     if (!enabled) return
     const handle = (event: KeyboardEvent) => {
       if (isTextTarget(event.target) || event.isComposing || event.altKey) return
       const state = useEditor.getState(), key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey
-      if (!state.present.doc.image) return
+      if (!state.present.doc.image) {
+        if (mod && (key === 'z' || key === 'y')) {
+          event.preventDefault()
+          if (key === 'y' || event.shiftKey) state.redo()
+          else state.undo()
+          return
+        }
+        const editingKey = mod ? ['a', 'g', 'd'].includes(key) : ['s', 'v', 'h', 'l', 'c', 'b', 'delete', 'backspace', 'enter', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)
+        if (editingKey && !event.repeat && !(event.target instanceof HTMLElement && event.target.closest('button, [role="button"]'))) {
+          event.preventDefault()
+          onMissingImage?.()
+        }
+        return
+      }
       if (key === 'enter' && event.target instanceof HTMLElement && event.target.closest('button, [role="button"]')) return
       if (mod && key === 'a') { event.preventDefault(); state.select(childrenOf(state.present.doc, state.present.scope)) }
       else if (mod && key === 'z') { event.preventDefault(); event.shiftKey ? state.redo() : state.undo() }
@@ -35,5 +48,5 @@ export function useShortcuts(enabled = true) {
     }
     window.addEventListener('keydown', handle)
     return () => window.removeEventListener('keydown', handle)
-  }, [enabled])
+  }, [enabled, onMissingImage])
 }

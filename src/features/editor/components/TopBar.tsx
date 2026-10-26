@@ -16,7 +16,7 @@ export function TopBar({ onImport, busy, busyLabel = '正在读取', children }:
     <div className="ml-auto flex shrink-0 items-center gap-1">
       <HistoryToolBar busy={busy} />
       <span aria-hidden="true" className="mx-2 h-5 border-l" />
-      <Button variant="outline" disabled={busy} onClick={() => input.current?.click()}><ImagePlus />{busy ? busyLabel : '导入图片'}</Button>
+      <Button variant="outline" disabled={busy} onClick={() => input.current?.click()}><ImagePlus />{busy ? busyLabel : image ? '替换图片' : '导入图片'}</Button>
       {children}
     </div>
     <input ref={input} className="hidden" type="file" accept="image/png,image/jpeg,image/webp,image/avif" aria-label="选择图片" onChange={e => { const file = e.target.files?.[0]; if (file) onImport(file); e.target.value = '' }} />
