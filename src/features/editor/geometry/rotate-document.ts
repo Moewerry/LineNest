@@ -1,5 +1,6 @@
-import { multiply, normalizeSplitLines } from './index'
+import { apply, multiply, normalizeSplitLines } from './index'
 import type { DocumentData, ImageInfo, Matrix } from '../model/types'
+import { transformRings } from '@/features/fill/geometry'
 
 export function rotateDocumentClockwise(doc: DocumentData, image: ImageInfo) {
   const previous = doc.image
@@ -7,6 +8,10 @@ export function rotateDocumentClockwise(doc: DocumentData, image: ImageInfo) {
   const rotation: Matrix = [0, 1, -1, 0, previous.height, 0]
   // Rotate the document, including locked objects, while preserving group hierarchy.
   for (const id of doc.roots) doc.nodes[id].matrix = multiply(rotation, doc.nodes[id].matrix)
+  for (const mark of doc.marks ?? []) {
+    mark.rings = transformRings(mark.rings, rotation)
+    mark.label = apply(rotation, mark.label)
+  }
   for (const node of Object.values(doc.nodes)) {
     if (node.type !== 'line' || !node.splitAxis) continue
     const oldName = node.splitAxis === 'horizontal' ? '横向分割线' : '竖向分割线'

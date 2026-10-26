@@ -1,4 +1,5 @@
 import type { DocumentData } from '@/features/editor/model/types'
+import { validRegionMarks } from '@/features/fill/validation'
 
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e9
@@ -9,6 +10,7 @@ const fail = (): never => { throw new Error('模板格式无效或版本不受�
 
 export function validateDocument(value: unknown): DocumentData {
   if (!record(value) || value.version !== 1 || !record(value.nodes) || !strings(value.roots)) return fail()
+  if (value.marks !== undefined && !validRegionMarks(value.marks)) return fail()
   const image = value.image
   if (!record(image) || !text(image.id) || !text(image.name) || !finite(image.width) || !finite(image.height) || image.width <= 0 || image.height <= 0) return fail()
   if (value.crop !== null) {
