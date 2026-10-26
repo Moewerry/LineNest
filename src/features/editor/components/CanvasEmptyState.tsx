@@ -9,7 +9,7 @@ export function CanvasEmptyState({ onPick, busy, dragging }: { onPick: () => voi
           <h1 id="image-import-heading" className="text-[clamp(2rem,3.8vw,3.5rem)] font-semibold leading-tight tracking-tight">从一张图片开始</h1>
           <p role="status" className="mt-6 text-base leading-8 text-muted-foreground">{busy ? '正在读取图片，请稍候…' : dragging ? '松开图片，开始分割。' : <>将图片拖拽到这里，<br />或选择文件。</>}</p>
         </div>
-        <Button variant="outline" aria-label="上传图片" disabled={busy} onClick={onPick} className="group h-44 w-44 flex-col gap-5 rounded-xl border-2 border-neutral-300 bg-white p-6 text-neutral-900 shadow-sm hover:border-primary hover:bg-neutral-50 hover:text-primary hover:shadow-md lg:h-52 lg:w-52">
+        <Button variant="default" aria-label="上传图片" disabled={busy} onClick={onPick} className="group h-40 w-48 flex-col gap-4 rounded-xl p-6 text-white shadow-md hover:text-white lg:h-44 lg:w-56">
           {busy ? <LoaderCircle aria-hidden="true" className="size-16 animate-spin motion-reduce:animate-none" strokeWidth={1.5} /> : <ImagePlus aria-hidden="true" className="size-16 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-1" strokeWidth={1.5} />}
           <span className="text-base font-medium">{busy ? '正在读取图片' : '上传图片'}</span>
         </Button>
