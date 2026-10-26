@@ -6,13 +6,15 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { deleteTemplate, listTemplates, readTemplate, renameTemplate, saveTemplate, type TemplateRecord } from '@/lib/db'
-import { getImageAsset, registerImage } from '@/lib/images'
+import { getImageAsset } from '@/lib/images'
+import type { ImageInfo } from '@/features/editor/model/types'
 import { useEditor } from '@/features/editor/model/store'
 import { exportTemplate, importTemplate, type PreparedTemplate } from './portable'
 import { TemplateThumbnail } from './TemplateThumbnail'
+import { applyTemplate, sameSize } from './apply'
 
 const message = (error: unknown) => error instanceof Error ? error.message : '操作失败，请检查浏览器存储权限或可用空间'
-type Confirmation = { type: 'load'; template: PreparedTemplate } | { type: 'delete'; id: string }
+type Confirmation = { type: 'load'; template: PreparedTemplate; currentImage: ImageInfo | null } | { type: 'delete'; id: string }
 
 export function TemplateDialog({ disabled }: { disabled: boolean }) {
   const [open, setOpen] = useState(false), [busy, setBusy] = useState(false), [loading, setLoading] = useState(false)
@@ -34,18 +36,18 @@ export function TemplateDialog({ disabled }: { disabled: boolean }) {
     try { await action() } catch (error) { toast.error(message(error)) }
     finally { operation.current = false; setBusy(false) }
   }
-  const prepareLoad = (template: PreparedTemplate) => setConfirmation({ type: 'load', template })
+  const prepareLoad = (template: PreparedTemplate, applyToCurrent = false) => {
+    const currentImage = applyToCurrent ? useEditor.getState().present.doc.image : null
+    if (applyToCurrent && !currentImage) throw new Error('请先导入新图片')
+    setConfirmation({ type: 'load', template, currentImage })
+  }
   const confirm = () => void run(async () => {
     if (!confirmation) return
     if (confirmation.type === 'delete') {
       await deleteTemplate(confirmation.id); await refresh(); setConfirmation(null); toast.success('已删除模板'); return
     }
-    const { doc, blob } = confirmation.template
-    const info = await registerImage(blob, doc.image!.name)
-    if (info.width !== doc.image!.width || info.height !== doc.image!.height) throw new Error('模板图片尺寸与布局不一致')
-    useEditor.getState().commit(s => { s.doc = { ...doc, image: info }; s.selected = []; s.scope = null })
-    useEditor.getState().setTool('select')
-    setConfirmation(null); setOpen(false); toast.success('模板已加载')
+    await applyTemplate(confirmation.template, confirmation.currentImage)
+    setConfirmation(null); setOpen(false); toast.success(confirmation.currentImage ? '布局已套用' : '模板已加载')
   })
   return <>
     <Dialog open={open} onOpenChange={value => { if (!busy) setOpen(value) }}>
@@ -70,6 +72,7 @@ export function TemplateDialog({ disabled }: { disabled: boolean }) {
             <div className="min-w-0 flex-1">{renaming?.id === row.id ? <div className="flex gap-1"><Input value={renaming.name} maxLength={80} className="h-8" aria-label="新模板名称" onChange={e => setRenaming({ ...renaming, name: e.target.value })} /><Button size="sm" disabled={busy || !renaming.name.trim()} onClick={() => void run(async () => { await renameTemplate(row.id, renaming.name); setRenaming(null); await refresh() })}>保存</Button><Button variant="ghost" size="sm" onClick={() => setRenaming(null)}>取消</Button></div> : <><p className="truncate text-sm" title={row.name}>{row.name}</p><p className="mt-1 text-[11px] text-muted-foreground">{row.doc.image?.width} × {row.doc.image?.height} · {new Date(row.updatedAt).toLocaleDateString()}</p></>}</div>
             {!renaming && <div className="flex items-center gap-1">
               <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(async () => prepareLoad(await readTemplate(row.id)))}>加载</Button>
+              <Button size="sm" variant="outline" disabled={busy || !image} onClick={() => void run(async () => prepareLoad(await readTemplate(row.id), true))}>套用</Button>
               <Button variant="ghost" size="icon-sm" disabled={busy} aria-label={`重命名 ${row.name}`} onClick={() => setRenaming({ id: row.id, name: row.name })}><Pencil /></Button>
               <Button variant="ghost" size="icon-sm" disabled={busy} aria-label={`备份 ${row.name}`} onClick={() => void run(async () => { const saved = await readTemplate(row.id); await exportTemplate(row.name, saved.doc, saved.blob) })}><Download /></Button>
               <Button variant="ghost" size="icon-sm" disabled={busy} aria-label={`删除 ${row.name}`} onClick={() => setConfirmation({ type: 'delete', id: row.id })}><Trash2 /></Button>
@@ -79,6 +82,11 @@ export function TemplateDialog({ disabled }: { disabled: boolean }) {
         <input ref={fileInput} type="file" className="hidden" accept=".json" aria-label="导入模板文件" onChange={e => { const file = e.target.files?.[0]; if (file) void run(async () => prepareLoad(await importTemplate(file))); e.target.value = '' }} />
       </DialogContent>
     </Dialog>
-    <Dialog open={!!confirmation} onOpenChange={value => { if (!value && !busy) setConfirmation(null) }}><DialogContent onInteractOutside={e => { if (busy) e.preventDefault() }} onEscapeKeyDown={e => { if (busy) e.preventDefault() }}><DialogHeader><DialogTitle>{confirmation?.type === 'delete' ? '删除这个模板？' : '加载这个模板？'}</DialogTitle><DialogDescription>{confirmation?.type === 'delete' ? '删除后无法从模板列表恢复，当前画布不受影响。' : '将替换当前图片和布局。加载后可以撤销恢复。'}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" disabled={busy} onClick={() => setConfirmation(null)}>取消</Button><Button variant={confirmation?.type === 'delete' ? 'destructive' : 'default'} disabled={busy} onClick={confirm}>{busy ? '正在处理' : confirmation?.type === 'delete' ? '删除' : '加载'}</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={!!confirmation} onOpenChange={value => { if (!value && !busy) setConfirmation(null) }}><DialogContent onInteractOutside={e => { if (busy) e.preventDefault() }} onEscapeKeyDown={e => { if (busy) e.preventDefault() }}><DialogHeader>
+      <DialogTitle>{confirmation?.type === 'delete' ? '删除这个模板？' : confirmation?.currentImage ? '套用到当前图片？' : '加载这个模板？'}</DialogTitle>
+      <DialogDescription>{confirmation?.type === 'delete' ? '删除后无法从模板列表恢复，当前画布不受影响。' : confirmation?.currentImage ? '保留当前图片，替换线条和组群布局。套用后可以撤销。' : '将替换当前图片和布局。加载后可以撤销恢复。'}</DialogDescription>
+    </DialogHeader>
+      {confirmation?.type === 'load' && confirmation.currentImage && !sameSize(confirmation.template.doc.image!, confirmation.currentImage) && <div className="space-y-2 rounded-lg border bg-secondary p-3 text-xs leading-6"><p>模板尺寸：{confirmation.template.doc.image!.width} × {confirmation.template.doc.image!.height}<br />当前图片：{confirmation.currentImage.width} × {confirmation.currentImage.height}</p><p>尺寸不同。线条保留原坐标，不缩放；裁剪选区将清空。超出图片的线条会隐藏，可手动移回。</p></div>}
+      <DialogFooter><Button variant="outline" disabled={busy} onClick={() => setConfirmation(null)}>取消</Button><Button variant={confirmation?.type === 'delete' ? 'destructive' : 'default'} disabled={busy} onClick={confirm}>{busy ? '正在处理' : confirmation?.type === 'delete' ? '删除' : confirmation?.currentImage ? '套用布局' : '加载'}</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
