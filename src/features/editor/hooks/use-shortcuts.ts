@@ -8,8 +8,9 @@ export function isTextTarget(target: EventTarget | null) {
 export function useShortcuts() {
   useEffect(() => {
     const handle = (event: KeyboardEvent) => {
-      if (isTextTarget(event.target)) return
+      if (isTextTarget(event.target) || event.isComposing || event.altKey) return
       const state = useEditor.getState(), key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey
+      if (key === 'enter' && event.target instanceof HTMLElement && event.target.closest('button, [role="button"]')) return
       if (mod && key === 'a') { event.preventDefault(); state.select(childrenOf(state.present.doc, state.present.scope)) }
       else if (mod && key === 'z') { event.preventDefault(); event.shiftKey ? state.redo() : state.undo() }
       else if (mod && key === 'y') { event.preventDefault(); state.redo() }

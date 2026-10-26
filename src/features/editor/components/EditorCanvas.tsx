@@ -45,6 +45,8 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (isTextTarget(e.target)) return
+      if (e.isComposing) return
+      if (e.code === 'Space' && e.target instanceof HTMLElement && e.target.closest('button, [role="button"]')) return
       if (e.code === 'Space') { e.preventDefault(); setSpace(true) }
       if (e.key === 'Escape' && gestureRef.current) { e.stopImmediatePropagation(); updateGesture(null) }
     }
@@ -86,6 +88,7 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     }
     if (hit.startsWith('endpoint:')) {
       const [, end, id] = hit.split(':')
+      if (event.evt.shiftKey) { state.select(snapshot.selected.filter(selected => selected !== id)); return }
       updateGesture({ type: 'endpoint', id, end: end as 'start' | 'end', start: p, current: p }); return
     }
     const target = hit ? scopeTarget(snapshot.doc, hit, snapshot.scope) : null
@@ -138,7 +141,8 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
   const preview = gesture?.type === 'rotate' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
-  return <CanvasContextMenu disabled={busy}><div ref={container} className={`canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden ${dropping ? 'ring-2 ring-inset ring-ring' : ''}`} style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+  return <CanvasContextMenu disabled={busy}><div ref={container} tabIndex={0} role="region" aria-label="编辑画布" className={`canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring ${dropping ? 'ring-2 ring-inset ring-ring' : ''}`} style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+    onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}
     onDragOver={e => { e.preventDefault(); setDropping(true) }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropping(false) }} onDrop={e => { e.preventDefault(); setDropping(false); const file = e.dataTransfer.files[0]; if (file && !busy) onDrop(file) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (tool !== 'select') return
