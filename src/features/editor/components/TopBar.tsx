@@ -12,8 +12,8 @@ export function TopBar({ onImport, busy, busyLabel = '正在读取', children }:
   const image = useEditor(s => s.present.doc.image)
   return <header className="flex h-[72px] shrink-0 items-center gap-4 border-b bg-card px-5">
     <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" disabled={busy} className="h-auto gap-2 px-0 hover:bg-transparent" aria-label="LineNest 菜单"><Brand /><ChevronDown className="size-3 text-muted-foreground" /></Button></DropdownMenuTrigger><DropdownMenuContent align="start"><DropdownMenuItem onSelect={() => navigate('/')}><Home />返回首页</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
-    <span className="hidden max-w-48 truncate border-l pl-4 text-xs text-muted-foreground lg:block" title={image?.name}>{image?.name ?? '未命名'}</span>
-    <div className="ml-auto flex items-center gap-1">
+    <span className="hidden min-w-0 truncate border-l pl-4 text-xs text-muted-foreground lg:block lg:max-w-80 xl:max-w-112" title={image?.name}>{image?.name ?? '未命名'}</span>
+    <div className="ml-auto flex shrink-0 items-center gap-1">
       <HistoryToolBar busy={busy} />
       <span aria-hidden="true" className="mx-2 h-5 border-l" />
       <Button variant="outline" disabled={busy} onClick={() => input.current?.click()}><ImagePlus />{busy ? busyLabel : '导入图片'}</Button>
