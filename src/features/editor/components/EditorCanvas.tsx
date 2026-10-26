@@ -65,11 +65,22 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   useEffect(() => { fit(); updateGesture(null) }, [image?.id, size.width, size.height])
   useEffect(() => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }, [image?.id, busy])
   useEffect(() => {
+    const changeSplitDirection = (axis: SplitAxis) => {
+      setHorizontal(axis === 'horizontal')
+      const active = gestureRef.current
+      if (active?.type !== 'split') return
+      const currentImage = useEditor.getState().present.doc.image
+      if (!currentImage || (axis === 'horizontal' ? currentImage.height : currentImage.width) <= 1) {
+        updateGesture(null)
+        return
+      }
+      updateGesture({ ...active, axis })
+    }
     const down = (e: KeyboardEvent) => {
       if (!useEditor.getState().present.doc.image) return
       if (isTextTarget(e.target)) return
       if (e.isComposing) return
-      if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); setHorizontal(true) }
+      if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); changeSplitDirection('horizontal') }
       if (e.code === 'Space') {
         if (e.ctrlKey || e.metaKey || e.altKey) return
         const button = e.target instanceof HTMLElement ? e.target.closest('button, [role="button"]') : null
@@ -89,7 +100,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
         spaceRef.current = false; setSpace(false)
         if (gestureRef.current?.type === 'pan' && gestureRef.current.source === 'space') updateGesture(null)
       }
-      if (e.code === 'KeyW') setHorizontal(false)
+      if (e.code === 'KeyW') changeSplitDirection('vertical')
     }
     const cancel = () => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', cancel)
