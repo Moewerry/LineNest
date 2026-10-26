@@ -18,7 +18,7 @@ import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
   | { type: 'move' }
-  | { type: 'pan'; origin: Point }
+  | { type: 'pan'; origin: Point; source: 'space' | 'tool' | 'middle' }
   | { type: 'endpoint'; id: string; end: 'start' | 'end' }
   | { type: 'rotate'; center: Point; initialAngle: number }
 )
@@ -30,6 +30,7 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
   const [gesture, setGesture] = useState<Gesture | null>(null), gestureRef = useRef<Gesture | null>(null)
   const [space, setSpace] = useState(false)
+  const spaceRef = useRef(false)
   const [horizontal, setHorizontal] = useState(false)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
@@ -46,18 +47,35 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
     return () => observer.disconnect()
   }, [])
   useEffect(() => { fit(); updateGesture(null) }, [image?.id, size.width, size.height])
+  useEffect(() => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }, [image?.id, busy])
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (!useEditor.getState().present.doc.image) return
       if (isTextTarget(e.target)) return
       if (e.isComposing) return
       if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); setHorizontal(true) }
-      if (e.code === 'Space' && e.target instanceof HTMLElement && e.target.closest('button, [role="button"]')) return
-      if (e.code === 'Space') { e.preventDefault(); setSpace(true) }
+      if (e.code === 'Space') {
+        if (e.ctrlKey || e.metaKey || e.altKey) return
+        const button = e.target instanceof HTMLElement ? e.target.closest('button, [role="button"]') : null
+        if (button && !button.closest('[data-canvas-shortcuts]')) return
+        e.preventDefault()
+        if (!spaceRef.current) {
+          spaceRef.current = true; setSpace(true)
+          if (gestureRef.current && gestureRef.current.type !== 'pan') updateGesture(null)
+        }
+        container.current?.focus({ preventScroll: true })
+      }
       if (e.key === 'Escape' && gestureRef.current) { e.stopImmediatePropagation(); updateGesture(null) }
     }
-    const up = (e: KeyboardEvent) => { if (e.code === 'Space') setSpace(false); if (e.code === 'KeyW') setHorizontal(false) }
-    const cancel = () => { setSpace(false); setHorizontal(false); updateGesture(null) }
+    const up = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        if (spaceRef.current) e.preventDefault()
+        spaceRef.current = false; setSpace(false)
+        if (gestureRef.current?.type === 'pan' && gestureRef.current.source === 'space') updateGesture(null)
+      }
+      if (e.code === 'KeyW') setHorizontal(false)
+    }
+    const cancel = () => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', cancel)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', cancel) }
   }, [])
@@ -79,11 +97,11 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
     const p = pointer(), start = clamp(p), state = useEditor.getState()
     const screenPoint = stage.current?.getPointerPosition()
     if (screenPoint && (screenPoint.x < RULER_SIZE || screenPoint.y < RULER_SIZE)) return
-    if (tool === 'pan' || space || event.evt.button === 1) {
+    if (tool === 'pan' || spaceRef.current || event.evt.button === 1) {
       event.evt.preventDefault()
       const screen = stage.current?.getPointerPosition() ?? zero
       if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
-      updateGesture({ type: 'pan', start: screen, current: screen, origin: { x: view.x, y: view.y } })
+      updateGesture({ type: 'pan', start: screen, current: screen, origin: { x: view.x, y: view.y }, source: event.evt.button === 1 ? 'middle' : tool === 'pan' ? 'tool' : 'space' })
       return
     }
     const hit = event.target.id()
@@ -166,10 +184,10 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
   const preview = gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
-  return <CanvasContextMenu disabled={busy}><div ref={container} tabIndex={0} role="region" aria-label="编辑画布" className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+  return <CanvasContextMenu disabled={busy}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
-      if (tool !== 'select') return
+      if (tool !== 'select' || spaceRef.current) return
       const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)
       if (id) { updateGesture(null); enterGroup(id) }
     }} onContextMenu={e => {

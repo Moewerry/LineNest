@@ -12,7 +12,7 @@ const tools = [
 ] satisfies { id: Tool; label: string; icon: typeof Crop }[]
 export function ToolBar() {
   const tool = useEditor(s => s.tool), ready = useEditor(s => !!s.present.doc.image)
-  return <nav aria-label="编辑工具" className="flex w-[72px] shrink-0 flex-col items-center gap-3 border-r bg-card py-5">
+  return <nav data-canvas-shortcuts aria-label="编辑工具" className="flex w-[72px] shrink-0 flex-col items-center gap-3 border-r bg-card py-5">
     {tools.map(({ id, label, icon: Icon }) => <Tooltip key={id}>
       <TooltipTrigger asChild><Button size="icon" variant={tool === id ? 'default' : 'ghost'} aria-label={label} aria-pressed={tool === id} disabled={!ready} onClick={() => useEditor.getState().setTool(id)}><Icon className="size-[18px]" /></Button></TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
