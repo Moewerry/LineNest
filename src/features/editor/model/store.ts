@@ -44,6 +44,10 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   setTool: tool => set({ tool }),
   setImage(image) {
+    if (!get().present.doc.image) {
+      set({ present: { ...emptySnapshot(), doc: { ...emptySnapshot().doc, image } }, past: [], future: [], tool: 'split' })
+      return
+    }
     get().commit(draft => Object.assign(draft, emptySnapshot(), { doc: { ...emptySnapshot().doc, image } }))
     set({ tool: 'split' })
   },

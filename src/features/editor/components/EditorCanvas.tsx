@@ -130,7 +130,8 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
     }
     if (tool === 'split') {
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
-      if (p.x <= 0 || p.x >= image.width || p.y <= 0 || p.y >= image.height) return
+      // Only the split coordinate must be inside the image; allow clicks along its outer guide.
+      if (horizontal ? p.y <= 0 || p.y >= image.height : p.x <= 0 || p.x >= image.width) return
       const x = Math.max(1, Math.min(image.width - 1, Math.round(p.x)))
       const y = Math.max(1, Math.min(image.height - 1, Math.round(p.y)))
       if (horizontal ? image.height <= 1 : image.width <= 1) return
