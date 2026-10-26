@@ -7,7 +7,6 @@ export const canvasColors = {
   handle: '#ffffff',
   ink: '#171717',
   line: '#525252',
-  lineHalo: '#ffffff',
   mutedInk: '#737373',
   mutedLine: '#a3a3a3',
 } as const
