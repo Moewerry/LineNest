@@ -15,6 +15,7 @@ import { enterGroup, leaveGroup, rotateSelection } from '../commands'
 import { CanvasContextMenu } from './CanvasContextMenu'
 import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 import { CanvasModeStatus } from './CanvasModeStatus'
+import { displaySegment } from '../geometry/display-segment'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -35,6 +36,7 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
   const [horizontal, setHorizontal] = useState(false)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
+  const viewport: Box = { x: (RULER_SIZE - view.x) / view.scale, y: (RULER_SIZE - view.y) / view.scale, width: Math.max(0, size.width - RULER_SIZE) / view.scale, height: Math.max(0, size.height - RULER_SIZE) / view.scale }
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value) }
   const fit = () => {
     if (!image) return
@@ -167,7 +169,11 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
     }
     if (active.type === 'box') {
       const rect = boxBetween(start, current)
-      const ids = distance > 3 ? childrenOf(snapshot.doc, snapshot.scope).filter(id => !isLocked(snapshot.doc, id) && segments(snapshot.doc, [id]).some(line => segmentIntersectsBox(line.start, line.end, rect))) : []
+      const ids = distance > 3 ? childrenOf(snapshot.doc, snapshot.scope).filter(id => !isLocked(snapshot.doc, id) && segments(snapshot.doc, [id]).some(line => {
+        const node = snapshot.doc.nodes[line.id]
+        const display = displaySegment(line, node.type === 'line' ? node.splitAxis : undefined, viewport)
+        return segmentIntersectsBox(display.start, display.end, rect)
+      })) : []
       state.select(active.additive ? [...snapshot.selected, ...ids] : ids)
     }
     updateGesture(null)
@@ -199,10 +205,10 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
     }} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
-        <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} />
         {snapshot.doc.crop && <Rect {...snapshot.doc.crop} stroke={canvasColors.selection} strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
         {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={2 / view.scale} listening={false} />}
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
+        <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} viewport={viewport} />
         <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
       </Group></Layer>
     </Stage> : null}
