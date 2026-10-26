@@ -6,9 +6,9 @@ import { useHomeImageImport } from './HomeImageImport'
 export function HomeStartCard() {
   const { busy, pickImage } = useHomeImageImport()
 
-  return <div className="relative mx-auto w-full max-w-[420px] lg:mr-0">
-    <div aria-hidden="true" className="home-card-back absolute -inset-3 rotate-6 rounded-[2px] bg-primary/15 sm:-inset-4" />
-    <section aria-label="开始图片分割" className="home-card-front relative rounded-[2px] bg-foreground p-7 text-background sm:p-9">
+  return <div className="relative mx-auto w-full max-w-[480px] lg:mr-0">
+    <div aria-hidden="true" className="home-card-back absolute -inset-3 -rotate-4 rounded-[28px] bg-primary/15 sm:-inset-4" />
+    <section aria-label="开始图片分割" className="home-card-front relative rounded-3xl bg-foreground p-7 text-background sm:p-9">
       <div className="flex items-center justify-between">
         <span className="home-card-label rounded-full border border-background/25 px-3 py-1.5 text-[10px] tracking-[0.15em]"><HomeAnimatedText delay={120} stagger={22}>YOUR NEXT CREATION</HomeAnimatedText></span>
         <span aria-hidden="true" className="home-card-dot size-2 shrink-0 rounded-full bg-highlight" />

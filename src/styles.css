@@ -57,9 +57,9 @@
 
 .home-page {
   /* Reveal the remaining text after the cards, scissors, button and divider settle. */
-  --home-back-duration: 560ms;
+  --home-back-duration: 1100ms;
   --home-front-delay: 120ms;
-  --home-front-duration: 640ms;
+  --home-front-duration: 1200ms;
   --home-icon-delay: calc(var(--home-front-delay) + var(--home-front-duration));
   --home-icon-duration: 360ms;
   --home-content-start: calc(var(--home-icon-delay) + var(--home-icon-duration) + 80ms);
@@ -134,11 +134,11 @@
 }
 
 .home-card-back {
-  animation: home-back-fly-in var(--home-back-duration) cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: home-back-fly-in var(--home-back-duration) cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
 }
 
 .home-card-front {
-  animation: home-front-fly-in var(--home-front-duration) cubic-bezier(0.16, 1, 0.3, 1) var(--home-front-delay) backwards;
+  animation: home-front-fly-in var(--home-front-duration) cubic-bezier(0.2, 0.85, 0.3, 1) var(--home-front-delay) backwards;
 }
 
 .home-card-icon {
@@ -195,18 +195,14 @@
 }
 
 @keyframes home-back-fly-in {
-  from { opacity: 0; transform: translate(-100vw, calc(-100vh - 100%)) rotate(-38deg); }
-  12% { opacity: 1; }
-  74% { transform: translate(-8px, 5px) rotate(8deg); }
-  86% { transform: translate(2px, -2px) rotate(-3deg); }
+  from { opacity: 0; transform: translate(-40vw, -28vh) rotate(-1080deg); }
+  8% { opacity: 1; }
   to { opacity: 1; transform: translate(0, 0) rotate(0); }
 }
 
 @keyframes home-front-fly-in {
-  from { opacity: 0; transform: translate(100vw, 100vh) rotate(42deg); }
-  12% { opacity: 1; }
-  74% { transform: translate(8px, -5px) rotate(-6deg); }
-  86% { transform: translate(-2px, 2px) rotate(2deg); }
+  from { opacity: 0; transform: translate(40vw, 28vh) rotate(1080deg); }
+  8% { opacity: 1; }
   to { opacity: 1; transform: translate(0, 0) rotate(0); }
 }
 
