@@ -4,9 +4,9 @@
 
 [在线使用](https://moewerry.github.io/LineNest/) · [反馈问题](https://github.com/Moewerry/LineNest/issues) · [MIT 许可证](LICENSE)
 
-## 操作演示
+## 首页预览
 
-![LineNest 操作演示](media/linenest.gif)
+![LineNest 首页预览](media/linenest.gif)
 
 ## 主要功能
 
