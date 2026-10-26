@@ -15,10 +15,10 @@ export function Toaster({ className, style, ...props }: ToasterProps) {
       richColors
       className={cn('toaster', className)}
       icons={{
-        success: <CircleCheck className="size-5" aria-hidden="true" />,
-        error: <CircleX className="size-5" aria-hidden="true" />,
+        success: <CircleCheck className="size-5 text-[var(--notification-success-icon)]" aria-hidden="true" />,
+        error: <CircleX className="size-5 text-[var(--notification-error-icon)]" aria-hidden="true" />,
         info: <Info className="size-5" aria-hidden="true" />,
-        warning: <TriangleAlert className="size-5" aria-hidden="true" />,
+        warning: <TriangleAlert className="size-5 text-[var(--notification-warning-icon)]" aria-hidden="true" />,
         loading: <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />,
       }}
       style={{

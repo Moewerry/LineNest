@@ -40,18 +40,21 @@
   --accent: #f8e0d3;
   --muted-foreground: #79746c;
   --border: #e2dbd0;
-  --notification-background: #fffdf8;
-  --notification-border: #e2dbd0;
-  --notification-foreground: #514739;
-  --notification-success-background: #f0f3e8;
-  --notification-success-border: #ccd6ba;
-  --notification-success-foreground: #4d6237;
-  --notification-error-background: #fff0ea;
-  --notification-error-border: #ebc5b8;
-  --notification-error-foreground: #a33825;
-  --notification-warning-background: #fff7df;
-  --notification-warning-border: #e6d49b;
-  --notification-warning-foreground: #806020;
+  --notification-background: #fff7ed;
+  --notification-border: #fdba74;
+  --notification-foreground: #c2410c;
+  --notification-success-background: #ffffff;
+  --notification-success-border: var(--primary);
+  --notification-success-foreground: #00875f;
+  --notification-success-icon: #00875f;
+  --notification-error-background: var(--primary);
+  --notification-error-border: var(--primary);
+  --notification-error-foreground: #ffffff;
+  --notification-error-icon: #ffffff;
+  --notification-warning-background: #ffffff;
+  --notification-warning-border: var(--color-highlight);
+  --notification-warning-foreground: var(--color-highlight-foreground);
+  --notification-warning-icon: var(--color-highlight);
   --radius: 0.75rem;
 }
 
