@@ -22,7 +22,7 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         ]
         : mode.instructions
 
-  return <div id="canvas-mode-status" role="status" aria-atomic="true" className="w-[360px] max-w-full overflow-hidden rounded-xl border bg-card text-foreground shadow-sm">
+  return <div id="canvas-mode-status" role="status" aria-atomic="true" className="w-[360px] max-w-full overflow-hidden rounded-xl bg-card text-foreground">
     <div className="flex items-start gap-2.5 px-4 pb-2.5 pt-4">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon aria-hidden="true" className="size-[18px]" /></span>
       <div className="min-w-0 flex-1">
