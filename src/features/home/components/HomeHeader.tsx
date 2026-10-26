@@ -1,17 +1,21 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { HomeAnimatedText } from './HomeAnimatedText'
+import { useHomeBatchEntry } from './HomeBatchEntry'
+import { useHomeImageImport } from './HomeImageImport'
 
 export function HomeHeader() {
-  return <header className="home-header mx-auto flex min-h-24 w-full max-w-[1320px] shrink-0 flex-wrap items-center justify-between gap-4 px-6 py-5 sm:px-10 lg:px-14">
+  const { openBatch, checking } = useHomeBatchEntry()
+  const { busy } = useHomeImageImport()
+  return <header className="home-header mx-auto flex min-h-24 w-full max-w-[1240px] shrink-0 flex-wrap items-center justify-between gap-4 px-6 py-6 sm:px-10 lg:px-14">
     <div className="min-w-0">
       <div className="flex items-center gap-2.5">
-        <Link to="/" aria-label="LineNest 首页" className="shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"><img src="/linenest.svg" alt="" aria-hidden="true" width={48} height={48} className="home-brand-icon size-12" /></Link>
-        <Link to="/" className="w-fit rounded-sm text-[48px] font-semibold leading-none tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring">LineNest</Link>
+        <Link to="/" aria-label="LineNest 首页" className="shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"><img src="/linenest.svg" alt="" aria-hidden="true" width={40} height={40} className="home-brand-icon size-10" /></Link>
+        <Link to="/" className="w-fit rounded-sm text-3xl font-semibold leading-none tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-[34px]">LineNest</Link>
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-2">
-      <Button asChild variant="outline" size="sm" className="h-10 rounded-full px-4"><Link to="/batch">批量裁剪</Link></Button>
+      <Button variant="outline" size="sm" disabled={busy || checking} onClick={openBatch} className="h-10 rounded-full border-foreground/10 bg-transparent px-4 shadow-none">{checking ? '正在读取…' : '批量裁剪'}</Button>
       <Button asChild size="sm" className="h-10 rounded-full border-0 bg-primary px-4 tracking-[0.1em] text-white shadow-none hover:bg-primary/90"><Link to="/editor" state={{ showImageImport: true }}><HomeAnimatedText delay={160} stagger={40}>进入工作台</HomeAnimatedText></Link></Button>
     </div>
   </header>

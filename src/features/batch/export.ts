@@ -12,7 +12,8 @@ export async function exportBatch(items: BatchItem[], templates: BatchTemplate[]
   if (!items.length || !templates.length) throw new Error('请添加图片并选择模板')
   const chunks: Uint8Array<ArrayBuffer>[] = []
   let bytes = 0, zipError: Error | null = null, total = 0
-  const report: { source: string; template: string; count: number; error?: string }[] = []
+  const report: { source: string; templates: string[]; count: number; error?: string }[] = []
+  const templateNames = templates.map(template => template.name)
   const zip = new Zip((error, data) => {
     if (error) zipError = error
     else if (data.length) { bytes += data.length; chunks.push(new Uint8Array(data)) }
@@ -40,43 +41,32 @@ export async function exportBatch(items: BatchItem[], templates: BatchTemplate[]
         check()
         const asset = getImageAsset(item.id)
         if (!asset) throw new Error('无法读取图片')
-        for (const [templateIndex, template] of templates.entries()) {
+        const doc = batchDocument(item, templates, fit)
+        const result = await calculateSlices(doc, signal)
+        if (result.regions.length < 2) throw new Error('所选模板叠加后未分出多个区域，请检查尺寸和位置')
+        if (result.unusedEdges > 0) throw new Error('部分线条未围成区域，请调整位置后重试')
+        for (const region of result.regions) {
           check()
-          let templateCount = 0
-          try {
-            const doc = batchDocument(item, template, fit)
-            const result = await calculateSlices(doc, signal)
-            if (result.regions.length < 2) throw new Error('模板未分出多个区域，请检查尺寸和位置')
-            if (result.unusedEdges > 0) throw new Error('部分线条未围成区域，请调整位置后重试')
-            for (const region of result.regions) {
-              check()
-              const { x, y, width, height } = region.box
-              if (width * height > 40_000_000 || width > 16384 || height > 16384) throw new Error('裁剪区域过大')
-              canvas.width = width; canvas.height = height
-              const context = canvas.getContext('2d')
-              if (!context) throw new Error('无法创建裁剪画布')
-              context.translate(-x, -y); context.clip(regionPath(region), 'evenodd')
-              context.drawImage(asset.element, 0, 0)
-              const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('图片导出失败')), 'image/png'))
-              check()
-              add(`${index + 1}_${safeName(item.file.name)}/${templateIndex + 1}_${safeName(template.name)}/slice-${String(region.id).padStart(3, '0')}.png`, new Uint8Array(await blob.arrayBuffer()))
-              count++; templateCount++; total++
-              onUpdate(item.id, { status: 'working', count })
-              await new Promise<void>(resolve => window.setTimeout(resolve, 0))
-            }
-            report.push({ source: item.file.name, template: template.name, count: templateCount })
-          } catch (error) {
-            check()
-            const message = error instanceof Error ? error.message : '裁剪失败'
-            errors.push(`${template.name}：${message}`)
-            report.push({ source: item.file.name, template: template.name, count: templateCount, error: message })
-          }
+          const { x, y, width, height } = region.box
+          if (width * height > 40_000_000 || width > 16384 || height > 16384) throw new Error('裁剪区域过大')
+          canvas.width = width; canvas.height = height
+          const context = canvas.getContext('2d')
+          if (!context) throw new Error('无法创建裁剪画布')
+          context.translate(-x, -y); context.clip(regionPath(region), 'evenodd')
+          context.drawImage(asset.element, 0, 0)
+          const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('图片导出失败')), 'image/png'))
+          check()
+          add(`${index + 1}_${safeName(item.file.name)}/slice-${String(region.id).padStart(3, '0')}.png`, new Uint8Array(await blob.arrayBuffer()))
+          count++; total++
+          onUpdate(item.id, { status: 'working', count })
+          await new Promise<void>(resolve => window.setTimeout(resolve, 0))
         }
+        report.push({ source: item.file.name, templates: templateNames, count })
       } catch (error) {
         check()
-        const message = error instanceof Error ? error.message : '图片读取失败'
+        const message = error instanceof Error ? error.message : '裁剪失败'
         errors.push(message)
-        report.push({ source: item.file.name, template: '', count, error: message })
+        report.push({ source: item.file.name, templates: templateNames, count, error: message })
       } finally { discardImageAsset(item.id) }
       onUpdate(item.id, { status: errors.length ? 'error' : 'done', count, error: errors.join('；') || undefined })
     }
