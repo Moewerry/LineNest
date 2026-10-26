@@ -9,7 +9,7 @@
   --color-popover: var(--card);
   --color-popover-foreground: var(--foreground);
   --color-primary: var(--primary);
-  --color-primary-foreground: var(--foreground);
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--foreground);
   --color-muted: var(--secondary);
@@ -32,7 +32,8 @@
   --background: #fafaf7;
   --foreground: #27272a;
   --card: #ffffff;
-  --primary: #a7e8cd;
+  --primary: #27272a;
+  --primary-foreground: #a7e8cd;
   --secondary: #f3f4f1;
   --accent: #e9f7f0;
   --muted-foreground: #71717a;
