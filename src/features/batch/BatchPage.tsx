@@ -7,6 +7,7 @@ import { BatchTemplatePicker } from './BatchTemplatePicker'
 import { BatchImageList } from './BatchImageList'
 import { BatchPreview } from './BatchPreview'
 import { useBatch } from './use-batch'
+import '@/features/editor/editor-theme.css'
 
 export function BatchPage() {
   const [params] = useSearchParams()
@@ -20,7 +21,7 @@ export function BatchPage() {
   const finished = batch.items.filter(item => item.status === 'done' || item.status === 'error').length
   const failed = batch.items.filter(item => item.status === 'error').length
 
-  return <div className="min-h-dvh bg-background">
+  return <div className="editor-workspace min-h-dvh bg-background">
     <header className="border-b"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-5">
       <div className="flex items-center gap-3"><Button asChild variant="ghost" size="icon-sm"><Link to="/editor" aria-label="返回工作台"><ArrowLeft /></Link></Button><h1 className="text-xl font-semibold">批量裁剪</h1></div>
       <span className="text-xs text-muted-foreground">添加图片 → 选择模板 → 裁剪下载</span>

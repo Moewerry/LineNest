@@ -21,10 +21,10 @@ export function batchDocument(item: BatchItem, template: BatchTemplate, fit: Bat
       if (axis === 'horizontal') { start.x = 0; end.x = item.width }
       if (axis === 'vertical') { start.y = 0; end.y = item.height }
       return [line.id, {
-      id: line.id, name: line.id, parentId: null, locked: false, type: 'line',
-      matrix: [1, 0, 0, 1, 0, 0],
-      start, end,
-    }]
+        id: line.id, name: line.id, parentId: null, locked: false, type: 'line',
+        matrix: [1, 0, 0, 1, 0, 0],
+        start, end,
+      }]
     })),
   }
 }

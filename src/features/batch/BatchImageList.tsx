@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { BatchItem } from './types'
 
-const status = (item: BatchItem) => item.status === 'working' ? '正在裁剪' : item.status === 'done' ? `完成 · ${item.count} 张` : item.status === 'error' ? `有失败${item.count ? ` · 已生成 ${item.count} 张` : ''}` : '待裁剪'
+const status = (item: BatchItem) => item.status === 'working' ? `正在裁剪 · ${item.count ?? 0} 张` : item.status === 'done' ? `完成 · ${item.count} 张` : item.status === 'error' ? `有失败${item.count ? ` · 已生成 ${item.count} 张` : ''}` : '待裁剪'
 
 export function BatchImageList({ items, active, disabled, onActive, onRemove }: {
   items: BatchItem[]; active?: string; disabled: boolean; onActive: (id: string) => void; onRemove: (id: string) => void

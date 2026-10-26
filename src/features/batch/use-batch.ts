@@ -22,6 +22,7 @@ export function useBatch(initialTemplate: string | null) {
   const urls = useRef(new Set<string>()), mounted = useRef(true)
   const operation = useRef(false), abort = useRef<AbortController | null>(null)
   const initialized = useRef(false)
+  const initialSelection = useRef(initialTemplate)
   useEffect(() => {
     mounted.current = true
     const subscription = liveQuery(listTemplates).subscribe({
@@ -29,7 +30,7 @@ export function useBatch(initialTemplate: string | null) {
         try {
           const valid = rows.map(row => ({ ...row, layout: validateLineTemplate(row.layout) }))
           setTemplates(previous => [...valid, ...previous.filter(row => row.id.startsWith('import-'))])
-          if (!initialized.current) { initialized.current = true; if (!initialTemplate && valid[0]) setSelected([valid[0].id]) }
+          if (!initialized.current) { initialized.current = true; if (!initialSelection.current && valid[0]) setSelected([valid[0].id]) }
           setTemplateError('')
         } catch (value) { setTemplateError(message(value)) }
         setLoading(false)
@@ -41,7 +42,7 @@ export function useBatch(initialTemplate: string | null) {
       mounted.current = false; subscription.unsubscribe(); abort.current?.abort()
       resources.forEach(url => URL.revokeObjectURL(url)); resources.clear()
     }
-  }, [initialTemplate])
+  }, [])
 
   const invalidate = () => { setResult(null); setError(''); setItems(rows => rows.map(row => ({ ...row, status: 'ready', error: undefined, count: undefined }))) }
   const addFiles = async (files: File[]) => {
@@ -60,7 +61,7 @@ export function useBatch(initialTemplate: string | null) {
           url = URL.createObjectURL(file); urls.current.add(url)
           const image = new Image(); image.src = url
           let timeout: ReturnType<typeof setTimeout> | undefined
-          try { await Promise.race([image.decode(), new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(new Error('图片读取超时')), 15000) })]) }
+          try { await Promise.race([image.decode().catch(() => { throw new Error('图片已损坏或格式不支持') }), new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(new Error('图片读取超时')), 15000) })]) }
           finally { clearTimeout(timeout) }
           if (!mounted.current) { URL.revokeObjectURL(url); urls.current.delete(url); break }
           if (!image.naturalWidth || !image.naturalHeight) throw new Error('图片尺寸无效')
@@ -123,7 +124,7 @@ export function useBatch(initialTemplate: string | null) {
     } catch (value) {
       if (mounted.current) {
         setError(controller.signal.aborted ? '已取消，可重新裁剪' : message(value))
-        setItems(rows => rows.map(row => row.status === 'working' ? { ...row, status: 'ready' } : row))
+        setItems(rows => rows.map(row => ({ ...row, status: !controller.signal.aborted && row.status === 'error' ? 'error' : 'ready', count: undefined, error: controller.signal.aborted ? undefined : row.error })))
       }
     } finally { operation.current = false; if (mounted.current) setRunning(false) }
   }

@@ -61,6 +61,7 @@ export async function exportBatch(items: BatchItem[], templates: BatchTemplate[]
               check()
               add(`${index + 1}_${safeName(item.file.name)}/${templateIndex + 1}_${safeName(template.name)}/slice-${String(region.id).padStart(3, '0')}.png`, new Uint8Array(await blob.arrayBuffer()))
               count++; templateCount++; total++
+              onUpdate(item.id, { status: 'working', count })
               await new Promise<void>(resolve => window.setTimeout(resolve, 0))
             }
             report.push({ source: item.file.name, template: template.name, count: templateCount })
