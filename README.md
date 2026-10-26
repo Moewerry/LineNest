@@ -8,9 +8,9 @@
 
 > 在线入口需在仓库启用 GitHub Pages 且部署成功后可用。当前以电脑端操作为主，移动端布局和触控手势尚未实现。
 
-## 演示视频
+## 操作演示
 
-[点击观看 LineNest 演示视频](media/linenest.mp4)
+![LineNest 操作演示](media/linenest.gif)
 
 ## 能做什么
 
