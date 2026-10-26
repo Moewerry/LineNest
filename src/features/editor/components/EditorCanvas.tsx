@@ -13,7 +13,6 @@ import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
 import { enterGroup, leaveGroup, rotateSelection } from '../commands'
 import { CanvasContextMenu } from './CanvasContextMenu'
-import { CanvasEmptyState } from './CanvasEmptyState'
 import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 
 type Gesture = { start: Point; current: Point } & (
@@ -25,7 +24,7 @@ type Gesture = { start: Point; current: Point } & (
 )
 const zero = { x: 0, y: 0 }
 
-export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boolean }) {
+export function EditorCanvas({ busy }: { busy: boolean }) {
   const container = useRef<HTMLDivElement>(null), stage = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 1, height: 1 })
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
@@ -49,6 +48,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
   useEffect(() => { fit(); updateGesture(null) }, [image?.id, size.width, size.height])
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      if (!useEditor.getState().present.doc.image) return
       if (isTextTarget(e.target)) return
       if (e.isComposing) return
       if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); setHorizontal(true) }
@@ -186,7 +186,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
       </Group></Layer>
-    </Stage> : <CanvasEmptyState onPick={onPick} busy={busy} />}
+    </Stage> : null}
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
       {snapshot.scope && <div className="absolute left-10 top-10"><Button variant="outline" size="sm" className="bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}

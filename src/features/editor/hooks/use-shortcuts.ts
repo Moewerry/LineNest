@@ -5,11 +5,20 @@ import { deleteSelection, duplicateSelection, enterGroup, groupSelection, leaveG
 export function isTextTarget(target: EventTarget | null) {
   return target instanceof HTMLElement && !!target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"]')
 }
-export function useShortcuts() {
+export function useShortcuts(enabled = true) {
   useEffect(() => {
+    if (!enabled) return
     const handle = (event: KeyboardEvent) => {
       if (isTextTarget(event.target) || event.isComposing || event.altKey) return
       const state = useEditor.getState(), key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey
+      if (!state.present.doc.image) {
+        // Undoing the initial import must still allow restoring it with redo.
+        if (mod && (key === 'y' || (key === 'z' && event.shiftKey)) && state.future.length) {
+          event.preventDefault()
+          state.redo()
+        }
+        return
+      }
       if (key === 'enter' && event.target instanceof HTMLElement && event.target.closest('button, [role="button"]')) return
       if (mod && key === 'a') { event.preventDefault(); state.select(childrenOf(state.present.doc, state.present.scope)) }
       else if (mod && key === 'z') { event.preventDefault(); event.shiftKey ? state.redo() : state.undo() }
@@ -32,5 +41,5 @@ export function useShortcuts() {
     }
     window.addEventListener('keydown', handle)
     return () => window.removeEventListener('keydown', handle)
-  }, [])
+  }, [enabled])
 }
