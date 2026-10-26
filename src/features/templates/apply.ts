@@ -1,24 +1,21 @@
 import { useEditor } from '@/features/editor/model/store'
-import { registerImage } from '@/lib/images'
 import type { ImageInfo } from '@/features/editor/model/types'
-import type { PreparedTemplate } from './portable'
-import { validateDocument } from './validation'
+import { validateLineTemplate, type LineTemplate } from './layout'
 import { normalizeSplitLines } from '@/features/editor/geometry'
 
-export const sameSize = (a: ImageInfo, b: ImageInfo) => a.width === b.width && a.height === b.height
+export const sameSize = (a: { width: number; height: number }, b: { width: number; height: number }) => a.width === b.width && a.height === b.height
 
-export async function applyTemplate(template: PreparedTemplate, currentImage: ImageInfo | null) {
-  const doc = validateDocument(template.doc)
-  if (currentImage) {
-    // Free lines retain their coordinates; full-image dividers are normalized below.
-    if (!sameSize(doc.image!, currentImage)) doc.crop = null
-    doc.image = currentImage
-  } else {
-    const image = await registerImage(template.blob, doc.image!.name)
-    if (!sameSize(doc.image!, image)) throw new Error('模板图片尺寸与布局不一致')
-    doc.image = image
-  }
-  normalizeSplitLines(doc)
-  useEditor.getState().commit(s => { s.doc = doc; s.selected = []; s.scope = null })
-  useEditor.getState().setTool('select')
+export function applyTemplate(template: LineTemplate, expectedImage: ImageInfo) {
+  const state = useEditor.getState(), image = state.present.doc.image
+  if (!image) throw new Error('请先导入图片，再套用线条模板')
+  if (image.id !== expectedImage.id || !sameSize(image, expectedImage)) throw new Error('当前图片已变化，请重新套用模板')
+  const layout = validateLineTemplate(template)
+  state.commit(snapshot => {
+    snapshot.doc.nodes = layout.nodes
+    snapshot.doc.roots = layout.roots
+    normalizeSplitLines(snapshot.doc)
+    snapshot.selected = []
+    snapshot.scope = null
+  })
+  state.setTool('select')
 }

@@ -1,58 +1,30 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { DocumentData } from '@/features/editor/model/types'
-import { getImageAsset } from '@/lib/images'
-import { canvasColors } from '@/lib/canvas-colors'
-import { validateDocument } from '@/features/templates/validation'
-import { segments } from '@/features/editor/geometry'
-import { drawMarkThumbnail } from '@/features/fill/thumbnail'
+import { lineTemplateFromDocument, validateLineTemplate, type LineTemplate } from '@/features/templates/layout'
 
-export type TemplateRecord = { id: string; name: string; imageId: string; doc: DocumentData; thumbnail: Blob; updatedAt: number }
+export type TemplateRecord = { id: string; name: string; layout: LineTemplate; updatedAt: number }
 const db = new Dexie('LineNest') as Dexie & {
   templates: EntityTable<TemplateRecord, 'id'>
-  images: EntityTable<{ id: string; blob: Blob }, 'id'>
 }
 db.version(1).stores({ templates: 'id, imageId, updatedAt', images: 'id' })
-
-async function thumbnailFor(doc: DocumentData): Promise<Blob> {
-  const asset = getImageAsset(doc.image?.id)
-  if (!asset) throw new Error('找不到原图，请重新导入')
-  const canvas = document.createElement('canvas'), scale = Math.min(240 / asset.element.naturalWidth, 150 / asset.element.naturalHeight, 1)
-  canvas.width = Math.max(1, Math.round(asset.element.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(asset.element.naturalHeight * scale))
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('无法生成预览')
-  context.drawImage(asset.element, 0, 0, canvas.width, canvas.height)
-  context.save()
-  context.scale(canvas.width / asset.element.naturalWidth, canvas.height / asset.element.naturalHeight)
-  drawMarkThumbnail(context, doc.marks ?? [], scale)
-  context.strokeStyle = canvasColors.selection; context.lineWidth = 1.5 / scale
-  for (const line of segments(doc)) {
-    context.beginPath(); context.moveTo(line.start.x, line.start.y); context.lineTo(line.end.x, line.end.y); context.stroke()
-  }
-  if (doc.crop) {
-    context.setLineDash([4 / scale, 3 / scale])
-    context.strokeRect(doc.crop.x, doc.crop.y, doc.crop.width, doc.crop.height)
-  }
-  context.restore()
-  return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('无法生成预览')), 'image/png'))
-}
+// Rewrite old records without original images, image thumbnails, crop or region marks.
+// Removing the images store releases the previously persisted originals as well.
+db.version(2).stores({ templates: 'id, updatedAt', images: null }).upgrade(async transaction => {
+  const table = transaction.table('templates')
+  const rows = await table.toArray() as { id: string; name: string; doc: DocumentData; updatedAt: number }[]
+  await table.bulkPut(rows.map(row => ({ id: row.id, name: row.name, layout: lineTemplateFromDocument(row.doc), updatedAt: row.updatedAt })))
+})
 
 export const listTemplates = () => db.templates.orderBy('updatedAt').reverse().toArray()
 export async function saveTemplate(name: string, source: DocumentData) {
-  const doc = validateDocument(source), image = doc.image!, asset = getImageAsset(image.id)
-  if (!asset) throw new Error('找不到原图，请重新导入')
   if (!name.trim()) throw new Error('请输入模板名称')
-  const thumbnail = await thumbnailFor(doc)
-  await db.transaction('rw', db.templates, db.images, async () => {
-    await db.images.put({ id: image.id, blob: asset.blob })
-    await db.templates.add({ id: crypto.randomUUID(), name: name.trim().slice(0, 80), imageId: image.id, doc, thumbnail, updatedAt: Date.now() })
-  })
+  const layout = lineTemplateFromDocument(source)
+  await db.templates.add({ id: crypto.randomUUID(), name: name.trim().slice(0, 80), layout, updatedAt: Date.now() })
 }
 export async function readTemplate(id: string) {
   const row = await db.templates.get(id)
   if (!row) throw new Error('模板不存在')
-  const image = await db.images.get(row.imageId)
-  if (!image) throw new Error('模板原图已丢失')
-  return { doc: validateDocument(row.doc), blob: image.blob }
+  return validateLineTemplate(row.layout)
 }
 export async function renameTemplate(id: string, name: string) {
   if (!name.trim()) throw new Error('请输入模板名称')
@@ -60,10 +32,5 @@ export async function renameTemplate(id: string, name: string) {
   if (!count) throw new Error('模板不存在')
 }
 export async function deleteTemplate(id: string) {
-  await db.transaction('rw', db.templates, db.images, async () => {
-    const row = await db.templates.get(id)
-    if (!row) return
-    await db.templates.delete(id)
-    if (await db.templates.where('imageId').equals(row.imageId).count() === 0) await db.images.delete(row.imageId)
-  })
+  await db.templates.delete(id)
 }

@@ -9,10 +9,10 @@ export function EditorSidebar({ disabled, open }: { disabled: boolean; open: boo
 
   return <aside aria-label="模板与图层" className={`${open ? 'flex' : 'hidden'} w-[320px] shrink-0 flex-col border-l bg-card`}>
     <Tabs defaultValue="templates" className="min-h-0 flex-1 gap-0">
-      <div className="flex h-16 shrink-0 items-center border-b px-3">
-        <TabsList data-editor-settings aria-label="侧边栏内容" className="w-full bg-secondary">
-          <TabsTrigger value="templates"><FolderOpen className="size-3.5" />模板<span className="rounded-full bg-secondary px-1.5 text-[10px] tabular-nums" aria-live="polite">{templateCount ?? '…'}</span></TabsTrigger>
-          <TabsTrigger value="layers"><Layers className="size-3.5" />图层</TabsTrigger>
+      <div className="flex shrink-0 items-center border-b px-3 py-4">
+        <TabsList data-editor-settings aria-label="侧边栏内容" className="h-12 w-full bg-secondary p-1.5">
+          <TabsTrigger className="h-full py-2" value="templates"><FolderOpen className="size-3.5" />模板<span className="rounded-full bg-secondary px-1.5 text-[10px] tabular-nums" aria-live="polite">{templateCount ?? '…'}</span></TabsTrigger>
+          <TabsTrigger className="h-full py-2" value="layers"><Layers className="size-3.5" />图层</TabsTrigger>
         </TabsList>
       </div>
       <TabsContent value="templates" forceMount className="flex flex-col"><TemplatePanel disabled={disabled} onCountChange={setTemplateCount} /></TabsContent>

@@ -1,25 +1,17 @@
-import type { DocumentData } from '@/features/editor/model/types'
 import { downloadBlob } from '@/lib/download'
+import { lineTemplateFromDocument, validateLineTemplate, type LineTemplate } from './layout'
 import { validateDocument } from './validation'
 
-export type PreparedTemplate = { doc: DocumentData; blob: Blob }
-export async function exportTemplate(name: string, doc: DocumentData, blob: Blob) {
-  const imageData = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error('读取原图失败'))
-    reader.readAsDataURL(blob)
-  })
-  const contents = JSON.stringify({ format: 'linenest', version: 1, document: doc, imageData })
+export function exportTemplate(name: string, template: LineTemplate) {
+  const contents = JSON.stringify({ format: 'linenest', version: 2, layout: validateLineTemplate(template) })
   downloadBlob(new Blob([contents], { type: 'application/json' }), `${name.replace(/[<>:"/\\|?*]/g, '-')}.linenest.json`)
 }
-export async function importTemplate(file: File): Promise<PreparedTemplate> {
+export async function importTemplate(file: File): Promise<LineTemplate> {
   if (file.size > 60 * 1024 * 1024) throw new Error('模板文件超过 60 MB')
   const value = JSON.parse(await file.text())
-  if (!value || value.format !== 'linenest' || value.version !== 1 || typeof value.imageData !== 'string') throw new Error('请选择 LineNest 模板文件')
-  const doc = validateDocument(value.document)
-  const match = /^data:(image\/(?:png|jpeg|webp|avif));base64,([A-Za-z0-9+/=]+)$/.exec(value.imageData)
-  if (!match) throw new Error('模板图片格式无效')
-  const bytes = Uint8Array.from(atob(match[2]), c => c.charCodeAt(0))
-  return { doc, blob: new Blob([bytes], { type: match[1] }) }
+  if (!value || value.format !== 'linenest') throw new Error('请选择 LineNest 模板文件')
+  if (value.version === 2) return validateLineTemplate(value.layout)
+  // Legacy backups are accepted only for their lines; embedded images are ignored.
+  if (value.version === 1) return lineTemplateFromDocument(validateDocument(value.document))
+  throw new Error('模板格式无效或版本不受支持')
 }
