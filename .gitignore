@@ -1,0 +1,15 @@
+# Ignore Markdown files except README.md (case-insensitive).
+*.[mM][dD]
+![rR][eE][aA][dD][mM][eE].[mM][dD]
+
+# Ignore docs directories and their contents.
+docs/
+
+node_modules/
+dist/
+.vite/
+*.local
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
