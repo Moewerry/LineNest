@@ -1,11 +1,11 @@
-import { ArrowUpRight, LockKeyhole, Scissors } from 'lucide-react'
+import { ArrowUpRight, LoaderCircle, LockKeyhole, Scissors } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { useEditor } from '@/features/editor/model/store'
 import { HomeAnimatedText } from './HomeAnimatedText'
+import { useHomeImageImport } from './HomeImageImport'
 
 export function HomeStartCard() {
-  const hasDocument = useEditor(s => !!s.present.doc.image)
+  const { busy } = useHomeImageImport()
 
   return <div className="relative mx-auto w-full max-w-[420px] lg:mr-0">
     <div aria-hidden="true" className="home-card-back absolute -inset-3 rotate-3 rounded-[28px] bg-primary/15 sm:-inset-4" />
@@ -19,7 +19,8 @@ export function HomeStartCard() {
         <p className="text-2xl font-semibold leading-snug tracking-tight"><HomeAnimatedText delay={100} stagger={40}>画一次，</HomeAnimatedText><br /><HomeAnimatedText delay={240} stagger={40}>整组复用。</HomeAnimatedText></p>
       </div>
       <p className="mb-7 text-sm leading-7 text-background/60"><HomeAnimatedText delay={380}>从画线到分图，简单顺手</HomeAnimatedText></p>
-      <Button asChild size="lg" className="home-card-action group h-14 w-full justify-between rounded-xl px-5 text-base shadow-none hover:bg-primary/90"><Link to="/editor">{hasDocument ? '继续编辑' : '开始分图'}<ArrowUpRight className="size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5" /></Link></Button>
+      {busy ? <Button size="lg" disabled className="home-card-action h-14 w-full justify-between rounded-xl px-5 text-base shadow-none">正在导入图片<LoaderCircle aria-hidden="true" className="size-5 animate-spin motion-reduce:animate-none" /></Button> : <Button asChild size="lg" className="home-card-action group h-14 w-full justify-between rounded-xl px-5 text-base shadow-none hover:bg-primary/90"><Link to="/editor"><HomeAnimatedText stagger={35}>进入工具台</HomeAnimatedText><ArrowUpRight aria-hidden="true" className="size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5" /></Link></Button>}
+      <p className="mt-3 text-center text-xs text-background/60" role={busy ? 'status' : undefined}>{busy ? '正在读取，请稍候' : '也可直接拖入图片，自动进入工具台'}</p>
       <p className="mt-5 flex items-center justify-center gap-2 text-[11px] text-background/55"><LockKeyhole aria-hidden="true" className="home-card-privacy-icon size-3 shrink-0" /><HomeAnimatedText delay={640} stagger={24}>图片留在本地，隐私更安心</HomeAnimatedText></p>
     </section>
   </div>

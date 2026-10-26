@@ -12,6 +12,8 @@ import { TopBar } from './TopBar'
 import { TemplateDialog } from '@/features/templates/TemplateDialog'
 import { ExportButton } from './ExportButton'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { useImageDrop } from '@/hooks/use-image-drop'
+import { ImageDropOverlay } from '@/components/ImageDropOverlay'
 
 export function Editor() {
   const [busy, setBusy] = useState(false), [pending, setPending] = useState<File | null>(null)
@@ -30,15 +32,17 @@ export function Editor() {
     finally { loading.current = false; setBusy(false) }
   }
   const requestImport = (file: File) => {
-    if (loading.current) return
+    if (loading.current || pending) return
     try { validateImage(file) } catch (error) { toast.error((error as Error).message); return }
     const { doc } = useEditor.getState().present
     if (doc.roots.length || doc.crop) setPending(file)
     else void load(file)
   }
-  return <main className="flex h-dvh min-w-[760px] flex-col overflow-hidden">
+  const { dragging, dropHandlers } = useImageDrop(requestImport, busy || !!pending)
+  return <main className="flex h-dvh min-w-[760px] flex-col overflow-hidden" {...dropHandlers}>
     <TopBar onImport={requestImport} busy={busy}><TemplateDialog disabled={busy} /><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起对象面板' : '打开对象面板'} aria-pressed={panelOpen} title={panelOpen ? '收起对象面板' : '打开对象面板'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
-    <div className="flex min-h-0 flex-1"><ToolBar /><EditorCanvas onPick={() => input.current?.click()} onDrop={requestImport} busy={busy} />{panelOpen && <ObjectPanel />}</div>
+    <div className="flex min-h-0 flex-1"><ToolBar /><EditorCanvas onPick={() => input.current?.click()} busy={busy} />{panelOpen && <ObjectPanel />}</div>
+    {dragging && <ImageDropOverlay />}
     <input ref={input} type="file" className="hidden" aria-label="导入图片" accept="image/png,image/jpeg,image/webp,image/avif" onChange={e => { const file = e.target.files?.[0]; if (file) requestImport(file); e.target.value = '' }} />
     <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条和裁剪选区将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => { const file = pending; setPending(null); if (file) void load(file) }}>替换图片</Button></DialogFooter></DialogContent></Dialog>
   </main>

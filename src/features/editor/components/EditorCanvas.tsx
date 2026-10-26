@@ -23,12 +23,12 @@ type Gesture = { start: Point; current: Point } & (
 )
 const zero = { x: 0, y: 0 }
 
-export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onDrop: (file: File) => void; busy: boolean }) {
+export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boolean }) {
   const container = useRef<HTMLDivElement>(null), stage = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 1, height: 1 })
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
   const [gesture, setGesture] = useState<Gesture | null>(null), gestureRef = useRef<Gesture | null>(null)
-  const [space, setSpace] = useState(false), [dropping, setDropping] = useState(false)
+  const [space, setSpace] = useState(false)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value) }
@@ -143,9 +143,8 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
   const preview = gesture?.type === 'rotate' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
-  return <CanvasContextMenu disabled={busy}><div ref={container} tabIndex={0} role="region" aria-label="编辑画布" className={`canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring ${dropping ? 'ring-2 ring-inset ring-ring' : ''}`} style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
-    onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}
-    onDragOver={e => { e.preventDefault(); setDropping(true) }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropping(false) }} onDrop={e => { e.preventDefault(); setDropping(false); const file = e.dataTransfer.files[0]; if (file && !busy) onDrop(file) }}>
+  return <CanvasContextMenu disabled={busy}><div ref={container} tabIndex={0} role="region" aria-label="编辑画布" className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+    onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (tool !== 'select') return
       const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)

@@ -57,16 +57,15 @@
 
 .home-page {
   /* Reveal the remaining text after the cards, scissors, button and divider settle. */
-  --home-back-duration: 700ms;
-  --home-front-delay: 160ms;
-  --home-front-duration: 800ms;
+  --home-back-duration: 560ms;
+  --home-front-delay: 120ms;
+  --home-front-duration: 640ms;
   --home-icon-delay: calc(var(--home-front-delay) + var(--home-front-duration));
   --home-icon-duration: 360ms;
   --home-content-start: calc(var(--home-icon-delay) + var(--home-icon-duration) + 80ms);
 }
 
-.home-header,
-.home-hero-mark {
+.home-header {
   animation: home-soft-enter 180ms ease-out backwards;
 }
 
@@ -75,7 +74,9 @@
 }
 
 .home-header { animation-delay: var(--home-content-start); }
-.home-hero-mark { animation-delay: calc(var(--home-content-start) + 30ms); }
+.home-hero-mark {
+  animation: home-mark-fly-in 520ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--home-content-start) + 30ms) backwards;
+}
 .home-card-privacy-icon { animation-delay: calc(var(--home-content-start) + 640ms); }
 
 .home-card-label {
@@ -86,8 +87,31 @@
   animation: home-dot-pop 480ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--home-content-start) + 240ms) backwards;
 }
 
-.home-text-character {
-  animation: home-character-pop 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+.home-typing-cursor::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 0.15em;
+  bottom: 0.1em;
+  width: 1px;
+  background: currentColor;
+}
+
+.home-hero-line {
+  animation: home-hero-fade-left 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--home-content-start) both;
+}
+
+.home-hero-title-line {
+  animation-duration: 1600ms;
+  animation-delay: 0ms;
+  animation-timing-function: ease-out;
+}
+.home-hero-line-third { animation-delay: calc(var(--home-content-start) + 240ms); }
+.home-hero-line-fourth { animation-delay: calc(var(--home-content-start) + 360ms); }
+
+@keyframes home-hero-fade-left {
+  from { opacity: 0; transform: translateX(36px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .home-workflow-divider {
@@ -95,11 +119,19 @@
 }
 
 .home-workflow-step {
-  animation: home-workflow-enter 360ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--home-content-start) + 180ms) backwards;
+  --home-step-delay: 180ms;
 }
 
-.home-workflow-step:nth-child(2) { animation-delay: calc(var(--home-content-start) + 280ms); }
-.home-workflow-step:nth-child(3) { animation-delay: calc(var(--home-content-start) + 380ms); }
+.home-workflow-step:nth-child(2) { --home-step-delay: 280ms; }
+.home-workflow-step:nth-child(3) { --home-step-delay: 380ms; }
+
+.home-workflow-content {
+  animation: home-workflow-enter 360ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--home-content-start) + var(--home-step-delay)) backwards;
+}
+
+.home-workflow-number {
+  animation: home-number-slide-in 440ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--home-content-start) + var(--home-step-delay)) backwards;
+}
 
 .home-card-back {
   animation: home-back-fly-in var(--home-back-duration) cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -117,6 +149,10 @@
   animation: home-action-fly-in var(--home-icon-duration) cubic-bezier(0.12, 0.8, 0.2, 1) var(--home-icon-delay) backwards;
 }
 
+.home-brand-icon {
+  animation: home-action-fly-in var(--home-icon-duration) cubic-bezier(0.12, 0.8, 0.2, 1) var(--home-content-start) backwards;
+}
+
 @keyframes home-soft-enter {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -132,11 +168,16 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes home-character-pop {
-  from { opacity: 0; transform: translateY(0.65em) scale(0.8); }
-  60% { opacity: 1; transform: translateY(-0.12em) scale(1.06); }
-  82% { opacity: 1; transform: translateY(0.04em) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes home-number-slide-in {
+  from { opacity: 0; transform: translateX(-56px) rotate(-16deg) scale(0.8); }
+  72% { opacity: 1; transform: translateX(3px) rotate(2deg) scale(1.05); }
+  to { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
+}
+
+@keyframes home-mark-fly-in {
+  from { opacity: 0; transform: translate(-56px, 48px) rotate(-150deg) scale(0.3); }
+  78% { opacity: 1; transform: translate(3px, -4px) rotate(12deg) scale(1.1); }
+  to { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
 }
 
 @keyframes home-label-pop {
