@@ -1,6 +1,7 @@
 # Ignore Markdown files except README.md (case-insensitive).
 *.[mM][dD]
 ![rR][eE][aA][dD][mM][eE].[mM][dD]
+!THIRD_PARTY.md
 
 # Ignore docs directories and their contents.
 docs/
