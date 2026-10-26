@@ -52,6 +52,30 @@ export function segments(doc: DocumentData, ids = doc.roots): Segment[] {
     return [{ id, start: apply(m, node.start), end: apply(m, node.end) }]
   })
 }
+export function containsSplit(doc: DocumentData, ids: string[]): boolean {
+  return segments(doc, ids).some(segment => {
+    const node = doc.nodes[segment.id]
+    return node.type === 'line' && !!node.splitAxis
+  })
+}
+
+// Store full-image endpoints in local coordinates, including inside groups.
+export function normalizeSplitLines(doc: DocumentData) {
+  const image = doc.image
+  if (!image) return
+  for (const segment of segments(doc)) {
+    const node = doc.nodes[segment.id]
+    if (node.type !== 'line' || !node.splitAxis) continue
+    const horizontal = node.splitAxis === 'horizontal'
+    const limit = horizontal ? image.height : image.width
+    const coordinate = horizontal ? (segment.start.y + segment.end.y) / 2 : (segment.start.x + segment.end.x) / 2
+    const position = Math.max(0, Math.min(limit, Math.round(coordinate)))
+    const parent = inverse(worldMatrix(doc, node.parentId))
+    node.matrix = identity()
+    node.start = apply(parent, horizontal ? { x: 0, y: position } : { x: position, y: 0 })
+    node.end = apply(parent, horizontal ? { x: image.width, y: position } : { x: position, y: image.height })
+  }
+}
 export function bounds(doc: DocumentData, ids: string[]): Box | null {
   const points = segments(doc, ids).flatMap(s => [s.start, s.end])
   if (!points.length) return null

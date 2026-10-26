@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { apply, childrenOf, containsLocked, identity, inverse, isLocked, multiply, translation, worldMatrix } from '../geometry'
-import { emptySnapshot, type Box, type ImageInfo, type Matrix, type Point, type Snapshot, type Tool } from './types'
+import { apply, childrenOf, containsLocked, containsSplit, identity, inverse, isLocked, multiply, normalizeSplitLines, segments, translation, worldMatrix } from '../geometry'
+import { emptySnapshot, type Box, type ImageInfo, type Matrix, type Point, type Snapshot, type SplitAxis, type Tool } from './types'
 
 type EditorState = {
   present: Snapshot; past: Snapshot[]; future: Snapshot[]; tool: Tool
@@ -8,7 +8,7 @@ type EditorState = {
   setTool: (tool: Tool) => void
   setImage: (image: ImageInfo) => void
   select: (ids: string[]) => void
-  addLine: (start: Point, end: Point) => void
+  addLine: (start: Point, end: Point, splitAxis?: SplitAxis) => void
   move: (delta: Point) => void
   endpoint: (id: string, end: 'start' | 'end', point: Point) => void
   setCrop: (crop: Box | null) => void
@@ -16,10 +16,12 @@ type EditorState = {
 }
 export function transformSelection(draft: Snapshot, matrix: Matrix) {
   if (draft.selected.some(id => containsLocked(draft.doc, id))) return
+  if (containsSplit(draft.doc, draft.selected) && (matrix[0] !== 1 || matrix[1] !== 0 || matrix[2] !== 0 || matrix[3] !== 1)) return
   for (const id of draft.selected) {
     const node = draft.doc.nodes[id], parent = worldMatrix(draft.doc, node.parentId)
     node.matrix = multiply(multiply(multiply(inverse(parent), matrix), parent), node.matrix)
   }
+  normalizeSplitLines(draft.doc)
 }
 export const useEditor = create<EditorState>((set, get) => ({
   present: emptySnapshot(), past: [], future: [], tool: 'split',
@@ -40,11 +42,15 @@ export const useEditor = create<EditorState>((set, get) => ({
       draft.selected = [...new Set(ids)].filter(id => allowed.includes(id) && !isLocked(draft.doc, id))
     })
   },
-  addLine(start, end) {
+  addLine(start, end, splitAxis) {
     get().commit(draft => {
       if (!draft.doc.image || (draft.scope && isLocked(draft.doc, draft.scope))) return
+      if (splitAxis && segments(draft.doc).some(segment => {
+        const node = draft.doc.nodes[segment.id]
+        return node.type === 'line' && node.splitAxis === splitAxis && (splitAxis === 'horizontal' ? segment.start.y === start.y : segment.start.x === start.x)
+      })) return
       const id = crypto.randomUUID(), parent = inverse(worldMatrix(draft.doc, draft.scope))
-      draft.doc.nodes[id] = { id, type: 'line', name: '线条', parentId: draft.scope, matrix: identity(), locked: false, start: apply(parent, start), end: apply(parent, end) }
+      draft.doc.nodes[id] = { id, type: 'line', name: splitAxis ? splitAxis === 'horizontal' ? '横向分割线' : '竖向分割线' : '线条', parentId: draft.scope, matrix: identity(), locked: false, start: apply(parent, start), end: apply(parent, end), ...(splitAxis ? { splitAxis } : {}) }
       childrenOf(draft.doc, draft.scope).push(id)
       draft.selected = [id]
     })
@@ -53,7 +59,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   endpoint(id, end, point) {
     get().commit(draft => {
       const node = draft.doc.nodes[id]
-      if (node?.type !== 'line' || isLocked(draft.doc, id)) return
+      if (node?.type !== 'line' || node.splitAxis || isLocked(draft.doc, id)) return
       node[end] = apply(inverse(worldMatrix(draft.doc, id)), point)
     })
   },

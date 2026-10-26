@@ -3,6 +3,7 @@ import { registerImage } from '@/lib/images'
 import type { ImageInfo } from '@/features/editor/model/types'
 import type { PreparedTemplate } from './portable'
 import { validateDocument } from './validation'
+import { normalizeSplitLines } from '@/features/editor/geometry'
 
 export const sameSize = (a: ImageInfo, b: ImageInfo) => a.width === b.width && a.height === b.height
 
@@ -17,6 +18,7 @@ export async function applyTemplate(template: PreparedTemplate, currentImage: Im
     if (!sameSize(doc.image!, image)) throw new Error('模板图片尺寸与布局不一致')
     doc.image = image
   }
+  normalizeSplitLines(doc)
   useEditor.getState().commit(s => { s.doc = doc; s.selected = []; s.scope = null })
   useEditor.getState().setTool('select')
 }

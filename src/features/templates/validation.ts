@@ -22,7 +22,10 @@ export function validateDocument(value: unknown): DocumentData {
     if (!record(n) || n.id !== id || !text(id) || !text(n.name) || (n.parentId !== null && !text(n.parentId)) || typeof n.locked !== 'boolean') return fail()
     const m = n.matrix
     if (!Array.isArray(m) || m.length !== 6 || !m.every(finite) || Math.abs(m[0] * m[3] - m[1] * m[2]) < 1e-12) return fail()
-    if (n.type === 'line') { if (!point(n.start) || !point(n.end)) return fail() }
+    if (n.type === 'line') {
+      if (!point(n.start) || !point(n.end)) return fail()
+      if (n.splitAxis !== undefined && n.splitAxis !== 'horizontal' && n.splitAxis !== 'vertical') return fail()
+    }
     else if (n.type === 'group') { if (!strings(n.children)) return fail() }
     else return fail()
   }

@@ -90,7 +90,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
       const x = Math.max(1, Math.min(image.width - 1, Math.round(p.x)))
       const y = Math.max(1, Math.min(image.height - 1, Math.round(p.y)))
       if (horizontal ? image.height <= 1 : image.width <= 1) return
-      state.addLine(horizontal ? { x: 0, y } : { x, y: 0 }, horizontal ? { x: image.width, y } : { x, y: image.height })
+      state.addLine(horizontal ? { x: 0, y } : { x, y: 0 }, horizontal ? { x: image.width, y } : { x, y: image.height }, horizontal ? 'horizontal' : 'vertical')
       return
     }
     if (hit === 'rotate-handle') {
@@ -157,11 +157,12 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
       return { scale, x: p.x - (p.x - v.x) * ratio, y: p.y - (p.y - v.y) * ratio }
     })
   }
-  const delta = gesture?.type === 'move' ? { x: gesture.current.x - gesture.start.x, y: gesture.current.y - gesture.start.y } : zero
+  const delta = zero
   const marquee: Box | null = gesture && (gesture.type === 'box' || gesture.type === 'crop') ? boxBetween(gesture.start, gesture.current) : null
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
-  const preview = gesture?.type === 'rotate' ? structuredClone(snapshot) : snapshot
+  const preview = gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
+  if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
   return <CanvasContextMenu disabled={busy}><div ref={container} tabIndex={0} role="region" aria-label="编辑画布" className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
