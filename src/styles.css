@@ -50,7 +50,7 @@
 }
 
 .canvas-surface {
-  background-color: #eee9e0;
+  background-color: #ffffff;
   background-image: radial-gradient(circle, #cfc6b9 0.8px, transparent 0.8px);
   background-size: 20px 20px;
 }

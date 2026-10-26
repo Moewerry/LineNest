@@ -2,7 +2,7 @@ import { ImagePlus, LoaderCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function CanvasEmptyState({ onPick, busy, dragging }: { onPick: () => void; busy: boolean; dragging: boolean }) {
-  return <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/65 px-12 py-10 backdrop-blur-md">
+  return <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/65 px-12 py-10 backdrop-blur-md">
     <section aria-labelledby="image-import-heading" aria-busy={busy} className="w-full max-w-3xl">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-12 lg:gap-24">
         <div>
