@@ -21,6 +21,7 @@ import { FillSettings } from '@/features/fill/FillSettings'
 import { RegionMarkLayer } from '@/features/fill/RegionMarkLayer'
 import { containsPoint } from '@/features/fill/geometry'
 import { useFillRegions } from '@/features/fill/use-fill-regions'
+import { fillCursors } from '@/features/fill/cursors'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -208,7 +209,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   const preview = gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
-  return <CanvasContextMenu disabled={busy}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+  return <CanvasContextMenu disabled={busy}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : 'crosshair' }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (tool !== 'select' || spaceRef.current) return
