@@ -2,8 +2,6 @@ import { useEffect, useId, useState, type MouseEvent } from 'react'
 import { Eraser, PaintBucket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
-import { ShortcutKeys } from '@/features/editor/components/ShortcutKeys'
 import { useEditor } from '@/features/editor/model/store'
 
 type Props = { busy: boolean; loading: boolean; error: string }
@@ -24,7 +22,7 @@ export function FillSettings({ busy, loading, error }: Props) {
     if (event.detail > 0) (event.currentTarget.closest('[data-canvas-shortcuts]') as HTMLElement | null)?.focus({ preventScroll: true })
   }
 
-  return <section data-editor-settings aria-label="裁切标记设置" className="pointer-events-auto w-80 max-w-full rounded-xl border bg-card p-4 shadow-sm">
+  return <section aria-label="色块标记选项">
     <div className="flex items-center justify-between gap-3">
       <h2 className="text-xs font-semibold">标记设置</h2>
       <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary">已标记 {count} 块</span>
@@ -57,9 +55,6 @@ export function FillSettings({ busy, loading, error }: Props) {
         </div>
       </div>
     </div>
-    <Separator className="my-3" />
-    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground"><span>标错了？按</span><ShortcutKeys keys={['Ctrl', 'Z']} /><span>撤销上一步</span></div>
-    <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">颜色只帮助你识别区域，导出的图片保留原色。</p>
     {loading && <p role="status" className="mt-2 text-[11px] text-muted-foreground">正在识别分割区域…</p>}
     {error && <p role="alert" className="mt-2 text-[11px] leading-relaxed text-destructive">{error}</p>}
   </section>

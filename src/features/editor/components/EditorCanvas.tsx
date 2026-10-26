@@ -17,7 +17,7 @@ import { CanvasModeStatus } from './CanvasModeStatus'
 import { displaySegment } from '../geometry/display-segment'
 import { CanvasViewControls } from './CanvasViewControls'
 import { toast } from 'sonner'
-import { FillSettings } from '@/features/fill/FillSettings'
+import { FloatingFillSettings } from '@/features/fill/FloatingFillSettings'
 import { RegionMarkLayer } from '@/features/fill/RegionMarkLayer'
 import { containsPoint } from '@/features/fill/geometry'
 import { useFillRegions } from '@/features/fill/use-fill-regions'
@@ -239,10 +239,10 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
       <div className="pointer-events-none absolute left-10 right-5 top-10 flex flex-wrap items-start gap-2">
         <div className="flex min-w-0 max-w-full flex-col gap-2">
           <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
-          {tool === 'fill' && <FillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
         </div>
         {snapshot.scope && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button>}
       </div>
+      {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
       <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}{snapshot.doc.marks?.length ? ` · 标记 ${snapshot.doc.marks.length} 块` : ''}</div>
       <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} onZoom={zoom} onFit={fit} onRotate={onRotateImage} />
     </>}

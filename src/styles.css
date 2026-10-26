@@ -44,7 +44,7 @@
   --notification-border: #fdba74;
   --notification-foreground: #c2410c;
   --notification-success-background: #ffffff;
-  --notification-success-border: var(--primary);
+  --notification-success-border: var(--notification-success-icon);
   --notification-success-foreground: #00875f;
   --notification-success-icon: #00875f;
   --notification-error-background: var(--primary);

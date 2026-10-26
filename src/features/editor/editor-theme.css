@@ -9,3 +9,21 @@ body:has(.editor-workspace) {
   --muted-foreground: #737373;
   --border: #e5e5e5;
 }
+
+.fill-settings-reveal[data-state="open"] {
+  animation: fill-settings-expand 180ms ease-out;
+}
+
+.fill-settings-reveal[data-state="closed"] {
+  animation: fill-settings-collapse 180ms ease-in;
+}
+
+@keyframes fill-settings-expand {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-collapsible-content-height); opacity: 1; }
+}
+
+@keyframes fill-settings-collapse {
+  from { height: var(--radix-collapsible-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
+}
