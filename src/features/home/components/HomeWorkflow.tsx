@@ -14,7 +14,7 @@ export function HomeWorkflow() {
       {steps.map(({ number, icon: Icon, title, description }, index) => <li key={number} className="home-workflow-step flex items-start gap-4">
         <span className="home-workflow-number inline-block shrink-0 font-mono text-lg leading-5 text-primary">{number}</span>
         <div className="home-workflow-content"><h2 className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 shrink-0 text-black" strokeWidth={1.6} /><HomeAnimatedText className="text-foreground" delay={400 + index * 100}>{title}</HomeAnimatedText></h2>
-        <p className="mt-1 text-xs leading-5 text-foreground"><HomeAnimatedText delay={540 + index * 100} stagger={20}>{description}</HomeAnimatedText></p></div>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground"><HomeAnimatedText delay={540 + index * 100} stagger={20}>{description}</HomeAnimatedText></p></div>
       </li>)}
     </ol>
   </section>

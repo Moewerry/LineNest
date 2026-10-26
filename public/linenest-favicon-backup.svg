@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <title>LineNest</title>
+  <rect width="40" height="40" rx="10" fill="#BD3E1C"/>
+  <g stroke="#FFFAF4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 10v18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V18"/>
+    <path d="M16 24V16l8 8V10"/>
+    <path d="M10 10h7"/>
+  </g>
+  <rect x="28" y="8" width="4" height="4" rx="1" fill="#F1D66A"/>
+</svg>

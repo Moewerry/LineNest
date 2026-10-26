@@ -15,7 +15,7 @@ export function HomeStartCard() {
       </div>
       <div className="mb-8 mt-10 flex items-center gap-5">
         <div className="home-card-icon flex size-20 shrink-0 -rotate-6 items-center justify-center rounded-[22px] bg-primary text-primary-foreground"><Scissors aria-hidden="true" className="size-10" strokeWidth={1.4} /></div>
-        <p className="text-2xl font-semibold leading-snug tracking-tight"><HomeAnimatedText delay={100} stagger={40}>画一次，</HomeAnimatedText><br /><HomeAnimatedText delay={240} stagger={40}>整组复用。</HomeAnimatedText></p>
+        <p className="text-2xl font-semibold leading-snug tracking-[0.04em]"><HomeAnimatedText delay={100} stagger={40}>画一次，</HomeAnimatedText><br /><HomeAnimatedText delay={240} stagger={40}>整组复用。</HomeAnimatedText></p>
       </div>
       <p className="mb-7 text-sm leading-7 text-white"><HomeAnimatedText delay={380}>从画线到分图，简单顺手</HomeAnimatedText></p>
       <Button size="lg" disabled={busy} onClick={pickImage} className="home-card-action group h-14 w-full justify-center gap-2 rounded-xl px-5 text-center text-base shadow-none hover:bg-primary/90">{busy ? '正在导入图片' : <HomeAnimatedText stagger={35}>上传图片</HomeAnimatedText>}{busy ? <LoaderCircle aria-hidden="true" className="size-5 animate-spin motion-reduce:animate-none" /> : <Upload aria-hidden="true" className="size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5" />}</Button>
