@@ -9,10 +9,9 @@ import { useEditor } from '../model/store'
 import { useShortcuts } from '../hooks/use-shortcuts'
 import { useMissingImageHint } from '../hooks/use-missing-image-hint'
 import { EditorCanvas } from './EditorCanvas'
-import { ObjectPanel } from './ObjectPanel'
+import { EditorSidebar } from './EditorSidebar'
 import { ToolBar } from './ToolBar'
 import { TopBar } from './TopBar'
-import { TemplateDialog } from '@/features/templates/TemplateDialog'
 import { ExportButton } from './ExportButton'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useImageDrop } from '@/hooks/use-image-drop'
@@ -80,8 +79,8 @@ export function Editor() {
   }
   return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground [&_button:disabled]:pointer-events-auto" {...dropHandlers} onPointerDownCapture={missingImageHint.onPointerDownCapture}>
     <div inert={showImageImport && !image} aria-hidden={showImageImport && !image ? true : undefined} className="flex min-h-0 flex-1 flex-col">
-      <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><TemplateDialog disabled={busy} /><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起对象面板' : '打开对象面板'} aria-pressed={panelOpen} title={panelOpen ? '收起对象面板' : '打开对象面板'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
-      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} />{panelOpen && <ObjectPanel />}</div>
+      <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起侧边栏' : '打开侧边栏'} aria-pressed={panelOpen} title={panelOpen ? '收起侧边栏' : '打开侧边栏'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
+      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} /><EditorSidebar disabled={busy} open={panelOpen} /></div>
     </div>
     {showImageImport && !image && <CanvasEmptyState onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
     {!(showImageImport && !image) && dragging && <ImageDropOverlay />}
