@@ -7,7 +7,7 @@ import { HomeFooter } from './HomeFooter'
 export function HomePage() {
   return <HomeImageImport>
     <HomeHeader />
-    <main className="mx-auto flex w-full max-w-[1320px] flex-1 flex-col px-6 sm:px-10 lg:px-14">
+    <main className="mx-auto flex w-full max-w-[1320px] flex-1 flex-col px-6 sm:pb-36 sm:px-10 lg:pb-28 lg:px-14">
       <HomeHero />
       <HomeWorkflow />
     </main>

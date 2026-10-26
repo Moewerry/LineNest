@@ -197,12 +197,16 @@
 @keyframes home-back-fly-in {
   from { opacity: 0; transform: translate(-100vw, calc(-100vh - 100%)) rotate(-38deg); }
   12% { opacity: 1; }
+  74% { transform: translate(-8px, 5px) rotate(8deg); }
+  86% { transform: translate(2px, -2px) rotate(-3deg); }
   to { opacity: 1; transform: translate(0, 0) rotate(0); }
 }
 
 @keyframes home-front-fly-in {
   from { opacity: 0; transform: translate(100vw, 100vh) rotate(42deg); }
   12% { opacity: 1; }
+  74% { transform: translate(8px, -5px) rotate(-6deg); }
+  86% { transform: translate(-2px, 2px) rotate(2deg); }
   to { opacity: 1; transform: translate(0, 0) rotate(0); }
 }
 
