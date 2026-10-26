@@ -8,8 +8,12 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
   const Icon = temporary ? Hand : mode.icon
   const instructions: ToolInstruction[] = temporary
     ? [
-      { action: panSource === 'middle' ? '按住鼠标中键' : '按住空格和左键', result: '拖动整张画布' },
-      { action: panSource === 'middle' ? '松开中键' : '松开空格', result: `继续使用「${mode.label}」` },
+      panSource === 'middle'
+        ? { action: '按住鼠标中键', result: '拖动整张画布' }
+        : { action: '按住', keys: ['空格'], gesture: '＋左键', result: '拖动整张画布' },
+      panSource === 'middle'
+        ? { action: '松开中键', result: `继续使用「${mode.label}」` }
+        : { action: '松开', keys: ['空格'], result: `继续使用「${mode.label}」` },
     ]
     : tool === 'fill' && erasing
       ? [
@@ -28,7 +32,7 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <p className="text-base font-semibold leading-5">{temporary ? '临时移动画布' : tool === 'fill' && erasing ? '清除色块标记' : mode.label}</p>
-          {!temporary && <ShortcutKeys keys={[mode.shortcut]} variant="plain" />}
+          {!temporary && <ShortcutKeys keys={[mode.shortcut]} variant="highlight" />}
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{temporary ? '松开后继续使用当前工具。' : mode.description}</p>
       </div>
@@ -38,14 +42,14 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         <span className="font-medium">{instruction.result}</span>
         <span className="flex flex-wrap items-center justify-end gap-1 text-foreground">
           <span>{instruction.action}</span>
-          {instruction.keys && <ShortcutKeys keys={instruction.keys} variant="plain" />}
+          {instruction.keys && <ShortcutKeys keys={instruction.keys} variant="highlight" />}
           {instruction.gesture && <span>{instruction.gesture}</span>}
         </span>
       </div>)}
     </div>
     {!temporary && tool === 'pan' ? <div className="flex items-start gap-1.5 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
         <Hand aria-hidden="true" className="mt-0.5 size-3 shrink-0" />
-        <span>在其他模式下，按住空格并用鼠标左键拖动，可临时移动画布。</span>
+        <span>在其他模式下，按住 <ShortcutKeys keys={['空格']} variant="highlight" /> 并用鼠标左键拖动，可临时移动画布。</span>
       </div>
     : <div className="h-3" />}
   </div>
