@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { getImageAsset } from '@/lib/images'
+import { canvasColors } from '@/lib/canvas-colors'
 import type { DocumentData } from '@/features/editor/model/types'
 import { regionPath } from './export'
 import type { SliceResult } from './types'
@@ -18,14 +19,14 @@ export function SlicePreview({ doc, result, selected }: { doc: DocumentData; res
     context.drawImage(asset.element, 0, 0)
     for (const region of result.regions) {
       const path = regionPath(region), included = selected.has(region.id)
-      context.fillStyle = included ? '#a7e8cd44' : '#ffffffbb'
+      context.fillStyle = included ? canvasColors.previewFill : '#ffffffbb'
       context.fill(path, 'evenodd')
-      context.strokeStyle = included ? '#237a60' : '#a1a1aa'; context.lineWidth = 1.5 / scale; context.stroke(path)
+      context.strokeStyle = included ? canvasColors.selection : '#a1a1aa'; context.lineWidth = 1.5 / scale; context.stroke(path)
     }
     context.font = `600 ${11 / scale}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle'
     for (const region of result.regions) {
       context.beginPath(); context.arc(region.label.x, region.label.y, 11 / scale, 0, Math.PI * 2)
-      context.fillStyle = selected.has(region.id) ? '#27272a' : '#71717a'; context.fill()
+      context.fillStyle = selected.has(region.id) ? canvasColors.ink : '#71717a'; context.fill()
       context.fillStyle = 'white'; context.fillText(String(region.id), region.label.x, region.label.y)
     }
   }, [doc, result, selected])

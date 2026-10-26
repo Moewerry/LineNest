@@ -4,6 +4,7 @@ import type Konva from 'konva'
 import { ImagePlus, Maximize, Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getImageAsset } from '@/lib/images'
+import { canvasColors } from '@/lib/canvas-colors'
 import { bounds, boxBetween, childrenOf, containsLocked, inBox, isLocked, rotationAround, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
 import { transformSelection, useEditor } from '../model/store'
 import type { Box, Point } from '../model/types'
@@ -157,8 +158,8 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
         <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} />
-        {snapshot.doc.crop && <Rect {...snapshot.doc.crop} stroke="#237a60" strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill="#a7e8cd16" listening={false} />}
-        {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke="#237a60" strokeWidth={2 / view.scale} listening={false} />}
+        {snapshot.doc.crop && <Rect {...snapshot.doc.crop} stroke={canvasColors.selection} strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
+        {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={2 / view.scale} listening={false} />}
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
       </Group></Layer>
