@@ -46,7 +46,8 @@ export async function exportBatch(items: BatchItem[], templates: BatchTemplate[]
           try {
             const doc = batchDocument(item, template, fit)
             const result = await calculateSlices(doc, signal)
-            if (!result.regions.length) throw new Error('没有可裁剪区域')
+            if (result.regions.length < 2) throw new Error('模板未分出多个区域，请检查尺寸和位置')
+            if (result.unusedEdges > 0) throw new Error('部分线条未围成区域，请调整位置后重试')
             for (const region of result.regions) {
               check()
               const { x, y, width, height } = region.box
