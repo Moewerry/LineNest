@@ -86,7 +86,7 @@ export function TemplateDialog({ disabled }: { disabled: boolean }) {
       <DialogTitle>{confirmation?.type === 'delete' ? '删除这个模板？' : confirmation?.currentImage ? '套用到当前图片？' : '加载这个模板？'}</DialogTitle>
       <DialogDescription>{confirmation?.type === 'delete' ? '删除后无法从模板列表恢复，当前画布不受影响。' : confirmation?.currentImage ? '保留当前图片，替换线条和组群布局。套用后可以撤销。' : '将替换当前图片和布局。加载后可以撤销恢复。'}</DialogDescription>
     </DialogHeader>
-      {confirmation?.type === 'load' && confirmation.currentImage && !sameSize(confirmation.template.doc.image!, confirmation.currentImage) && <div className="space-y-2 rounded-lg border bg-secondary p-3 text-xs leading-6"><p>模板尺寸：{confirmation.template.doc.image!.width} × {confirmation.template.doc.image!.height}<br />当前图片：{confirmation.currentImage.width} × {confirmation.currentImage.height}</p><p>尺寸不同。线条保留原坐标，不缩放；裁剪选区将清空。超出图片的线条会隐藏，可手动移回。</p></div>}
+      {confirmation?.type === 'load' && confirmation.currentImage && !sameSize(confirmation.template.doc.image!, confirmation.currentImage) && <div className="space-y-2 rounded-lg border bg-secondary p-3 text-xs leading-6"><p>模板尺寸：{confirmation.template.doc.image!.width} × {confirmation.template.doc.image!.height}<br />当前图片：{confirmation.currentImage.width} × {confirmation.currentImage.height}</p><p>尺寸不同。自由线条保留原坐标，不缩放，超出部分会隐藏；分割线保持方向和分割坐标，超出范围时限制到边界，并延伸至当前图片两侧。裁剪选区将清空。</p></div>}
       <DialogFooter><Button variant="outline" disabled={busy} onClick={() => setConfirmation(null)}>取消</Button><Button variant={confirmation?.type === 'delete' ? 'destructive' : 'default'} disabled={busy} onClick={confirm}>{busy ? '正在处理' : confirmation?.type === 'delete' ? '删除' : confirmation?.currentImage ? '套用布局' : '加载'}</Button></DialogFooter></DialogContent></Dialog>
   </>
 }

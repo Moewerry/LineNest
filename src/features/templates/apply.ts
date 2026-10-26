@@ -10,7 +10,7 @@ export const sameSize = (a: ImageInfo, b: ImageInfo) => a.width === b.width && a
 export async function applyTemplate(template: PreparedTemplate, currentImage: ImageInfo | null) {
   const doc = validateDocument(template.doc)
   if (currentImage) {
-    // Different sizes keep the exact line coordinates; clearing the crop is explicit in confirmation.
+    // Free lines retain their coordinates; full-image dividers are normalized below.
     if (!sameSize(doc.image!, currentImage)) doc.crop = null
     doc.image = currentImage
   } else {

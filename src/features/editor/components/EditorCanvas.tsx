@@ -14,6 +14,7 @@ import { SelectionLayer } from './SelectionLayer'
 import { enterGroup, leaveGroup, rotateSelection } from '../commands'
 import { CanvasContextMenu } from './CanvasContextMenu'
 import { CanvasEmptyState } from './CanvasEmptyState'
+import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -36,8 +37,8 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value) }
   const fit = () => {
     if (!image) return
-    const scale = Math.max(0.01, Math.min((size.width - 96) / image.width, (size.height - 96) / image.height, 1))
-    setView({ scale, x: (size.width - image.width * scale) / 2, y: (size.height - image.height * scale) / 2 })
+    const scale = Math.max(0.01, Math.min((size.width - RULER_SIZE - 96) / image.width, (size.height - RULER_SIZE - 96) / image.height, 1))
+    setView({ scale, x: RULER_SIZE + (size.width - RULER_SIZE - image.width * scale) / 2, y: RULER_SIZE + (size.height - RULER_SIZE - image.height * scale) / 2 })
   }
   useEffect(() => {
     if (!container.current) return
@@ -76,6 +77,8 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
   const begin = (event: Konva.KonvaEventObject<PointerEvent>) => {
     if (!image || busy || (event.evt.button !== 0 && event.evt.button !== 1)) return
     const p = pointer(), start = clamp(p), state = useEditor.getState()
+    const screenPoint = stage.current?.getPointerPosition()
+    if (screenPoint && (screenPoint.x < RULER_SIZE || screenPoint.y < RULER_SIZE)) return
     if (tool === 'pan' || space || event.evt.button === 1) {
       event.evt.preventDefault()
       const screen = stage.current?.getPointerPosition() ?? zero
@@ -185,8 +188,9 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
       </Group></Layer>
     </Stage> : <CanvasEmptyState onPick={onPick} busy={busy} />}
     {image && <>
-      {snapshot.scope && <div className="absolute left-4 top-4"><Button variant="outline" size="sm" className="bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}
-      <div className="pointer-events-none absolute bottom-5 left-5 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}<span className="ml-3">{tool === 'split' ? horizontal ? '单击添加横线 · 松开 W 添加竖线 · V 选择微调' : '单击添加竖线 · 按住 W 单击添加横线 · V 选择微调' : tool === 'pan' ? '按住左键拖动画布 · S 返回分割线' : 'S 分割线 · H 拖动画布 · 空格 + 拖动临时平移'}</span></div>
+      <CanvasRulers image={image} view={view} size={size} />
+      {snapshot.scope && <div className="absolute left-10 top-10"><Button variant="outline" size="sm" className="bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}
+      <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-240px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}<span className="ml-3">{tool === 'split' ? horizontal ? '单击添加横线 · 松开 W 添加竖线 · V 选择微调' : '单击添加竖线 · 按住 W 单击添加横线 · V 选择微调' : tool === 'pan' ? '按住左键拖动画布 · S 返回分割线' : 'S 分割线 · H 拖动画布 · 空格 + 拖动临时平移'}</span></div>
       <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-full border bg-card p-1.5 shadow-sm">
         <Button variant="ghost" size="icon-sm" aria-label="缩小" onClick={() => zoom(1 / 1.2)}><Minus /></Button><span className="w-12 text-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span><Button variant="ghost" size="icon-sm" aria-label="放大" onClick={() => zoom(1.2)}><Plus /></Button><span className="mx-1 h-4 border-l" /><Button variant="ghost" size="icon-sm" aria-label="适应画布" title="适应画布" onClick={fit}><Maximize /></Button>
       </div>
