@@ -8,6 +8,7 @@ import { validateLineTemplate } from '@/features/templates/layout'
 import { exportBatch } from './export'
 import type { Point } from '@/features/editor/model/types'
 import type { BatchFit, BatchItem, BatchTemplate } from './types'
+import type { ExportOptions } from '@/lib/export/options'
 
 const message = (error: unknown) => error instanceof Error ? error.message : '操作失败'
 
@@ -104,10 +105,10 @@ export function useBatch(initialTemplate: string | null) {
     urls.current.forEach(url => URL.revokeObjectURL(url)); urls.current.clear()
     setItems([]); setResult(null); setError('')
   }
-  const updateOffset = (id: string, axis: 'offsetX' | 'offsetY', value: number) => {
-    if (operation.current || !Number.isFinite(value)) return
+  const updateOffset = (id: string, templateId: string, axis: 'offsetX' | 'offsetY', value: number) => {
+    if (operation.current || !selected.includes(templateId) || !Number.isFinite(value)) return
     invalidate()
-    setItems(rows => rows.map(row => row.id === id ? { ...row, [axis]: Math.round(Math.max(-16384, Math.min(16384, value))) } : row))
+    setItems(rows => rows.map(row => row.id === id ? { ...row, templateOffsets: { ...row.templateOffsets, [templateId]: { ...(row.templateOffsets?.[templateId] ?? { x: 0, y: 0 }), [axis === 'offsetX' ? 'x' : 'y']: Math.round(Math.max(-16384, Math.min(16384, value))) } } } : row))
   }
   const changeFit = (value: BatchFit) => { if (!operation.current) { invalidate(); setFit(value) } }
   const updateLineOffset = (id: string, lineId: string, offset: Point) => {
@@ -119,14 +120,16 @@ export function useBatch(initialTemplate: string | null) {
     const limit = (value: number) => Math.round(Math.max(-16384, Math.min(16384, value)))
     setItems(rows => rows.map(row => row.id === id ? { ...row, lineOffsets: { ...row.lineOffsets, [lineId]: { x: limit(offset.x), y: limit(offset.y) } } } : row))
   }
-  const resetPosition = (id: string) => {
-    if (operation.current) return
+  const resetPosition = (id: string, templateId: string) => {
+    if (operation.current || !selected.includes(templateId)) return
     invalidate()
-    setItems(rows => rows.map(row => row.id === id ? { ...row, offsetX: 0, offsetY: 0, lineOffsets: undefined } : row))
+    const template = templates.find(row => row.id === templateId)
+    const lineIds = new Set(Object.keys(template?.layout.nodes ?? {}).map(nodeId => JSON.stringify([templateId, nodeId])))
+    setItems(rows => rows.map(row => row.id === id ? { ...row, templateOffsets: { ...row.templateOffsets, [templateId]: { x: 0, y: 0 } }, lineOffsets: Object.fromEntries(Object.entries(row.lineOffsets ?? {}).filter(([lineId]) => !lineIds.has(lineId))) } : row))
   }
   const editPreview = () => { if (!operation.current) invalidate() }
   const toggleTemplate = (id: string) => { if (!operation.current) { invalidate(); setSelected(ids => ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id]) } }
-  const start = async () => {
+  const start = async (options?: ExportOptions) => {
     if (operation.current) return
     const chosen = templates.filter(template => selected.includes(template.id))
     if (!items.length || !chosen.length) return
@@ -135,13 +138,15 @@ export function useBatch(initialTemplate: string | null) {
     try {
       const output = await exportBatch(items, chosen, fit, controller.signal, (id, update) => {
         if (mounted.current && !controller.signal.aborted) setItems(rows => rows.map(row => row.id === id ? { ...row, ...update } : row))
-      })
+      }, options)
       if (mounted.current && !controller.signal.aborted) setResult(output)
+      if (mounted.current && !controller.signal.aborted) return output
     } catch (value) {
       if (mounted.current) {
         setError(controller.signal.aborted ? '已取消，可重新裁剪' : message(value))
         setItems(rows => rows.map(row => ({ ...row, status: !controller.signal.aborted && row.status === 'error' ? 'error' : 'ready', count: undefined, error: controller.signal.aborted ? undefined : row.error })))
       }
+      if (options) throw value
     } finally { operation.current = false; if (mounted.current) setRunning(false) }
   }
   return { items, templates, selected, loading, templateError, fit, importing, running, error, result,

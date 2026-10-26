@@ -5,7 +5,7 @@ import type { SliceDownloadMode } from './types'
 
 const options = [
   { id: 'zip', title: '打包下载', description: '一个 ZIP，包含全部所选图片', icon: FileArchive },
-  { id: 'files', title: '逐张下载', description: '一键下载，每张都是独立 PNG', icon: Files },
+  { id: 'files', title: '逐张下载', description: '一键下载，每张都是独立图片', icon: Files },
 ] satisfies { id: SliceDownloadMode; title: string; description: string; icon: typeof Files }[]
 
 export function SliceDownloadOptions({ value, disabled, onChange }: { value: SliceDownloadMode; disabled: boolean; onChange: (value: SliceDownloadMode) => void }) {

@@ -11,6 +11,7 @@ export type BatchItem = {
   offsetX: number
   offsetY: number
   lineOffsets?: Record<string, Point>
+  templateOffsets?: Record<string, Point>
   status: 'ready' | 'working' | 'done' | 'error'
   error?: string
   count?: number

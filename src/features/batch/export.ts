@@ -4,11 +4,12 @@ import { calculateSlices } from '@/features/slicing/calculate'
 import { regionPath } from '@/features/slicing/export'
 import { batchDocument } from './document'
 import type { BatchFit, BatchItem, BatchTemplate, BatchUpdate } from './types'
+import { encodeImage, exportFileName, resolveFormat, type ExportOptions } from '@/lib/export/options'
 
 const safeName = (name: string) => name.replace(/\.[^.]+$/, '').replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').replace(/^\.+$/, '_').slice(0, 80) || 'image'
 const maxBytes = 256 * 1024 * 1024
 
-export async function exportBatch(items: BatchItem[], templates: BatchTemplate[], fit: BatchFit, signal: AbortSignal, onUpdate: (id: string, update: BatchUpdate) => void) {
+export async function exportBatch(items: BatchItem[], templates: BatchTemplate[], fit: BatchFit, signal: AbortSignal, onUpdate: (id: string, update: BatchUpdate) => void, options?: ExportOptions) {
   if (!items.length || !templates.length) throw new Error('请添加图片并选择模板')
   const chunks: Uint8Array<ArrayBuffer>[] = []
   let bytes = 0, zipError: Error | null = null, total = 0
@@ -54,9 +55,10 @@ export async function exportBatch(items: BatchItem[], templates: BatchTemplate[]
           if (!context) throw new Error('无法创建裁剪画布')
           context.translate(-x, -y); context.clip(regionPath(region), 'evenodd')
           context.drawImage(asset.element, 0, 0)
-          const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('图片导出失败')), 'image/png'))
+          const blob = await encodeImage(canvas, options ? resolveFormat(options, item.file.name) : 'png')
           check()
-          add(`${index + 1}_${safeName(item.file.name)}/slice-${String(region.id).padStart(3, '0')}.png`, new Uint8Array(await blob.arrayBuffer()))
+          const name = options ? exportFileName(options, item.file.name, total + 1) : `slice-${String(region.id).padStart(3, '0')}.png`
+          add(`${index + 1}_${safeName(item.file.name)}/${name}`, new Uint8Array(await blob.arrayBuffer()))
           count++; total++
           onUpdate(item.id, { status: 'working', count })
           await new Promise<void>(resolve => window.setTimeout(resolve, 0))

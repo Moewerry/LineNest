@@ -7,13 +7,14 @@ export function batchDocument(item: BatchItem, templates: BatchTemplate[], fit: 
   const lines = templates.flatMap(template => {
     const sx = fit === 'relative' ? item.width / template.layout.width : 1
     const sy = fit === 'relative' ? item.height / template.layout.height : 1
+    const templateOffset = item.templateOffsets?.[template.id] ?? { x: 0, y: 0 }
     return segments(templateDocument(template.layout)).map((line): LineNode => {
       const id = JSON.stringify([template.id, line.id])
       const offset = item.lineOffsets?.[id] ?? { x: 0, y: 0 }
       const node = template.layout.nodes[line.id]
       const axis = node.type === 'line' ? node.splitAxis : undefined
-      const start = { x: line.start.x * sx + item.offsetX + offset.x, y: line.start.y * sy + item.offsetY + offset.y }
-      const end = { x: line.end.x * sx + item.offsetX + offset.x, y: line.end.y * sy + item.offsetY + offset.y }
+      const start = { x: line.start.x * sx + item.offsetX + templateOffset.x + offset.x, y: line.start.y * sy + item.offsetY + templateOffset.y + offset.y }
+      const end = { x: line.end.x * sx + item.offsetX + templateOffset.x + offset.x, y: line.end.y * sy + item.offsetY + templateOffset.y + offset.y }
       // Full-width/height split lines must still meet both image edges after moving.
       if (axis === 'horizontal') { start.x = 0; end.x = item.width }
       if (axis === 'vertical') { start.y = 0; end.y = item.height }

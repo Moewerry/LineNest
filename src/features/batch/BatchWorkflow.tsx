@@ -20,8 +20,8 @@ export function BatchWorkflow({ busy, running, importing, count, selected, total
           const active = currentStep === index + 1
           return <li key={index} aria-current={active ? 'step' : undefined}>
             <Button variant="ghost" disabled={disabled} onClick={action} className={cn(
-              'h-full min-h-20 w-full items-start justify-start gap-3 rounded-lg border px-3 py-3 text-left whitespace-normal transition-colors disabled:opacity-100',
-              active ? 'border-primary bg-primary/5 text-foreground hover:bg-primary hover:text-white hover:[&_span]:text-white dark:hover:bg-primary' : 'border-transparent text-muted-foreground/60 hover:bg-secondary/60 hover:text-muted-foreground',
+              'h-full min-h-20 w-full items-start justify-start gap-3 rounded-lg border bg-transparent px-3 py-3 text-left whitespace-normal transition-colors hover:bg-transparent active:bg-transparent disabled:opacity-100 dark:hover:bg-transparent',
+              active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/60 hover:text-muted-foreground',
             )}>
               <span aria-hidden="true" className={cn('shrink-0 font-mono text-lg leading-5 tabular-nums', active ? 'text-primary' : 'text-muted-foreground/45')}>{String(index + 1).padStart(2, '0')}</span>
               <span className="min-w-0"><span className="flex items-center gap-2"><Icon aria-hidden="true" />{label}</span><span className={cn('mt-1 block text-xs font-normal leading-5', active ? 'text-muted-foreground' : 'text-muted-foreground/50')}>{description}</span></span>

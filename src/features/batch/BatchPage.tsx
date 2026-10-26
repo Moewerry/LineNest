@@ -10,6 +10,8 @@ import { BatchWorkflow } from './BatchWorkflow'
 import { BatchTemplatesDialog } from './BatchTemplatesDialog'
 import { useBatch } from './use-batch'
 import '@/features/editor/editor-theme.css'
+import { ExportConfirmDialog } from '@/features/export/ExportConfirmDialog'
+import { exportBase, type ExportOptions } from '@/lib/export/options'
 
 export function BatchPage() {
   const [params] = useSearchParams()
@@ -17,6 +19,7 @@ export function BatchPage() {
   const input = useRef<HTMLInputElement>(null), templateInput = useRef<HTMLInputElement>(null)
   const [activeId, setActiveId] = useState('')
   const [templatesOpen, setTemplatesOpen] = useState(false)
+  const [downloadOpen, setDownloadOpen] = useState(false)
   const [confirmedTemplates, setConfirmedTemplates] = useState<string | null>(null)
   const busy = batch.importing || batch.running
   const active = batch.items.find(item => item.id === activeId) ?? batch.items[0]
@@ -26,7 +29,12 @@ export function BatchPage() {
   const finished = batch.items.filter(item => item.status === 'done' || item.status === 'error').length
   const failed = batch.items.filter(item => item.status === 'error').length
   const status = batch.running ? `正在裁剪 ${finished} / ${batch.items.length}` : batch.result ? `已生成 ${batch.result.total} 张${failed ? ` · ${failed} 张原图有失败，见图片列表` : ''}` : ''
-  const download = () => { if (batch.result) downloadBlob(batch.result.blob, 'LineNest-批量裁剪.zip') }
+  const download = () => { if (batch.result) setDownloadOpen(true) }
+  const confirmDownload = async (options: ExportOptions) => {
+    const output = await batch.start(options)
+    if (!output) throw new Error('导出已取消，请重新下载')
+    downloadBlob(output.blob, `${exportBase(options, batch.items[0]?.file.name ?? 'images')}-batch.zip`)
+  }
 
   return <div className="editor-workspace flex h-dvh flex-col overflow-hidden bg-background">
     <header className="shrink-0 border-b"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
@@ -37,7 +45,7 @@ export function BatchPage() {
       <div className="mx-auto flex min-h-full max-w-6xl flex-col gap-5 px-5 py-7">
         {active ? <div className="grid items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
           <section className="space-y-3"><div className="flex items-center justify-between"><h2 className="text-base font-semibold">图片 <span className="text-xs font-normal text-muted-foreground">{batch.items.length} / 100</span></h2><Button variant="ghost" size="sm" disabled={busy} onClick={batch.clear}>清空</Button></div><BatchImageList items={batch.items} active={active.id} disabled={busy} onActive={setActiveId} onRemove={batch.remove} /></section>
-          <BatchPreview item={active} templates={selected} fit={batch.fit} disabled={busy} running={batch.running} status={status} total={batch.result?.total} onDownload={download} onEdit={batch.editPreview} onOffset={batch.updateOffset} onLineOffset={batch.updateLineOffset} onReset={batch.resetPosition} />
+          <BatchPreview key={JSON.stringify([active.id, selected.map(template => template.id)])} item={active} templates={selected} fit={batch.fit} disabled={busy} running={batch.running} status={status} total={batch.result?.total} onDownload={download} onEdit={batch.editPreview} onOffset={batch.updateOffset} onLineOffset={batch.updateLineOffset} onReset={batch.resetPosition} />
         </div> : <div className="flex min-h-64 flex-1 items-center justify-center"><Button variant="outline" disabled={busy} onClick={() => input.current?.click()} className="h-24 w-52 border-dashed text-muted-foreground shadow-none">{batch.importing ? '正在读取图片…' : '请上传图片'}</Button></div>}
         {batch.templateError && <p role="alert" className="text-sm text-destructive">模板读取失败：{batch.templateError}</p>}
         {batch.error && <p role="alert" className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-destructive/5 p-3 text-sm text-destructive">{batch.error}</p>}
@@ -47,6 +55,7 @@ export function BatchPage() {
       onAdd={() => input.current?.click()} onTemplates={() => setTemplatesOpen(true)} onCrop={() => void batch.start()} onCancel={batch.cancel}
       onDownload={download} />
     <BatchTemplatesDialog open={templatesOpen} onOpenChange={setTemplatesOpen} templates={batch.templates} selected={batch.selected} fit={batch.fit} disabled={busy} loading={batch.loading} error={batch.templateError} onToggle={batch.toggleTemplate} onFit={batch.changeFit} onImport={() => templateInput.current?.click()} onConfirm={() => setConfirmedTemplates(templateSelection)} />
+    {downloadOpen && <ExportConfirmDialog sources={batch.items.map(item => item.file.name)} onClose={() => setDownloadOpen(false)} onConfirm={confirmDownload} />}
     <input ref={input} type="file" multiple accept="image/png,image/jpeg,image/webp,image/avif" aria-label="批量添加图片" className="hidden" disabled={busy} onChange={event => { const files = Array.from(event.target.files ?? []); event.target.value = ''; void batch.addFiles(files) }} />
     <input ref={templateInput} type="file" accept=".json" aria-label="导入裁剪模板" className="hidden" disabled={busy} onChange={event => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void batch.addTemplate(file) }} />
   </div>

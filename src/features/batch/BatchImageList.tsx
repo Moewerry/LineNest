@@ -8,12 +8,12 @@ export function BatchImageList({ items, active, disabled, onActive, onRemove }: 
   items: BatchItem[]; active?: string; disabled: boolean; onActive: (id: string) => void; onRemove: (id: string) => void
 }) {
   return <div className="max-h-[480px] space-y-2 overflow-y-auto" aria-label="图片列表">
-    {items.map(item => <div key={item.id} className={`flex items-center gap-2 rounded-lg border p-2 ${item.id === active ? 'border-primary bg-primary/5' : ''}`}>
-      <Button variant="ghost" className="h-auto min-w-0 flex-1 justify-start gap-3 p-1 text-left" aria-pressed={item.id === active} onClick={() => onActive(item.id)}>
+    {items.map(item => <div key={item.id} className={`flex items-center gap-2 rounded-lg border bg-transparent p-2 ${item.id === active ? 'border-primary' : ''}`}>
+      <Button variant="ghost" disabled={disabled} className="h-auto min-w-0 flex-1 justify-start gap-3 bg-transparent p-1 text-left hover:bg-transparent active:bg-transparent dark:hover:bg-transparent" aria-pressed={item.id === active} onClick={() => onActive(item.id)}>
         <img src={item.url} alt="" loading="lazy" className="size-12 shrink-0 rounded object-contain" />
         <span className="min-w-0"><span className="block truncate" title={item.file.name}>{item.file.name}</span><span className="block text-xs font-normal text-muted-foreground">{item.width} × {item.height}</span><span className={`block text-xs font-normal ${item.status === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}>{status(item)}</span></span>
       </Button>
-      <Button variant="ghost" size="icon-sm" disabled={disabled} aria-label={`移除 ${item.file.name}`} onClick={() => onRemove(item.id)}><X /></Button>
+      <Button variant="ghost" size="icon-sm" className="bg-transparent hover:bg-transparent active:bg-transparent dark:hover:bg-transparent" disabled={disabled} aria-label={`移除 ${item.file.name}`} onClick={() => onRemove(item.id)}><X /></Button>
     </div>)}
   </div>
 }

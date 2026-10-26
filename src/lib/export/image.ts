@@ -1,8 +1,9 @@
 import type { DocumentData } from '@/features/editor/model/types'
 import { getImageAsset } from '@/lib/images'
 import { downloadBlob } from '@/lib/download'
+import { encodeImage, exportFileName, resolveFormat, type ExportOptions } from './options'
 
-export async function exportImage(doc: DocumentData, cropOnly: boolean) {
+export async function exportImage(doc: DocumentData, cropOnly: boolean, options: ExportOptions) {
   const image = doc.image, asset = getImageAsset(image?.id)
   if (!image || !asset) throw new Error('请先导入图片')
   if (cropOnly && !doc.crop) throw new Error('请先框选裁剪区域')
@@ -16,7 +17,8 @@ export async function exportImage(doc: DocumentData, cropOnly: boolean) {
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('浏览器无法创建导出画布')
   ctx.drawImage(asset.element, x, y, width, height, 0, 0, width, height)
-  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('导出失败，图片可能过大')), 'image/png'))
-  const base = image.name.replace(/\.[^.]+$/, '')
-  downloadBlob(blob, `${base}${cropOnly ? '-crop' : ''}.png`)
+  try {
+    const blob = await encodeImage(canvas, resolveFormat(options, image.name))
+    downloadBlob(blob, exportFileName(options, image.name, 1))
+  } finally { canvas.width = 1; canvas.height = 1 }
 }
