@@ -43,7 +43,7 @@
   --notification-background: #fff7ed;
   --notification-border: #fdba74;
   --notification-foreground: #c2410c;
-  --notification-success-background: #ffffff;
+  --notification-success-background: #eef9e2;
   --notification-success-border: var(--notification-success-icon);
   --notification-success-foreground: #00875f;
   --notification-success-icon: #00875f;
@@ -51,7 +51,7 @@
   --notification-error-border: var(--primary);
   --notification-error-foreground: #ffffff;
   --notification-error-icon: #ffffff;
-  --notification-warning-background: #ffffff;
+  --notification-warning-background: #fff9e8;
   --notification-warning-border: var(--color-highlight);
   --notification-warning-foreground: var(--color-highlight-foreground);
   --notification-warning-icon: var(--color-highlight);

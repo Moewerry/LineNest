@@ -10,8 +10,8 @@ export function Toaster({ className, style, ...props }: ToasterProps) {
       position="top-right"
       offset={{ top: 72, right: 24 }}
       mobileOffset={{ top: 24, right: 16, left: 16 }}
-      duration={5000}
-      closeButton
+      duration={3000}
+      closeButton={false}
       richColors
       className={cn('toaster max-[600px]:!w-[calc(100%-var(--mobile-offset-left)-var(--mobile-offset-right))]', className)}
       icons={{
@@ -42,9 +42,8 @@ export function Toaster({ className, style, ...props }: ToasterProps) {
         ...style,
       } as CSSProperties}
       toastOptions={{
-        closeButtonAriaLabel: '关闭提示',
         classNames: {
-          toast: '!left-auto !w-max !max-w-full !gap-3 !shadow-[0_8px_28px_rgb(48_41_30_/_0.10)]',
+          toast: '!left-auto !w-max !max-w-full !gap-3 !border-0 !shadow-[0_8px_28px_rgb(48_41_30_/_0.10)]',
           title: 'text-sm leading-relaxed font-medium',
           description: 'text-xs leading-relaxed',
         },

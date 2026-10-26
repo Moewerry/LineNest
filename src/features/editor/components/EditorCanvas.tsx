@@ -6,7 +6,7 @@ import { getImageAsset } from '@/lib/images'
 import { canvasColors } from '@/lib/canvas-colors'
 import { bounds, boxBetween, childrenOf, containsLocked, inBox, isLocked, rotationAround, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
 import { transformSelection, useEditor } from '../model/store'
-import type { Box, Point } from '../model/types'
+import type { Box, Point, SplitAxis } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
 import { useModeGuide } from '../hooks/use-mode-guide'
 import { NodeLayer } from './NodeLayer'
@@ -16,6 +16,8 @@ import { CanvasContextMenu } from './CanvasContextMenu'
 import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 import { CanvasModeStatus } from './CanvasModeStatus'
 import { displaySegment } from '../geometry/display-segment'
+import { splitLineAt } from '../geometry/split-line'
+import { SplitLinePreview } from './SplitLinePreview'
 import { CanvasViewControls } from './CanvasViewControls'
 import { toast } from 'sonner'
 import { FloatingFillSettings } from '@/features/fill/FloatingFillSettings'
@@ -27,6 +29,7 @@ import { fillCursors } from '@/features/fill/cursors'
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
   | { type: 'move' }
+  | { type: 'split'; axis: SplitAxis }
   | { type: 'pan'; origin: Point; source: 'space' | 'tool' | 'middle' }
   | { type: 'endpoint'; id: string; end: 'start' | 'end' }
   | { type: 'rotate'; center: Point; initialAngle: number }
@@ -132,10 +135,10 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
       // Only the split coordinate must be inside the image; allow clicks along its outer guide.
       if (horizontal ? p.y <= 0 || p.y >= image.height : p.x <= 0 || p.x >= image.width) return
-      const x = Math.max(1, Math.min(image.width - 1, Math.round(p.x)))
-      const y = Math.max(1, Math.min(image.height - 1, Math.round(p.y)))
       if (horizontal ? image.height <= 1 : image.width <= 1) return
-      state.addLine(horizontal ? { x: 0, y } : { x, y: 0 }, horizontal ? { x: image.width, y } : { x, y: image.height }, horizontal ? 'horizontal' : 'vertical')
+      event.evt.preventDefault()
+      if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
+      updateGesture({ type: 'split', axis: horizontal ? 'horizontal' : 'vertical', start: p, current: p })
       return
     }
     if (hit === 'rotate-handle') {
@@ -180,6 +183,10 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
     if (!active) return
     const { start, current } = active, state = useEditor.getState()
     const distance = Math.hypot(current.x - start.x, current.y - start.y) * view.scale
+    if (active.type === 'split' && image) {
+      const line = splitLineAt(pointer(), active.axis, image)
+      state.addLine(line.start, line.end, active.axis)
+    }
     if (active.type === 'line' && distance > 3 && image && segmentIntersectsBox(start, current, { x: 0, y: 0, width: image.width, height: image.height })) state.addLine(start, current)
     if (active.type === 'move' && distance > 1) state.move({ x: current.x - start.x, y: current.y - start.y })
     if (active.type === 'endpoint' && distance > 1) state.endpoint(active.id, active.end, current)
@@ -235,6 +242,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} viewport={viewport} />
         <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
+        {gesture?.type === 'split' && <SplitLinePreview point={gesture.current} axis={gesture.axis} image={image} viewport={viewport} scale={view.scale} />}
       </Group></Layer>
     </Stage> : null}
     {image && <>
