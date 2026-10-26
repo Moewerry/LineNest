@@ -8,6 +8,7 @@ import { bounds, boxBetween, childrenOf, containsLocked, inBox, isLocked, rotati
 import { transformSelection, useEditor } from '../model/store'
 import type { Box, Point } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
+import { useModeGuide } from '../hooks/use-mode-guide'
 import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
 import { enterGroup, leaveGroup, rotateSelection } from '../commands'
@@ -41,6 +42,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   const spaceRef = useRef(false)
   const [horizontal, setHorizontal] = useState(false)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
+  const modeGuideVisible = useModeGuide()
   const fillAction = useEditor(s => s.fillAction)
   const fillRegions = useFillRegions(snapshot.doc, tool === 'fill' && fillAction === 'mark' && !busy)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
@@ -209,7 +211,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   const preview = gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
-  return <CanvasContextMenu disabled={busy}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : 'crosshair' }}
+  return <CanvasContextMenu disabled={busy}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : 'crosshair' }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (tool !== 'select' || spaceRef.current) return
@@ -237,9 +239,9 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
       <div className="pointer-events-none absolute left-10 right-5 top-10 flex flex-wrap items-start gap-2">
-        <div className="flex min-w-0 max-w-full flex-col gap-2">
+        {modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
           <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
-        </div>
+        </div>}
         {snapshot.scope && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button>}
       </div>
       {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
