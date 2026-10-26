@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -16,26 +15,15 @@ import { ExportButton } from './ExportButton'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useImageDrop } from '@/hooks/use-image-drop'
 import { ImageDropOverlay } from '@/components/ImageDropOverlay'
-import { CanvasEmptyState } from './CanvasEmptyState'
 import '../editor-theme.css'
 
 export function Editor() {
   const [operation, setOperation] = useState<'import' | 'rotate' | null>(null), [pending, setPending] = useState<File | null>(null)
   const busy = operation !== null
   const [panelOpen, setPanelOpen] = useState(true)
-  const image = useEditor(s => s.present.doc.image)
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [showImageImport, setShowImageImport] = useState(() => !image && location.state?.showImageImport === true)
-  useEffect(() => {
-    if (location.state?.showImageImport) {
-      const { showImageImport: _, ...state } = location.state
-      void navigate(location.pathname, { replace: true, state })
-    }
-  }, [location.pathname, location.state, navigate])
   const input = useRef<HTMLInputElement>(null), loading = useRef(false)
-  const missingImageHint = useMissingImageHint(!busy && !pending && !showImageImport)
-  useShortcuts(!busy && !pending && !showImageImport, missingImageHint.notify)
+  const missingImageHint = useMissingImageHint(!busy && !pending)
+  useShortcuts(!busy && !pending, missingImageHint.notify)
   const load = async (file: File) => {
     if (loading.current) return
     loading.current = true; setOperation('import')
@@ -43,7 +31,6 @@ export function Editor() {
       validateImage(file)
       const image = await registerImage(file, file.name)
       useEditor.getState().setImage(image)
-      setShowImageImport(false)
       toast.success('图片已导入')
     } catch (error) { toast.error(error instanceof Error ? error.message : '导入失败') }
     finally { loading.current = false; setOperation(null) }
@@ -74,16 +61,14 @@ export function Editor() {
   const { dragging, dropHandlers } = useImageDrop(requestImport, busy || !!pending)
   const removeImage = () => {
     if (loading.current || pending) return
-    setShowImageImport(false)
     useEditor.getState().removeImage()
   }
   return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground [&_button:disabled]:pointer-events-auto" {...dropHandlers} onPointerDownCapture={missingImageHint.onPointerDownCapture}>
-    <div inert={showImageImport && !image} aria-hidden={showImageImport && !image ? true : undefined} className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起侧边栏' : '打开侧边栏'} aria-pressed={panelOpen} title={panelOpen ? '收起侧边栏' : '打开侧边栏'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
       <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} /><EditorSidebar disabled={busy} open={panelOpen} /></div>
     </div>
-    {showImageImport && !image && <CanvasEmptyState onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
-    {!(showImageImport && !image) && dragging && <ImageDropOverlay />}
+    {dragging && <ImageDropOverlay />}
     <input ref={input} type="file" className="hidden" aria-label="导入图片" accept="image/png,image/jpeg,image/webp,image/avif" onChange={e => { const file = e.target.files?.[0]; if (file) requestImport(file); e.target.value = '' }} />
     <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条、裁剪选区和区域标记将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => { const file = pending; setPending(null); if (file) void load(file) }}>替换图片</Button></DialogFooter></DialogContent></Dialog>
   </main>

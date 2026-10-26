@@ -26,6 +26,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
   const [confirmation, setConfirmation] = useState<TemplateConfirmationState | null>(null), [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null), operation = useRef(false)
   const image = useEditor(s => s.present.doc.image)
+  const hasLines = useEditor(s => Object.values(s.present.doc.nodes).some(node => node.type === 'line'))
   useEffect(() => {
     const subscription = liveQuery(listTemplates).subscribe({
       next: list => { setRows(list); setLoading(false); setLoadError(false); onCountChange(list.length) },
@@ -63,7 +64,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
       void run(async () => { await saveTemplate(name, useEditor.getState().present.doc); setName(''); toast.success('已保存') })
     }}>
       <Input value={name} onChange={event => setName(event.target.value)} placeholder="模板名称" aria-label="模板名称" maxLength={80} disabled={busy || disabled} className="h-10 flex-1 border-transparent bg-secondary/60 shadow-none" />
-      <Button type="submit" disabled={busy || disabled || !name.trim()} className="h-10 gap-1.5 px-3 text-xs shadow-none"><Plus />保存</Button>
+      <Button type="submit" disabled={busy || disabled || !name.trim() || !hasLines} title={hasLines ? undefined : '请先绘制分割线'} className="h-10 gap-1.5 px-3 text-xs shadow-none"><Plus />保存</Button>
     </form>}
     {loading || loadError || !rows.length ? <div role="status" className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-6 py-8 text-center">
       {loading ? <LoaderCircle aria-hidden="true" className="size-6 animate-spin text-muted-foreground/50 motion-reduce:animate-none" /> : <FolderOpen aria-hidden="true" className="size-8 text-muted-foreground/35" />}

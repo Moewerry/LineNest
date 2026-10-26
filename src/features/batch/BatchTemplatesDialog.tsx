@@ -1,0 +1,33 @@
+import { Link } from 'react-router-dom'
+import { ArrowRight, ExternalLink, Upload } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { SaveTemplateButton } from '@/features/templates/SaveTemplateButton'
+import { BatchTemplatePicker } from './BatchTemplatePicker'
+import type { BatchFit, BatchTemplate } from './types'
+
+export function BatchTemplatesDialog({ open, onOpenChange, templates, selected, fit, disabled, loading, error, onToggle, onFit, onImport, onConfirm }: {
+  open: boolean; onOpenChange: (open: boolean) => void; templates: BatchTemplate[]; selected: string[]; fit: BatchFit
+  disabled: boolean; loading: boolean; error: string; onToggle: (id: string) => void; onFit: (fit: BatchFit) => void; onImport: () => void
+  onConfirm: () => void
+}) {
+  const selectedCount = templates.filter(template => selected.includes(template.id)).length
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-3xl">
+    <DialogHeader className="border-b px-6 py-5 text-left"><DialogTitle className="text-lg">选择裁剪模板</DialogTitle><DialogDescription className="text-xs leading-5">选好线条布局，为整组图片统一分图。</DialogDescription></DialogHeader>
+    <div className="min-h-0 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
+    <div className="flex flex-wrap items-center gap-2">
+      <Button variant="outline" disabled={disabled} onClick={onImport} className="shadow-none"><Upload />导入模板</Button>
+      <SaveTemplateButton disabled={disabled} />
+      <Button asChild variant="ghost" className="text-muted-foreground"><Link to="/editor" target="_blank" rel="noopener noreferrer"><ExternalLink />新标签页画线</Link></Button>
+    </div>
+    {loading ? <p role="status" className="text-sm text-muted-foreground">正在读取模板…</p> : error ? <p role="alert" className="text-sm text-destructive">模板读取失败：{error}</p> : templates.length ?
+      <BatchTemplatePicker templates={templates} selected={selected} fit={fit} disabled={disabled} onToggle={onToggle} onFit={onFit} /> :
+      <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">还没有模板，请先画线并保存，或导入模板。</p>}
+    <p className="text-[11px] leading-5 text-muted-foreground">新模板在画线模式保存后会自动出现在这里，当前批量图片会保留。</p>
+    </div>
+    <DialogFooter className="items-center justify-between gap-3 border-t bg-secondary/30 px-6 py-4 sm:justify-between">
+      <span className="text-xs text-muted-foreground">{selectedCount ? `已选择 ${selectedCount} 个模板` : '请选择需要应用的线条模板'}</span>
+      <Button disabled={disabled || loading || !selectedCount} onClick={() => { onConfirm(); onOpenChange(false) }} className="w-full gap-3 rounded-lg sm:w-auto">完成选择<ArrowRight className="size-4" /></Button>
+    </DialogFooter>
+  </DialogContent></Dialog>
+}

@@ -1,5 +1,6 @@
 import { LoaderCircle, Scissors, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Link } from 'react-router-dom'
 import { HomeAnimatedText } from './HomeAnimatedText'
 import { useHomeImageImport } from './HomeImageImport'
 
@@ -19,6 +20,7 @@ export function HomeStartCard() {
       </div>
       <p className="mb-7 text-sm leading-7 tracking-[0.06em] text-white"><HomeAnimatedText delay={380}>从画线到分图，简单顺手</HomeAnimatedText></p>
       <Button size="lg" disabled={busy} onClick={pickImage} className="home-card-action group h-14 w-full justify-center gap-2 rounded-xl px-5 text-center text-base tracking-[0.1em] shadow-none hover:bg-primary/90">{busy ? '正在导入图片' : <HomeAnimatedText stagger={35}>上传图片</HomeAnimatedText>}{busy ? <LoaderCircle aria-hidden="true" className="size-5 animate-spin motion-reduce:animate-none" /> : <Upload aria-hidden="true" className="size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5" />}</Button>
+      <Button asChild={!busy} disabled={busy} variant="ghost" className="mt-3 h-11 w-full text-background hover:bg-background/10 hover:text-background">{busy ? <span>批量裁剪图片</span> : <Link to="/batch"><Scissors />批量裁剪图片</Link>}</Button>
       {busy && <p className="mt-3 text-center text-xs text-background/60" role="status">正在读取，请稍候</p>}
     </section>
   </div>

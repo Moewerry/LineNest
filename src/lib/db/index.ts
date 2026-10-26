@@ -18,6 +18,7 @@ db.version(2).stores({ templates: 'id, updatedAt', images: null }).upgrade(async
 export const listTemplates = () => db.templates.orderBy('updatedAt').reverse().toArray()
 export async function saveTemplate(name: string, source: DocumentData) {
   if (!name.trim()) throw new Error('请输入模板名称')
+  if (!Object.values(source.nodes).some(node => node.type === 'line')) throw new Error('请先绘制分割线，再保存模板')
   const layout = lineTemplateFromDocument(source)
   await db.templates.add({ id: crypto.randomUUID(), name: name.trim().slice(0, 80), layout, updatedAt: Date.now() })
 }

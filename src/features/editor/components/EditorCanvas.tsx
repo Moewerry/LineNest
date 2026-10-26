@@ -19,6 +19,7 @@ import { displaySegment } from '../geometry/display-segment'
 import { splitLineAt, splitMoveAxis } from '../geometry/split-line'
 import { SplitLinePreview } from './SplitLinePreview'
 import { CanvasViewControls } from './CanvasViewControls'
+import { CanvasEmptyState } from './CanvasEmptyState'
 import { toast } from 'sonner'
 import { FloatingFillSettings } from '@/features/fill/FloatingFillSettings'
 import { RegionMarkLayer } from '@/features/fill/RegionMarkLayer'
@@ -260,6 +261,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         {gesture?.type === 'split' && <SplitLinePreview point={gesture.current} axis={gesture.axis} image={image} viewport={viewport} scale={view.scale} />}
       </Group></Layer>
     </Stage> : null}
+    {!image && <CanvasEmptyState onPick={onReplaceImage} busy={busy} />}
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
       <div className="pointer-events-none absolute left-10 right-5 top-10 flex flex-wrap items-start gap-2">
