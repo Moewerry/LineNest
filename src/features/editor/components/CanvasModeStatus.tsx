@@ -33,10 +33,10 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{temporary ? '松开后继续使用当前工具。' : mode.description}</p>
       </div>
     </div>
-    <div className="mx-3 space-y-2.5 rounded-lg bg-primary/10 px-3 py-3">
+    <div className="mx-3 space-y-2.5 rounded-lg bg-primary px-3 py-3 text-white">
       {instructions.map(instruction => <div key={instruction.result} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 text-[11px] leading-relaxed">
         <span className="font-medium">{instruction.result}</span>
-        <span className="flex flex-wrap items-center justify-end gap-1 text-muted-foreground">
+        <span className="flex flex-wrap items-center justify-end gap-1 text-white">
           <span>{instruction.action}</span>
           {instruction.keys && <ShortcutKeys keys={instruction.keys} />}
           {instruction.gesture && <span>{instruction.gesture}</span>}
