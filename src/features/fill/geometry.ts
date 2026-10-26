@@ -34,15 +34,22 @@ function ringKey(ring: Point[]): string {
   }
   while (points.length > 1 && compare(points[0], points[points.length - 1]) === 0) points.pop()
   if (!points.length) return ''
-  const reversed = [...points].reverse()
-  const forwardStart = leastRotation(points), reverseStart = leastRotation(reversed)
-  let traversal = points, start = forwardStart
-  for (let offset = 0; offset < points.length; offset++) {
-    const order = compare(points[(forwardStart + offset) % points.length], reversed[(reverseStart + offset) % points.length])
+  // Noding can insert collinear vertices without changing the actual region.
+  const simplified = points.filter((point, index) => {
+    const before = points[(index + points.length - 1) % points.length], after = points[(index + 1) % points.length]
+    const ax = point[0] - before[0], ay = point[1] - before[1], bx = after[0] - point[0], by = after[1] - point[1]
+    return ax * bx + ay * by < 0 || Math.abs(ax * by - ay * bx) > Math.hypot(ax + bx, ay + by)
+  })
+  const vertices = simplified.length >= 3 ? simplified : points
+  const reversed = [...vertices].reverse()
+  const forwardStart = leastRotation(vertices), reverseStart = leastRotation(reversed)
+  let traversal = vertices, start = forwardStart
+  for (let offset = 0; offset < vertices.length; offset++) {
+    const order = compare(vertices[(forwardStart + offset) % vertices.length], reversed[(reverseStart + offset) % vertices.length])
     if (order < 0) break
     if (order > 0) { traversal = reversed; start = reverseStart; break }
   }
-  return Array.from({ length: points.length }, (_, offset) => traversal[(start + offset) % points.length].join(',')).join(';')
+  return Array.from({ length: vertices.length }, (_, offset) => traversal[(start + offset) % vertices.length].join(',')).join(';')
 }
 
 export function ringsKey(rings: Point[][]): string {

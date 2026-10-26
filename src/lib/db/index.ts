@@ -4,6 +4,7 @@ import { getImageAsset } from '@/lib/images'
 import { canvasColors } from '@/lib/canvas-colors'
 import { validateDocument } from '@/features/templates/validation'
 import { segments } from '@/features/editor/geometry'
+import { drawMarkThumbnail } from '@/features/fill/thumbnail'
 
 export type TemplateRecord = { id: string; name: string; imageId: string; doc: DocumentData; thumbnail: Blob; updatedAt: number }
 const db = new Dexie('LineNest') as Dexie & {
@@ -22,6 +23,7 @@ async function thumbnailFor(doc: DocumentData): Promise<Blob> {
   context.drawImage(asset.element, 0, 0, canvas.width, canvas.height)
   context.save()
   context.scale(canvas.width / asset.element.naturalWidth, canvas.height / asset.element.naturalHeight)
+  drawMarkThumbnail(context, doc.marks ?? [], scale)
   context.strokeStyle = canvasColors.selection; context.lineWidth = 1.5 / scale
   for (const line of segments(doc)) {
     context.beginPath(); context.moveTo(line.start.x, line.start.y); context.lineTo(line.end.x, line.end.y); context.stroke()

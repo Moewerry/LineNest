@@ -5,7 +5,7 @@ import type { DocumentData } from '@/features/editor/model/types'
 import { regionPath } from './export'
 import type { SliceResult } from './types'
 
-export function SlicePreview({ doc, result, selected }: { doc: DocumentData; result: SliceResult; selected: Set<number> }) {
+export function SlicePreview({ doc, result, selected, marked = false }: { doc: DocumentData; result: SliceResult; selected: Set<number>; marked?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const canvas = ref.current, asset = getImageAsset(doc.image?.id)
@@ -19,9 +19,13 @@ export function SlicePreview({ doc, result, selected }: { doc: DocumentData; res
     context.drawImage(asset.element, 0, 0)
     for (const region of result.regions) {
       const path = regionPath(region), included = selected.has(region.id)
-      context.fillStyle = included ? canvasColors.previewFill : '#ffffffbb'
+      const mark = marked ? doc.marks?.[region.id - 1] : undefined
+      context.save()
+      context.fillStyle = included ? mark?.color ?? canvasColors.previewFill : '#ffffffbb'
+      if (included && mark) context.globalAlpha = mark.opacity
       context.fill(path, 'evenodd')
-      context.strokeStyle = included ? canvasColors.selection : canvasColors.mutedLine; context.lineWidth = 1.5 / scale; context.stroke(path)
+      context.restore()
+      context.strokeStyle = included ? mark?.color ?? canvasColors.selection : canvasColors.mutedLine; context.lineWidth = 1.5 / scale; context.stroke(path)
     }
     context.font = `600 ${11 / scale}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle'
     for (const region of result.regions) {
@@ -29,6 +33,6 @@ export function SlicePreview({ doc, result, selected }: { doc: DocumentData; res
       context.fillStyle = selected.has(region.id) ? canvasColors.ink : canvasColors.mutedInk; context.fill()
       context.fillStyle = 'white'; context.fillText(String(region.id), region.label.x, region.label.y)
     }
-  }, [doc, result, selected])
+  }, [doc, result, selected, marked])
   return <div className="canvas-surface flex min-h-40 items-center justify-center overflow-hidden rounded-xl border p-3"><canvas ref={ref} aria-label="切片区域预览" className="max-h-[42vh] max-w-full object-contain" /></div>
 }

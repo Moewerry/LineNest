@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useState, type MouseEvent } from 'react'
 import { Eraser, PaintBucket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,15 +17,19 @@ export function FillSettings({ busy, loading, error }: Props) {
   useEffect(() => setOpacityDraft(percentage(opacity)), [opacity])
   const opacityValue = opacityDraft.trim() ? Number(opacityDraft) : NaN
   const opacityValid = Number.isFinite(opacityValue) && opacityValue >= 0 && opacityValue <= 100
+  const chooseAction = (value: 'mark' | 'erase', event: MouseEvent<HTMLButtonElement>) => {
+    useEditor.getState().setFillAction(value)
+    if (event.detail > 0) (event.currentTarget.closest('[data-canvas-shortcuts]') as HTMLElement | null)?.focus({ preventScroll: true })
+  }
 
-  return <section aria-label="油漆桶设置" className="pointer-events-auto w-full max-w-sm rounded-xl border bg-card/95 p-3 shadow-sm">
+  return <section data-editor-settings aria-label="油漆桶设置" className="pointer-events-auto w-full max-w-sm rounded-xl border bg-card/95 p-3 shadow-sm">
     <div className="flex items-center justify-between gap-3">
       <h2 className="text-xs font-semibold">油漆桶</h2>
       <span className="text-[11px] text-muted-foreground">已标记 {count} 块</span>
     </div>
     <div role="group" aria-label="标记操作" className="mt-3 grid grid-cols-2 gap-2">
-      <Button size="sm" variant={action === 'mark' ? 'default' : 'outline'} aria-pressed={action === 'mark'} disabled={busy} onClick={() => useEditor.getState().setFillAction('mark')}><PaintBucket className="size-3.5" />标记区域</Button>
-      <Button size="sm" variant={action === 'erase' ? 'default' : 'outline'} aria-pressed={action === 'erase'} disabled={busy} onClick={() => useEditor.getState().setFillAction('erase')}><Eraser className="size-3.5" />清除标记</Button>
+      <Button size="sm" variant={action === 'mark' ? 'default' : 'outline'} aria-pressed={action === 'mark'} disabled={busy} onClick={event => chooseAction('mark', event)}><PaintBucket className="size-3.5" />标记区域</Button>
+      <Button size="sm" variant={action === 'erase' ? 'default' : 'outline'} aria-pressed={action === 'erase'} disabled={busy} onClick={event => chooseAction('erase', event)}><Eraser className="size-3.5" />清除标记</Button>
     </div>
     <div className="mt-3 grid grid-cols-[minmax(0,1fr)_6rem] gap-3">
       <div className="min-w-0 space-y-1.5">

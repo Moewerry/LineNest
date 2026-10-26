@@ -3,7 +3,7 @@ import { childrenOf } from '../geometry'
 import { useEditor } from '../model/store'
 import { deleteSelection, duplicateSelection, enterGroup, groupSelection, leaveGroup, ungroupSelection } from '../commands'
 export function isTextTarget(target: EventTarget | null) {
-  return target instanceof HTMLElement && !!target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"]')
+  return target instanceof HTMLElement && !!target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"], [data-editor-settings]')
 }
 export function useShortcuts(enabled = true) {
   useEffect(() => {
