@@ -1,27 +1,53 @@
-import { Crop, Grid2X2, Hand, MousePointer2, PaintBucket, Slash } from 'lucide-react'
+import { Hand } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
 import type { Tool } from '../model/types'
-
-const modes = {
-  split: { label: '分割线模式', hint: '单击添加竖线 · 按住 W 单击添加横线', icon: Grid2X2 },
-  select: { label: '选择模式', hint: '单击选择 · 拖动调整线条 · Shift 多选', icon: MousePointer2 },
-  pan: { label: '拖动画布模式', hint: '按住左键拖动画布 · S 返回分割线', icon: Hand },
-  line: { label: '自由画线模式', hint: '按住左键拖动画线 · V 选择微调', icon: Slash },
-  crop: { label: '裁剪模式', hint: '按住左键框选裁剪范围', icon: Crop },
-  fill: { label: '油漆桶 · 裁切标记', hint: '单击区域标记 · Ctrl+Z 撤销', icon: PaintBucket },
-} satisfies Record<Tool, { label: string; hint: string; icon: typeof Hand }>
+import { ShortcutKeys } from './ShortcutKeys'
+import { toolGuides, type ToolInstruction } from './tool-guide'
 
 export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false }: { tool: Tool; panSource: 'space' | 'middle' | null; horizontal: boolean; erasing?: boolean }) {
-  const mode = modes[tool], temporary = tool !== 'pan' && panSource !== null
+  const mode = toolGuides[tool], temporary = tool !== 'pan' && panSource !== null
   const Icon = temporary ? Hand : mode.icon
-  const hint = temporary
-    ? panSource === 'middle' ? `按住鼠标中键拖动 · 松开返回${mode.label}` : `按住左键拖动 · 松开空格返回${mode.label}`
-    : tool === 'fill' && erasing ? '单击已标记区域清除 · Ctrl+Z 撤销' : tool === 'split' && horizontal ? '单击添加横线 · 松开 W 恢复竖线' : mode.hint
+  const instructions: ToolInstruction[] = temporary
+    ? [
+      { action: panSource === 'middle' ? '按住鼠标中键' : '按住空格和左键', result: '拖动整张画布' },
+      { action: panSource === 'middle' ? '松开中键' : '松开空格', result: `继续使用「${mode.label}」` },
+    ]
+    : tool === 'fill' && erasing
+      ? [
+        { action: '左键单击色块', result: '清除这一块的标记' },
+        { action: '继续标记', result: '在下方切换到「标记区域」' },
+      ]
+      : tool === 'split' && horizontal
+        ? [
+          { action: '左键单击', result: '添加一条横线' },
+          { action: '松开', keys: ['W'], result: '恢复添加竖线' },
+        ]
+        : mode.instructions
 
-  return <div id="canvas-mode-status" role="status" aria-atomic="true" className="flex items-center gap-3 rounded-xl border bg-card/95 px-3 py-2 shadow-sm">
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon aria-hidden="true" className="size-4" /></span>
-    <div className="min-w-0">
-      <p className="text-xs font-semibold text-foreground">{temporary ? '临时拖动画布' : mode.label}</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{hint}{!temporary && tool !== 'pan' && <span className="ml-2">按住空格拖动画布</span>}</p>
+  return <div id="canvas-mode-status" role="status" aria-atomic="true" className="w-80 max-w-full overflow-hidden rounded-xl border bg-card text-foreground shadow-sm">
+    <div className="flex items-start gap-3 px-4 pb-3 pt-4">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon aria-hidden="true" className="size-[18px]" /></span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold">{temporary ? '临时移动画布' : tool === 'fill' && erasing ? '清除裁切标记' : mode.label}</p>
+          {!temporary && <span className="text-muted-foreground"><ShortcutKeys keys={[mode.shortcut]} /></span>}
+        </div>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{temporary ? '松开后会自动回到刚才的工具。' : mode.description}</p>
+      </div>
     </div>
+    <div className="mx-3 mb-3 space-y-2 rounded-lg bg-muted/60 p-3">
+      {instructions.map(instruction => <div key={instruction.action} className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] leading-relaxed">
+        <span className="font-medium">{instruction.action}</span>
+        {instruction.keys && <ShortcutKeys keys={instruction.keys} />}
+        <span className="text-muted-foreground">{instruction.result}</span>
+      </div>)}
+    </div>
+    {!temporary && tool !== 'pan' && <>
+      <Separator />
+      <div className="flex flex-wrap items-center gap-1.5 px-4 py-2.5 text-[10px] text-muted-foreground">
+        <Hand aria-hidden="true" className="size-3" />
+        <span>移画布：按住</span><ShortcutKeys keys={['空格']} /><span>+ 左键拖动</span>
+      </div>
+    </>}
   </div>
 }

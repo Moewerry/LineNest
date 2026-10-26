@@ -2,6 +2,8 @@ import { useEffect, useId, useState, type MouseEvent } from 'react'
 import { Eraser, PaintBucket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { ShortcutKeys } from '@/features/editor/components/ShortcutKeys'
 import { useEditor } from '@/features/editor/model/store'
 
 type Props = { busy: boolean; loading: boolean; error: string }
@@ -22,10 +24,10 @@ export function FillSettings({ busy, loading, error }: Props) {
     if (event.detail > 0) (event.currentTarget.closest('[data-canvas-shortcuts]') as HTMLElement | null)?.focus({ preventScroll: true })
   }
 
-  return <section data-editor-settings aria-label="油漆桶设置" className="pointer-events-auto w-full max-w-sm rounded-xl border bg-card/95 p-3 shadow-sm">
+  return <section data-editor-settings aria-label="裁切标记设置" className="pointer-events-auto w-80 max-w-full rounded-xl border bg-card p-4 shadow-sm">
     <div className="flex items-center justify-between gap-3">
-      <h2 className="text-xs font-semibold">油漆桶</h2>
-      <span className="text-[11px] text-muted-foreground">已标记 {count} 块</span>
+      <h2 className="text-xs font-semibold">标记设置</h2>
+      <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary">已标记 {count} 块</span>
     </div>
     <div role="group" aria-label="标记操作" className="mt-3 grid grid-cols-2 gap-2">
       <Button size="sm" variant={action === 'mark' ? 'default' : 'outline'} aria-pressed={action === 'mark'} disabled={busy} onClick={event => chooseAction('mark', event)}><PaintBucket className="size-3.5" />标记区域</Button>
@@ -33,10 +35,10 @@ export function FillSettings({ busy, loading, error }: Props) {
     </div>
     <div className="mt-3 grid grid-cols-[minmax(0,1fr)_6rem] gap-3">
       <div className="min-w-0 space-y-1.5">
-        <label htmlFor={colorId} className="text-[11px] text-muted-foreground">遮罩颜色</label>
+        <label htmlFor={colorId} className="text-[11px] text-muted-foreground">标记颜色</label>
         <div className="flex items-center gap-1.5">
-          <Input type="color" aria-label="选择遮罩颜色" value={color} disabled={busy} className="h-8 w-9 shrink-0 cursor-pointer p-1" onChange={event => useEditor.getState().setFillColor(event.target.value)} />
-          <Input id={colorId} aria-label="遮罩颜色 HEX" value={colorDraft} disabled={busy} maxLength={7} spellCheck={false} autoComplete="off" aria-invalid={!validColor(colorDraft)} className="h-8 min-w-0 flex-1 px-2 font-mono text-xs" onChange={event => {
+          <Input type="color" aria-label="选择标记颜色" value={color} disabled={busy} className="h-8 w-9 shrink-0 cursor-pointer p-1" onChange={event => useEditor.getState().setFillColor(event.target.value)} />
+          <Input id={colorId} aria-label="标记颜色 HEX" value={colorDraft} disabled={busy} maxLength={7} spellCheck={false} autoComplete="off" aria-invalid={!validColor(colorDraft)} className="h-8 min-w-0 flex-1 px-2 font-mono text-xs" onChange={event => {
             const value = event.target.value
             setColorDraft(value)
             if (validColor(value)) useEditor.getState().setFillColor(value)
@@ -44,7 +46,7 @@ export function FillSettings({ busy, loading, error }: Props) {
         </div>
       </div>
       <div className="space-y-1.5">
-        <label htmlFor={opacityId} className="text-[11px] text-muted-foreground">不透明度</label>
+        <label htmlFor={opacityId} className="text-[11px] text-muted-foreground">颜色浓度</label>
         <div className="flex items-center gap-1.5">
           <Input id={opacityId} type="number" min={0} max={100} step={1} title="100% 为完全不透明" value={opacityDraft} disabled={busy} aria-invalid={!opacityValid} className="h-8 px-2 text-xs" onChange={event => {
             const value = event.target.value, number = value.trim() ? Number(value) : NaN
@@ -55,8 +57,9 @@ export function FillSettings({ busy, loading, error }: Props) {
         </div>
       </div>
     </div>
-    <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">{action === 'erase' ? '点击已标记区域清除。' : '左键点击分割区域进行标记。'}Ctrl + Z 撤销。</p>
-    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">颜色仅作提示，导出保留原图。</p>
+    <Separator className="my-3" />
+    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground"><span>标错了？按</span><ShortcutKeys keys={['Ctrl', 'Z']} /><span>撤销上一步</span></div>
+    <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">颜色只帮助你识别区域，导出的图片保留原色。</p>
     {loading && <p role="status" className="mt-2 text-[11px] text-muted-foreground">正在识别分割区域…</p>}
     {error && <p role="alert" className="mt-2 text-[11px] leading-relaxed text-destructive">{error}</p>}
   </section>
