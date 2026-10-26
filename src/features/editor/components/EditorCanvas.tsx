@@ -69,9 +69,12 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     const p = pointer(), start = clamp(p), state = useEditor.getState()
     if (space || event.evt.button === 1) { event.evt.preventDefault(); updateGesture({ type: 'pan', start: p, current: p }); return }
     const hit = event.target.id()
-    if (tool === 'crop' || (tool === 'line' && !hit)) {
+    if (tool === 'crop') {
       if (!inBox(p, { x: 0, y: 0, width: image.width, height: image.height })) return
       updateGesture({ type: tool, start, current: start, additive: false }); return
+    }
+    if (tool === 'line' && !hit) {
+      updateGesture({ type: 'line', start: p, current: p, additive: false }); return
     }
     if (hit.startsWith('endpoint:')) {
       const [, end, id] = hit.split(':')
@@ -93,14 +96,14 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     const p = pointer()
     if (active.type === 'pan') {
       setView(v => ({ ...v, x: v.x + (p.x - active.start.x) * v.scale, y: v.y + (p.y - active.start.y) * v.scale }))
-    } else updateGesture({ ...active, current: ['line', 'crop', 'endpoint'].includes(active.type) ? clamp(p) : p })
+    } else updateGesture({ ...active, current: active.type === 'crop' ? clamp(p) : p })
   }
   const finish = () => {
     const active = gestureRef.current
     if (!active) return
     const { start, current } = active, state = useEditor.getState()
     const distance = Math.hypot(current.x - start.x, current.y - start.y) * view.scale
-    if (active.type === 'line' && distance > 3) state.addLine(start, current)
+    if (active.type === 'line' && distance > 3 && image && segmentIntersectsBox(start, current, { x: 0, y: 0, width: image.width, height: image.height })) state.addLine(start, current)
     if (active.type === 'move' && distance > 1) state.move({ x: current.x - start.x, y: current.y - start.y })
     if (active.type === 'endpoint' && distance > 1) state.endpoint(active.id, active.end, current)
     if (active.type === 'crop' && distance > 3) {
@@ -131,7 +134,7 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
       const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)
       if (id) { updateGesture(null); enterGroup(id) }
     }} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
-      <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
+      <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
         <NodeLayer snapshot={snapshot} scale={view.scale} delta={delta} endpoint={endpoint} />
         {snapshot.doc.crop && <Rect {...snapshot.doc.crop} stroke="#237a60" strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill="#a7e8cd16" listening={false} />}
