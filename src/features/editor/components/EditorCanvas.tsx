@@ -10,6 +10,7 @@ import type { Box, Point } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
 import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
+import { enterGroup, leaveGroup } from '../commands'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -43,7 +44,7 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     const down = (e: KeyboardEvent) => {
       if (isTextTarget(e.target)) return
       if (e.code === 'Space') { e.preventDefault(); setSpace(true) }
-      if (e.key === 'Escape') updateGesture(null)
+      if (e.key === 'Escape' && gestureRef.current) { e.stopImmediatePropagation(); updateGesture(null) }
     }
     const up = (e: KeyboardEvent) => { if (e.code === 'Space') setSpace(false) }
     const cancel = () => { setSpace(false); updateGesture(null) }
@@ -51,10 +52,13 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', cancel) }
   }, [])
   useEffect(() => {
-    const cancel = (e: PointerEvent) => { if (!container.current?.contains(e.target as Node) || e.type === 'pointercancel') updateGesture(null) }
+    const cancel = (e: PointerEvent) => { if (!stage.current?.container().contains(e.target as Node) || e.type === 'pointercancel') updateGesture(null) }
     window.addEventListener('pointerup', cancel); window.addEventListener('pointercancel', cancel)
     return () => { window.removeEventListener('pointerup', cancel); window.removeEventListener('pointercancel', cancel) }
   }, [])
+  useEffect(() => useEditor.subscribe((state, previous) => {
+    if (state.present !== previous.present) updateGesture(null)
+  }), [])
   const pointer = (): Point => {
     const p = stage.current?.getPointerPosition() ?? zero
     return { x: (p.x - view.x) / view.scale, y: (p.y - view.y) / view.scale }
@@ -119,7 +123,11 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
   return <div ref={container} className={`canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden ${dropping ? 'ring-2 ring-inset ring-ring' : ''}`} style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
     onDragOver={e => { e.preventDefault(); setDropping(true) }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropping(false) }} onDrop={e => { e.preventDefault(); setDropping(false); const file = e.dataTransfer.files[0]; if (file && !busy) onDrop(file) }}>
-    {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
+    {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
+      if (tool !== 'select') return
+      const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)
+      if (id) { updateGesture(null); enterGroup(id) }
+    }} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
         <NodeLayer snapshot={snapshot} scale={view.scale} delta={delta} endpoint={endpoint} />
@@ -129,6 +137,7 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
       </Group></Layer>
     </Stage> : <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"><Button size="lg" onClick={onPick} disabled={busy}><ImagePlus />{busy ? '正在读取图片' : '导入图片'}</Button><span className="text-xs text-muted-foreground">或拖入图片</span></div>}
     {image && <>
+      {snapshot.scope && <div className="absolute left-4 top-4"><Button variant="outline" size="sm" className="bg-white text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}
       <div className="pointer-events-none absolute bottom-5 left-5 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}</div>
       <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-xl border bg-white p-1 shadow-xs">
         <Button variant="ghost" size="icon-sm" aria-label="缩小" onClick={() => zoom(1 / 1.2)}><Minus /></Button><span className="w-12 text-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span><Button variant="ghost" size="icon-sm" aria-label="放大" onClick={() => zoom(1.2)}><Plus /></Button><span className="mx-1 h-4 border-l" /><Button variant="ghost" size="icon-sm" aria-label="适应画布" title="适应画布" onClick={fit}><Maximize /></Button>
