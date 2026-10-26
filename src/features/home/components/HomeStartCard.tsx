@@ -17,9 +17,9 @@ export function HomeStartCard() {
         <div className="home-card-icon flex size-20 shrink-0 -rotate-6 items-center justify-center rounded-[22px] bg-primary text-primary-foreground"><Scissors aria-hidden="true" className="size-10" strokeWidth={1.4} /></div>
         <p className="text-2xl font-semibold leading-snug tracking-tight"><HomeAnimatedText delay={100} stagger={40}>画一次，</HomeAnimatedText><br /><HomeAnimatedText delay={240} stagger={40}>整组复用。</HomeAnimatedText></p>
       </div>
-      <p className="mb-7 text-sm leading-7 text-background/60"><HomeAnimatedText delay={380}>从画线到分图，简单顺手</HomeAnimatedText></p>
-      <Button size="lg" disabled={busy} onClick={pickImage} className="home-card-action group relative h-14 w-full justify-center rounded-xl px-12 text-center text-base shadow-none hover:bg-primary/90">{busy ? '正在导入图片' : <HomeAnimatedText stagger={35}>上传图片</HomeAnimatedText>}{busy ? <LoaderCircle aria-hidden="true" className="absolute right-5 size-5 animate-spin motion-reduce:animate-none" /> : <Upload aria-hidden="true" className="absolute right-5 size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5" />}</Button>
-      <p className="mt-3 text-center text-xs text-background/60" role={busy ? 'status' : undefined}>{busy ? '正在读取，请稍候' : '也可直接拖入图片，自动进入工具台'}</p>
+      <p className="mb-7 text-sm leading-7 text-white"><HomeAnimatedText delay={380}>从画线到分图，简单顺手</HomeAnimatedText></p>
+      <Button size="lg" disabled={busy} onClick={pickImage} className="home-card-action group h-14 w-full justify-center gap-2 rounded-xl px-5 text-center text-base shadow-none hover:bg-primary/90">{busy ? '正在导入图片' : <HomeAnimatedText stagger={35}>上传图片</HomeAnimatedText>}{busy ? <LoaderCircle aria-hidden="true" className="size-5 animate-spin motion-reduce:animate-none" /> : <Upload aria-hidden="true" className="size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5" />}</Button>
+      {busy && <p className="mt-3 text-center text-xs text-background/60" role="status">正在读取，请稍候</p>}
     </section>
   </div>
 }

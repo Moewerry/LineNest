@@ -12,7 +12,7 @@ export function HomeWorkflow() {
     <span aria-hidden="true" className="home-workflow-divider absolute inset-x-0 top-0 h-px origin-left bg-primary" />
     <ol className="grid gap-4 sm:grid-cols-3 sm:gap-8">
       {steps.map(({ number, icon: Icon, title, description }, index) => <li key={number} className="home-workflow-step flex items-start gap-4">
-        <span className="home-workflow-number inline-block shrink-0 pt-1 font-mono text-xs text-foreground">{number}</span>
+        <span className="home-workflow-number inline-block shrink-0 font-mono text-lg leading-5 text-primary">{number}</span>
         <div className="home-workflow-content"><h2 className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 shrink-0 text-primary" strokeWidth={1.6} /><HomeAnimatedText className="text-foreground" delay={400 + index * 100}>{title}</HomeAnimatedText></h2>
         <p className="mt-1 text-xs leading-5 text-foreground"><HomeAnimatedText delay={540 + index * 100} stagger={20}>{description}</HomeAnimatedText></p></div>
       </li>)}

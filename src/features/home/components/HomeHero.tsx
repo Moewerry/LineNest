@@ -9,8 +9,8 @@ export function HomeHero() {
         <span className="home-hero-line home-hero-title-line mt-[0.08em] block text-primary">分得漂亮<span className="text-foreground">。</span></span>
       </h1>
       <div className="mt-8 flex items-start gap-4 sm:mt-10">
-        <Asterisk aria-hidden="true" className="home-hero-mark mt-1 size-7 shrink-0 text-foreground" strokeWidth={1.5} />
-        <p className="max-w-sm text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"><span className="home-hero-line home-hero-line-third block">LineNest — 让创作更顺手</span><span className="home-hero-line home-hero-line-fourth block text-[11px] tracking-[0.12em]">MADE FOR YOUR FLOW</span></p>
+        <Asterisk aria-hidden="true" className="home-hero-mark mt-1 size-7 shrink-0 text-primary" strokeWidth={1.5} />
+        <p className="max-w-sm text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"><span className="home-hero-line home-hero-line-third block text-primary">LineNest — 让创作更顺手</span><span className="home-hero-line home-hero-line-fourth block text-[11px] tracking-[0.12em]">MADE FOR YOUR FLOW</span></p>
       </div>
     </div>
     <HomeStartCard />
