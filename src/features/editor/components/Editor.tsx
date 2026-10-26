@@ -10,6 +10,7 @@ import { EditorCanvas } from './EditorCanvas'
 import { ObjectPanel } from './ObjectPanel'
 import { ToolBar } from './ToolBar'
 import { TopBar } from './TopBar'
+import { HistoryToolBar } from './HistoryToolBar'
 import { TemplateDialog } from '@/features/templates/TemplateDialog'
 import { ExportButton } from './ExportButton'
 import { PanelRightClose, PanelRightOpen } from 'lucide-react'
@@ -63,7 +64,7 @@ export function Editor() {
   return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground" {...dropHandlers}>
     <div inert={!image} aria-hidden={!image ? true : undefined} className="flex min-h-0 flex-1 flex-col">
       <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><TemplateDialog disabled={busy} /><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起对象面板' : '打开对象面板'} aria-pressed={panelOpen} title={panelOpen ? '收起对象面板' : '打开对象面板'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
-      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} />{panelOpen && <ObjectPanel />}</div>
+      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><div className="flex min-h-0 min-w-0 flex-1 flex-col"><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} /><HistoryToolBar busy={busy} /></div>{panelOpen && <ObjectPanel />}</div>
     </div>
     {!image && <CanvasEmptyState onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
     {image && dragging && <ImageDropOverlay />}

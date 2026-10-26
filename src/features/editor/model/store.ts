@@ -19,6 +19,7 @@ type EditorState = {
   eraseRegionMark: (point: Point) => void
   select: (ids: string[]) => void
   addLine: (start: Point, end: Point, splitAxis?: SplitAxis) => void
+  clearLines: () => void
   move: (delta: Point) => void
   endpoint: (id: string, end: 'start' | 'end', point: Point) => void
   setCrop: (crop: Box | null) => void
@@ -94,6 +95,15 @@ export const useEditor = create<EditorState>((set, get) => ({
       draft.doc.nodes[id] = { id, type: 'line', name: splitAxis ? splitAxis === 'horizontal' ? '横向分割线' : '竖向分割线' : '线条', parentId: draft.scope, matrix: identity(), locked: false, start: apply(parent, start), end: apply(parent, end), ...(splitAxis ? { splitAxis } : {}) }
       childrenOf(draft.doc, draft.scope).push(id)
       draft.selected = [id]
+    })
+  },
+  clearLines() {
+    get().commit(draft => {
+      if (!Object.values(draft.doc.nodes).some(node => node.type === 'line')) return
+      draft.doc.nodes = {}
+      draft.doc.roots = []
+      draft.selected = []
+      draft.scope = null
     })
   },
   move(delta) { get().commit(draft => transformSelection(draft, translation(delta.x, delta.y))) },
