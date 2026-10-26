@@ -1,12 +1,14 @@
 import { create } from 'zustand'
 import { apply, childrenOf, containsLocked, containsSplit, identity, inverse, isLocked, multiply, normalizeSplitLines, segments, translation, worldMatrix } from '../geometry'
 import { emptySnapshot, type Box, type ImageInfo, type Matrix, type Point, type Snapshot, type SplitAxis, type Tool } from './types'
+import { rotateDocumentClockwise } from '../geometry/rotate-document'
 
 type EditorState = {
   present: Snapshot; past: Snapshot[]; future: Snapshot[]; tool: Tool
   commit: (change: (draft: Snapshot) => void) => void
   setTool: (tool: Tool) => void
   setImage: (image: ImageInfo) => void
+  rotateImage: (image: ImageInfo) => void
   select: (ids: string[]) => void
   addLine: (start: Point, end: Point, splitAxis?: SplitAxis) => void
   move: (delta: Point) => void
@@ -36,6 +38,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     get().commit(draft => Object.assign(draft, emptySnapshot(), { doc: { ...emptySnapshot().doc, image } }))
     set({ tool: 'split' })
   },
+  rotateImage(image) { get().commit(draft => rotateDocumentClockwise(draft.doc, image)) },
   select(ids) {
     get().commit(draft => {
       const allowed = childrenOf(draft.doc, draft.scope)
