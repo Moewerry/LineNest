@@ -67,9 +67,8 @@ export function normalizeSplitLines(doc: DocumentData) {
     const node = doc.nodes[segment.id]
     if (node.type !== 'line' || !node.splitAxis) continue
     const horizontal = node.splitAxis === 'horizontal'
-    const limit = horizontal ? image.height : image.width
     const coordinate = horizontal ? (segment.start.y + segment.end.y) / 2 : (segment.start.x + segment.end.x) / 2
-    const position = Math.max(0, Math.min(limit, Math.round(coordinate)))
+    const position = Math.round(coordinate)
     const parent = inverse(worldMatrix(doc, node.parentId))
     node.matrix = identity()
     node.start = apply(parent, horizontal ? { x: 0, y: position } : { x: position, y: 0 })

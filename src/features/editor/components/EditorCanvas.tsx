@@ -70,7 +70,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
       const active = gestureRef.current
       if (active?.type !== 'split') return
       const currentImage = useEditor.getState().present.doc.image
-      if (!currentImage || (axis === 'horizontal' ? currentImage.height : currentImage.width) <= 1) {
+      if (!currentImage) {
         updateGesture(null)
         return
       }
@@ -144,9 +144,6 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
     }
     if (tool === 'split') {
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
-      // Only the split coordinate must be inside the image; allow clicks along its outer guide.
-      if (horizontal ? p.y <= 0 || p.y >= image.height : p.x <= 0 || p.x >= image.width) return
-      if (horizontal ? image.height <= 1 : image.width <= 1) return
       event.evt.preventDefault()
       if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
       updateGesture({ type: 'split', axis: horizontal ? 'horizontal' : 'vertical', start: p, current: p })
