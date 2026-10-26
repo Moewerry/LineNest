@@ -16,7 +16,7 @@ import { CanvasContextMenu } from './CanvasContextMenu'
 import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 import { CanvasModeStatus } from './CanvasModeStatus'
 import { displaySegment } from '../geometry/display-segment'
-import { splitLineAt } from '../geometry/split-line'
+import { splitLineAt, splitMoveAxis } from '../geometry/split-line'
 import { SplitLinePreview } from './SplitLinePreview'
 import { CanvasViewControls } from './CanvasViewControls'
 import { toast } from 'sonner'
@@ -44,13 +44,14 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   const [space, setSpace] = useState(false)
   const spaceRef = useRef(false)
   const [horizontal, setHorizontal] = useState(false)
+  const [splitHover, setSplitHover] = useState<SplitAxis | null>(null)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
   const modeGuideVisible = useModeGuide()
   const fillAction = useEditor(s => s.fillAction)
   const fillRegions = useFillRegions(snapshot.doc, tool === 'fill' && fillAction === 'mark' && !busy)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
   const viewport: Box = { x: (RULER_SIZE - view.x) / view.scale, y: (RULER_SIZE - view.y) / view.scale, width: Math.max(0, size.width - RULER_SIZE) / view.scale, height: Math.max(0, size.height - RULER_SIZE) / view.scale }
-  const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value) }
+  const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value); if (!value) setSplitHover(null) }
   const fit = () => {
     if (!image) return
     const scale = Math.max(0.01, Math.min((size.width - RULER_SIZE - 96) / image.width, (size.height - RULER_SIZE - 96) / image.height, 1))
@@ -146,6 +147,10 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
       event.evt.preventDefault()
       if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
+      if (splitMoveAxis(state.present, p, view.scale)) {
+        updateGesture({ type: 'move', start: p, current: p })
+        return
+      }
       updateGesture({ type: 'split', axis: horizontal ? 'horizontal' : 'vertical', start: p, current: p })
       return
     }
@@ -179,8 +184,11 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   }
   const track = () => {
     const active = gestureRef.current
-    if (!active) return
     const p = pointer()
+    if (!active) {
+      setSplitHover(tool === 'split' && !busy ? splitMoveAxis(useEditor.getState().present, p, view.scale) : null)
+      return
+    }
     if (active.type === 'pan') {
       const screen = stage.current?.getPointerPosition()
       if (screen) setView(v => ({ ...v, x: active.origin.x + screen.x - active.start.x, y: active.origin.y + screen.y - active.start.y }))
@@ -227,7 +235,9 @@ export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean;
   const preview = gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
-  return <CanvasContextMenu disabled={busy}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : 'crosshair' }}
+  const splitCursor = tool === 'split' && !busy && gesture?.type !== 'split' ? splitHover : null
+  return <CanvasContextMenu disabled={busy}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : 'crosshair' }}
+    onPointerLeave={() => setSplitHover(null)}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (tool !== 'select' || spaceRef.current) return

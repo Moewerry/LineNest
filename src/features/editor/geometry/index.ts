@@ -84,6 +84,11 @@ export function bounds(doc: DocumentData, ids: string[]): Box | null {
 export function boxBetween(a: Point, b: Point): Box {
   return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), width: Math.abs(a.x - b.x), height: Math.abs(a.y - b.y) }
 }
+export function selectionBox(doc: DocumentData, ids: string[], scale: number): Box | null {
+  const box = bounds(doc, ids)
+  const padding = 5 / scale
+  return box ? { x: box.x - padding, y: box.y - padding, width: box.width + padding * 2, height: box.height + padding * 2 } : null
+}
 export const inBox = (p: Point, b: Box) => p.x >= b.x && p.y >= b.y && p.x <= b.x + b.width && p.y <= b.y + b.height
 // Liang–Barsky clipping tests the segment instead of its bounding box.
 export function segmentIntersectsBox(a: Point, b: Point, box: Box): boolean {

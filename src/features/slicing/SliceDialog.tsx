@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Download, FileArchive, Scissors } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { DocumentData } from '@/features/editor/model/types'
 import { calculateSlices } from './calculate'
 import { exportSlices } from './export'
@@ -37,11 +36,12 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
     finally { exportingRef.current = false; setExporting(false) }
   }
   const close = () => { abort.current?.abort(); onClose() }
-  return <Dialog open onOpenChange={value => { if (!value) close() }}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl">
-    <DialogHeader className="gap-3 pr-6">
+  return <Dialog open onOpenChange={value => { if (!value) close() }}><DialogContent className="flex flex-col overflow-hidden p-0 sm:max-w-3xl">
+    <DialogHeader className="gap-3 px-6 pt-6 pr-12">
       <DialogTitle className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Scissors className="size-[18px]" /></span>{mode === 'marked' ? '导出标记区域' : '按线切图'}</DialogTitle>
       <DialogDescription>{mode === 'marked' ? '每个标记区域保存为一张图片，保留原图颜色。' : '按线条围成的区域切图，每个区域保存为一张图片。'}</DialogDescription>
     </DialogHeader>
+    <DialogBody>
     {error ? <p role="alert" className="rounded-lg bg-destructive/5 p-4 text-sm text-destructive">{error}</p> : !result ? <p role="status" className="py-16 text-center text-muted-foreground">正在计算切片…</p> : <>
       <SlicePreview doc={doc} result={result} selected={selected} marked={mode === 'marked'} />
       <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
@@ -55,8 +55,8 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
       {result.unusedEdges > 0 && <p className="text-xs text-muted-foreground">有未围成区域的线段，这些线段不参与切分。</p>}
       {mode === 'all' && result.regions.length === 1 && <p className="text-xs text-muted-foreground">还没有分出多个区域。请让线条连接图片边界，或围成封闭区域。</p>}
     </>}
-    <Separator />
-    <DialogFooter>
+    </DialogBody>
+    <DialogFooter className="border-t px-6 py-4">
       {exporting && <span role="status" className="self-center text-xs tabular-nums text-muted-foreground sm:mr-auto">正在导出 {progress} / {selected.size}</span>}
       <Button variant="outline" onClick={close}>{exporting ? '取消导出' : '关闭'}</Button>
       <Button disabled={!result || !selected.size || exporting} onClick={() => void download()}>

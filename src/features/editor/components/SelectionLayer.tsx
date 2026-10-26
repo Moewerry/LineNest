@@ -1,12 +1,13 @@
 import { Circle, Line, Rect } from 'react-konva'
 import { canvasColors } from '@/lib/canvas-colors'
-import { apply, bounds, containsLocked, containsSplit, worldMatrix } from '../geometry'
+import { apply, bounds, containsLocked, containsSplit, selectionBox, worldMatrix } from '../geometry'
 import type { Box, Point, Snapshot } from '../model/types'
 export function SelectionLayer({ snapshot, scale, delta, marquee, endpoint }: { snapshot: Snapshot; scale: number; delta: Point; marquee: Box | null; endpoint: { id: string; end: 'start' | 'end'; point: Point } | null }) {
   const box = bounds(snapshot.doc, snapshot.selected)
+  const outline = selectionBox(snapshot.doc, snapshot.selected, scale)
   const node = snapshot.selected.length === 1 ? snapshot.doc.nodes[snapshot.selected[0]] : null
   return <>
-    {box && <Rect x={box.x + delta.x - 5 / scale} y={box.y + delta.y - 5 / scale} width={box.width + 10 / scale} height={box.height + 10 / scale} stroke={canvasColors.selection} strokeWidth={1 / scale} dash={[4 / scale, 3 / scale]} listening={false} />}
+    {outline && <Rect {...outline} x={outline.x + delta.x} y={outline.y + delta.y} stroke={canvasColors.selection} strokeWidth={1 / scale} dash={[4 / scale, 3 / scale]} listening={false} />}
     {box && !containsSplit(snapshot.doc, snapshot.selected) && snapshot.selected.every(id => !containsLocked(snapshot.doc, id)) && <>
       <Line points={[box.x + box.width / 2, box.y - 5 / scale, box.x + box.width / 2, box.y - 28 / scale]} x={delta.x} y={delta.y} stroke={canvasColors.selection} strokeWidth={1 / scale} listening={false} />
       <Circle id="rotate-handle" x={box.x + box.width / 2 + delta.x} y={box.y - 28 / scale + delta.y} radius={5 / scale} fill={canvasColors.handle} stroke={canvasColors.selection} strokeWidth={1.5 / scale} hitStrokeWidth={12 / scale} />

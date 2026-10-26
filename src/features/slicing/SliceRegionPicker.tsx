@@ -1,6 +1,5 @@
 import { Check, Image } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import type { SliceRegion } from './types'
 
@@ -21,8 +20,7 @@ export function SliceRegionPicker({ regions, selected, disabled, onChange }: Pro
       </div>
       <Button size="sm" variant="ghost" disabled={disabled || !regions.length} onClick={() => onChange(selected.size === regions.length ? new Set() : new Set(regions.map(region => region.id)))}>{selected.size === regions.length && regions.length ? '取消全选' : '全选'}</Button>
     </div>
-    {!!regions.length && <ScrollArea className="max-h-44 [&_[data-slot=scroll-area-viewport]]:max-h-44">
-      <div className="grid gap-2 p-1 sm:grid-cols-2 lg:grid-cols-3">
+    {!!regions.length && <div className="grid gap-2 p-1 sm:grid-cols-2 lg:grid-cols-3">
         {regions.map(region => {
           const included = selected.has(region.id)
           return <Button key={region.id} variant="outline" aria-label={`区域 ${region.id}，${region.box.width} × ${region.box.height} 像素`} aria-pressed={included} disabled={disabled}
@@ -38,7 +36,6 @@ export function SliceRegionPicker({ regions, selected, disabled, onChange }: Pro
             </span>
           </Button>
         })}
-      </div>
-    </ScrollArea>}
+    </div>}
   </section>
 }

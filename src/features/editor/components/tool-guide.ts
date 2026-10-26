@@ -12,7 +12,8 @@ export const toolGuides = {
       { action: '按住', keys: ['W'], result: '添加横线，图片左右侧也可点击', gesture: '＋左键单击' },
       { action: '按住左键拖动', result: '调整新线位置，松开确认' },
       { action: '拖动时按住', keys: ['W'], result: '切换横线，松开后恢复竖线' },
-      { action: '按', keys: ['V'], result: '调整线条位置', gesture: '后左键拖动' },
+      { action: '拖动最新线条的虚线框', result: '移动当前线条，新建后旧线不再支持此操作' },
+      { action: '按', keys: ['V'], result: '选择并调整其他线条', gesture: '后左键拖动' },
     ],
   },
   select: {
