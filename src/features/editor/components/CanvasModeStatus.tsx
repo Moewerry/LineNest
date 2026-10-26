@@ -43,9 +43,9 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         </span>
       </div>)}
     </div>
-    {!temporary && tool !== 'pan' ? <div className="flex flex-wrap items-center gap-1.5 px-4 py-3 text-[11px] text-muted-foreground">
-        <Hand aria-hidden="true" className="size-3" />
-        <span>移动画布：按住空格+左键拖动</span>
+    {!temporary && tool === 'pan' ? <div className="flex items-start gap-1.5 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
+        <Hand aria-hidden="true" className="mt-0.5 size-3 shrink-0" />
+        <span>在其他模式下，按住空格并用鼠标左键拖动，可临时移动画布。</span>
       </div>
     : <div className="h-3" />}
   </div>
