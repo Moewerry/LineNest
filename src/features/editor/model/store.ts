@@ -22,7 +22,7 @@ export function transformSelection(draft: Snapshot, matrix: Matrix) {
   }
 }
 export const useEditor = create<EditorState>((set, get) => ({
-  present: emptySnapshot(), past: [], future: [], tool: 'select',
+  present: emptySnapshot(), past: [], future: [], tool: 'split',
   commit(change) {
     const current = get().present, next = structuredClone(current)
     change(next)
@@ -32,7 +32,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   setTool: tool => set({ tool }),
   setImage(image) {
     get().commit(draft => Object.assign(draft, emptySnapshot(), { doc: { ...emptySnapshot().doc, image } }))
-    set({ tool: 'select' })
+    set({ tool: 'split' })
   },
   select(ids) {
     get().commit(draft => {

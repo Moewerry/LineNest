@@ -24,6 +24,7 @@ export function useShortcuts() {
         const step = event.shiftKey ? 10 : 1
         state.move({ x: key === 'arrowleft' ? -step : key === 'arrowright' ? step : 0, y: key === 'arrowup' ? -step : key === 'arrowdown' ? step : 0 })
       }
+      else if (!mod && key === 's') state.setTool('split')
       else if (!mod && key === 'v') state.setTool('select')
       else if (!mod && key === 'h') state.setTool('pan')
       else if (!mod && key === 'l') state.setTool('line')

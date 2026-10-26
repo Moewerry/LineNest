@@ -30,6 +30,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
   const [gesture, setGesture] = useState<Gesture | null>(null), gestureRef = useRef<Gesture | null>(null)
   const [space, setSpace] = useState(false)
+  const [horizontal, setHorizontal] = useState(false)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value) }
@@ -49,12 +50,13 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
     const down = (e: KeyboardEvent) => {
       if (isTextTarget(e.target)) return
       if (e.isComposing) return
+      if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); setHorizontal(true) }
       if (e.code === 'Space' && e.target instanceof HTMLElement && e.target.closest('button, [role="button"]')) return
       if (e.code === 'Space') { e.preventDefault(); setSpace(true) }
       if (e.key === 'Escape' && gestureRef.current) { e.stopImmediatePropagation(); updateGesture(null) }
     }
-    const up = (e: KeyboardEvent) => { if (e.code === 'Space') setSpace(false) }
-    const cancel = () => { setSpace(false); updateGesture(null) }
+    const up = (e: KeyboardEvent) => { if (e.code === 'Space') setSpace(false); if (e.code === 'KeyW') setHorizontal(false) }
+    const cancel = () => { setSpace(false); setHorizontal(false); updateGesture(null) }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', cancel)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', cancel) }
   }, [])
@@ -82,6 +84,15 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
       return
     }
     const hit = event.target.id()
+    if (tool === 'split') {
+      if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
+      if (p.x <= 0 || p.x >= image.width || p.y <= 0 || p.y >= image.height) return
+      const x = Math.max(1, Math.min(image.width - 1, Math.round(p.x)))
+      const y = Math.max(1, Math.min(image.height - 1, Math.round(p.y)))
+      if (horizontal ? image.height <= 1 : image.width <= 1) return
+      state.addLine(horizontal ? { x: 0, y } : { x, y: 0 }, horizontal ? { x: image.width, y } : { x, y: image.height })
+      return
+    }
     if (hit === 'rotate-handle') {
       const box = bounds(snapshot.doc, snapshot.selected)
       if (!box || snapshot.selected.some(id => containsLocked(snapshot.doc, id))) return
@@ -174,7 +185,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
     </Stage> : <CanvasEmptyState onPick={onPick} busy={busy} />}
     {image && <>
       {snapshot.scope && <div className="absolute left-4 top-4"><Button variant="outline" size="sm" className="bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}
-      <div className="pointer-events-none absolute bottom-5 left-5 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}<span className="ml-3">{tool === 'pan' ? '按住左键拖动画布 · V 返回选择' : 'H 拖动画布 · 空格 + 拖动临时平移'}</span></div>
+      <div className="pointer-events-none absolute bottom-5 left-5 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}<span className="ml-3">{tool === 'split' ? horizontal ? '单击添加横线 · 松开 W 添加竖线 · V 选择微调' : '单击添加竖线 · 按住 W 单击添加横线 · V 选择微调' : tool === 'pan' ? '按住左键拖动画布 · S 返回分割线' : 'S 分割线 · H 拖动画布 · 空格 + 拖动临时平移'}</span></div>
       <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-full border bg-card p-1.5 shadow-sm">
         <Button variant="ghost" size="icon-sm" aria-label="缩小" onClick={() => zoom(1 / 1.2)}><Minus /></Button><span className="w-12 text-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span><Button variant="ghost" size="icon-sm" aria-label="放大" onClick={() => zoom(1.2)}><Plus /></Button><span className="mx-1 h-4 border-l" /><Button variant="ghost" size="icon-sm" aria-label="适应画布" title="适应画布" onClick={fit}><Maximize /></Button>
       </div>

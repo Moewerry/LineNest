@@ -1,9 +1,10 @@
-import { Crop, Hand, MousePointer2, Slash } from 'lucide-react'
+import { Crop, Hand, MousePointer2, Slash, Grid2X2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useEditor } from '../model/store'
 import type { Tool } from '../model/types'
 const tools = [
+  { id: 'split', label: '分割线 · S（单击竖线，按住 W 单击横线）', icon: Grid2X2 },
   { id: 'select', label: '选择 · V', icon: MousePointer2 },
   { id: 'pan', label: '拖动画布 · H', icon: Hand },
   { id: 'line', label: '画线 · L', icon: Slash },

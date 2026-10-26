@@ -14,7 +14,7 @@ export type DocumentData = {
   crop: Box | null
 }
 export type Snapshot = { doc: DocumentData; selected: string[]; scope: string | null }
-export type Tool = 'select' | 'pan' | 'line' | 'crop'
+export type Tool = 'split' | 'select' | 'pan' | 'line' | 'crop'
 export const emptySnapshot = (): Snapshot => ({
   doc: { version: 1, image: null, nodes: {}, roots: [], crop: null },
   selected: [], scope: null,
