@@ -68,11 +68,11 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
     if (!image || busy || (event.evt.button !== 0 && event.evt.button !== 1)) return
     const p = pointer(), start = clamp(p), state = useEditor.getState()
     if (space || event.evt.button === 1) { event.evt.preventDefault(); updateGesture({ type: 'pan', start: p, current: p }); return }
-    if (tool === 'line' || tool === 'crop') {
+    const hit = event.target.id()
+    if (tool === 'crop' || (tool === 'line' && !hit)) {
       if (!inBox(p, { x: 0, y: 0, width: image.width, height: image.height })) return
       updateGesture({ type: tool, start, current: start, additive: false }); return
     }
-    const hit = event.target.id()
     if (hit.startsWith('endpoint:')) {
       const [, end, id] = hit.split(':')
       updateGesture({ type: 'endpoint', id, end: end as 'start' | 'end', start: p, current: p }); return
