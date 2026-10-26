@@ -51,7 +51,7 @@
 
 .canvas-surface {
   background-color: #ffffff;
-  background-image: radial-gradient(circle, #cfc6b9 0.8px, transparent 0.8px);
+  background-image: radial-gradient(circle, rgb(0 0 0 / 0.14) 0.8px, transparent 0.8px);
   background-size: 20px 20px;
 }
 
