@@ -2,7 +2,7 @@ import { Zip, ZipPassThrough } from 'fflate'
 import { getImageAsset } from '@/lib/images'
 import { downloadBlob } from '@/lib/download'
 import type { DocumentData } from '@/features/editor/model/types'
-import type { SliceRegion } from './types'
+import type { SliceDownloadMode, SliceRegion } from './types'
 
 export function regionPath(region: SliceRegion): Path2D {
   const path = new Path2D()
@@ -15,18 +15,20 @@ export function regionPath(region: SliceRegion): Path2D {
   return path
 }
 
-export async function exportSlices(doc: DocumentData, regions: SliceRegion[], signal: AbortSignal, onProgress: (count: number) => void) {
+export async function exportSlices(doc: DocumentData, regions: SliceRegion[], signal: AbortSignal, onProgress: (count: number) => void, mode: SliceDownloadMode = 'zip') {
   const asset = getImageAsset(doc.image?.id)
   if (!asset || !doc.image) throw new Error('找不到原图，请重新导入')
   if (!regions.length) throw new Error('请选择需要导出的切片')
   const pixels = regions.reduce((sum, region) => sum + region.box.width * region.box.height, 0)
   if (pixels > 80_000_000) throw new Error('本次切片总尺寸过大，请减少勾选后分批导出')
   const chunks: Uint8Array<ArrayBuffer>[] = []
+  const packed = regions.length > 1 && mode === 'zip'
+  const base = doc.image.name.replace(/\.[^.]+$/, '')
   let zipError: Error | null = null
-  const zip = new Zip((error, data) => {
+  const zip = packed ? new Zip((error, data) => {
     if (error) zipError = error
     else if (data.length) chunks.push(new Uint8Array(data))
-  })
+  }) : null
   const check = () => { signal.throwIfAborted(); if (zipError) throw zipError }
   const canvas = document.createElement('canvas')
   try {
@@ -41,12 +43,21 @@ export async function exportSlices(doc: DocumentData, regions: SliceRegion[], si
       context.drawImage(asset.element, 0, 0)
       const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('切片尺寸过大，导出失败')), 'image/png'))
       check()
-      const file = new ZipPassThrough(`slice-${String(region.id).padStart(3, '0')}.png`)
-      zip.add(file); file.push(new Uint8Array(await blob.arrayBuffer()), true)
+      const name = `slice-${String(region.id).padStart(3, '0')}.png`
+      if (zip) {
+        const bytes = new Uint8Array(await blob.arrayBuffer())
+        check()
+        const file = new ZipPassThrough(name)
+        zip.add(file); file.push(bytes, true)
+      } else {
+        downloadBlob(blob, `${base}-${name}`)
+      }
       check(); onProgress(i + 1)
-      await new Promise<void>(resolve => window.setTimeout(resolve, 0))
+      // Space out separate downloads so the browser can process each request.
+      if (i < regions.length - 1) await new Promise<void>(resolve => window.setTimeout(resolve, zip ? 0 : 250))
     }
     check()
+    if (!zip) return
     const manifest = new ZipPassThrough('slices.json')
     zip.add(manifest)
     manifest.push(new TextEncoder().encode(JSON.stringify({
@@ -55,9 +66,8 @@ export async function exportSlices(doc: DocumentData, regions: SliceRegion[], si
       slices: regions.map(region => ({ file: `slice-${String(region.id).padStart(3, '0')}.png`, ...region.box, rings: region.rings })),
     }, null, 2)), true)
     zip.end(); check()
-    const base = doc.image.name.replace(/\.[^.]+$/, '')
     downloadBlob(new Blob(chunks, { type: 'application/zip' }), `${base}-slices.zip`)
   } finally {
-    zip.terminate(); canvas.width = 1; canvas.height = 1
+    zip?.terminate(); canvas.width = 1; canvas.height = 1
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Download, Scissors } from 'lucide-react'
+import { Download, FileArchive, Scissors } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -9,11 +9,13 @@ import { calculateSlices } from './calculate'
 import { exportSlices } from './export'
 import { SlicePreview } from './SlicePreview'
 import { SliceRegionPicker } from './SliceRegionPicker'
-import type { SliceMode, SliceResult } from './types'
+import { SliceDownloadOptions } from './SliceDownloadOptions'
+import type { SliceDownloadMode, SliceMode, SliceResult } from './types'
 
 export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData; mode?: SliceMode; onClose: () => void }) {
   const [result, setResult] = useState<SliceResult | null>(null), [error, setError] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set()), [exporting, setExporting] = useState(false), [progress, setProgress] = useState(0)
+  const [downloadMode, setDownloadMode] = useState<SliceDownloadMode>('zip')
   const abort = useRef<AbortController | null>(null), exportingRef = useRef(false)
   useEffect(() => {
     const controller = new AbortController()
@@ -24,12 +26,13 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
     return () => { controller.abort(); abort.current?.abort() }
   }, [doc, mode])
   const download = async () => {
-    if (!result || exportingRef.current) return
+    if (!result || !selected.size || exportingRef.current) return
+    const regions = result.regions.filter(region => selected.has(region.id))
     const controller = new AbortController(); abort.current = controller
     exportingRef.current = true; setExporting(true); setProgress(0)
     try {
-      await exportSlices(doc, result.regions.filter(region => selected.has(region.id)), controller.signal, setProgress)
-      toast.success('切片已打包导出')
+      await exportSlices(doc, regions, controller.signal, setProgress, downloadMode)
+      toast.success(regions.length === 1 ? '已发起 PNG 下载' : downloadMode === 'zip' ? '已发起 ZIP 下载' : `已发起 ${regions.length} 张图片下载`)
     } catch (value) { if (!controller.signal.aborted) toast.error(value instanceof Error ? value.message : '导出失败') }
     finally { exportingRef.current = false; setExporting(false) }
   }
@@ -48,10 +51,18 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
       </div>
       {!result.regions.length && <p role="status" className="text-sm text-muted-foreground">当前图片和裁剪范围内没有有效标记，请返回画布重新标记。</p>}
       <SliceRegionPicker regions={result.regions} selected={selected} disabled={exporting} onChange={setSelected} />
+      {selected.size > 1 && <SliceDownloadOptions value={downloadMode} disabled={exporting} onChange={setDownloadMode} />}
       {result.unusedEdges > 0 && <p className="text-xs text-muted-foreground">有未围成区域的线段，这些线段不参与切分。</p>}
       {mode === 'all' && result.regions.length === 1 && <p className="text-xs text-muted-foreground">还没有分出多个区域。请让线条连接图片边界，或围成封闭区域。</p>}
     </>}
     <Separator />
-    <DialogFooter><Button variant="outline" onClick={close}>{exporting ? '取消导出' : '关闭'}</Button><Button disabled={!result || !selected.size || exporting} onClick={() => void download()}><Download />{exporting ? `正在导出 ${progress}/${selected.size}` : '下载 ZIP'}</Button></DialogFooter>
+    <DialogFooter>
+      {exporting && <span role="status" className="self-center text-xs tabular-nums text-muted-foreground sm:mr-auto">正在导出 {progress} / {selected.size}</span>}
+      <Button variant="outline" onClick={close}>{exporting ? '取消导出' : '关闭'}</Button>
+      <Button disabled={!result || !selected.size || exporting} onClick={() => void download()}>
+        {selected.size > 1 && downloadMode === 'zip' ? <FileArchive /> : <Download />}
+        {exporting ? '正在导出…' : selected.size <= 1 ? '下载 PNG' : downloadMode === 'zip' ? '打包下载 ZIP' : `下载 ${selected.size} 张 PNG`}
+      </Button>
+    </DialogFooter>
   </DialogContent></Dialog>
 }
