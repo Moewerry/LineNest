@@ -10,11 +10,11 @@ const tools = [
   { id: 'line', label: '画线 · L', icon: Slash },
   { id: 'crop', label: '裁剪选区 · C', icon: Crop },
 ] satisfies { id: Tool; label: string; icon: typeof Crop }[]
-export function ToolBar() {
+export function ToolBar({ busy }: { busy: boolean }) {
   const tool = useEditor(s => s.tool), ready = useEditor(s => !!s.present.doc.image)
   return <nav data-canvas-shortcuts aria-label="编辑工具" className="flex w-[72px] shrink-0 flex-col items-center gap-3 border-r bg-card py-5">
     {tools.map(({ id, label, icon: Icon }) => <Tooltip key={id}>
-      <TooltipTrigger asChild><Button size="icon" variant={tool === id ? 'default' : 'ghost'} aria-label={label} aria-pressed={tool === id} disabled={!ready} onClick={() => useEditor.getState().setTool(id)}><Icon className="size-[18px]" /></Button></TooltipTrigger>
+      <TooltipTrigger asChild><Button size="icon" variant={tool === id ? 'default' : 'ghost'} aria-label={label} aria-pressed={tool === id} disabled={!ready || busy} onClick={() => useEditor.getState().setTool(id)}><Icon className="size-[18px]" /></Button></TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>)}
   </nav>

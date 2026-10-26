@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Group, Image as CanvasImage, Layer, Line, Rect, Stage } from 'react-konva'
 import type Konva from 'konva'
-import { Maximize, Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getImageAsset } from '@/lib/images'
 import { canvasColors } from '@/lib/canvas-colors'
@@ -16,6 +15,7 @@ import { CanvasContextMenu } from './CanvasContextMenu'
 import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
 import { CanvasModeStatus } from './CanvasModeStatus'
 import { displaySegment } from '../geometry/display-segment'
+import { CanvasViewControls } from './CanvasViewControls'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -26,7 +26,7 @@ type Gesture = { start: Point; current: Point } & (
 )
 const zero = { x: 0, y: 0 }
 
-export function EditorCanvas({ busy }: { busy: boolean }) {
+export function EditorCanvas({ busy, rotating, onRotateImage }: { busy: boolean; rotating: boolean; onRotateImage: () => void }) {
   const container = useRef<HTMLDivElement>(null), stage = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 1, height: 1 })
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
@@ -221,10 +221,8 @@ export function EditorCanvas({ busy }: { busy: boolean }) {
         <CanvasModeStatus tool={tool} horizontal={horizontal} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
         {snapshot.scope && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button>}
       </div>
-      <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-240px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}</div>
-      <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-full border bg-card p-1.5 shadow-sm">
-        <Button variant="ghost" size="icon-sm" aria-label="缩小" onClick={() => zoom(1 / 1.2)}><Minus /></Button><span className="w-12 text-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span><Button variant="ghost" size="icon-sm" aria-label="放大" onClick={() => zoom(1.2)}><Plus /></Button><span className="mx-1 h-4 border-l" /><Button variant="ghost" size="icon-sm" aria-label="适应画布" title="适应画布" onClick={fit}><Maximize /></Button>
-      </div>
+      <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}</div>
+      <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} onZoom={zoom} onFit={fit} onRotate={onRotateImage} />
     </>}
   </div></CanvasContextMenu>
 }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Brand } from '@/components/Brand'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useEditor } from '../model/store'
-export function TopBar({ onImport, busy, children }: { onImport: (file: File) => void; busy: boolean; children?: ReactNode }) {
+export function TopBar({ onImport, busy, busyLabel = '正在读取', children }: { onImport: (file: File) => void; busy: boolean; busyLabel?: string; children?: ReactNode }) {
   const input = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const image = useEditor(s => s.present.doc.image), past = useEditor(s => s.past.length), future = useEditor(s => s.future.length)
@@ -16,7 +16,7 @@ export function TopBar({ onImport, busy, children }: { onImport: (file: File) =>
       <Button variant="ghost" size="icon" aria-label="撤销 Ctrl+Z" title="撤销 Ctrl+Z" disabled={!past || busy} onClick={() => useEditor.getState().undo()}><Undo2 /></Button>
       <Button variant="ghost" size="icon" aria-label="重做 Ctrl+Shift+Z" title="重做 Ctrl+Shift+Z" disabled={!future || busy} onClick={() => useEditor.getState().redo()}><Redo2 /></Button>
       <span className="mx-2 h-5 border-l" />
-      <Button variant="outline" disabled={busy} onClick={() => input.current?.click()}><ImagePlus />{busy ? '正在读取' : '导入图片'}</Button>
+      <Button variant="outline" disabled={busy} onClick={() => input.current?.click()}><ImagePlus />{busy ? busyLabel : '导入图片'}</Button>
       {children}
     </div>
     <input ref={input} className="hidden" type="file" accept="image/png,image/jpeg,image/webp,image/avif" aria-label="选择图片" onChange={e => { const file = e.target.files?.[0]; if (file) onImport(file); e.target.value = '' }} />
