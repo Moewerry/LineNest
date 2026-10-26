@@ -1,21 +1,19 @@
-import { ArrowUpRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { useEditor } from '@/features/editor/model/store'
+import { Asterisk } from 'lucide-react'
+import { HomeStartCard } from './HomeStartCard'
 
 export function HomeHero() {
-  const hasDocument = useEditor(s => !!s.present.doc.image)
-  return <section className="flex min-h-0 flex-col justify-center gap-[clamp(12px,2.8dvh,28px)] py-2">
-    <p className="flex items-center gap-2 text-xs font-medium"><span aria-hidden="true" className="h-0.5 w-5 bg-primary" />图片分割工具</p>
-    <h1 className="text-[clamp(32px,8.2dvh,80px)] font-semibold leading-[1.1] tracking-[-0.055em]">
-      <span className="block">画线。</span>
-      <span className="block">复制。</span>
-      <span className="mt-1 inline-block bg-highlight px-2 pb-1 text-primary">分图。</span>
-    </h1>
-    <p className="max-w-64 text-sm leading-7 text-muted-foreground">手动画线，整组复制。<br />按线切图，一次导出。</p>
-    <div className="max-w-64 space-y-3">
-      <Button asChild size="lg" className="h-[clamp(42px,7dvh,56px)] w-full justify-between rounded-xl px-5 text-base"><Link to="/editor">{hasDocument ? '继续编辑' : '开始编辑'}<ArrowUpRight className="size-5" /></Link></Button>
-      <p className="text-[11px] text-muted-foreground">图片只在浏览器本地处理</p>
+  return <section className="grid flex-1 items-center gap-12 py-12 sm:py-16 lg:grid-cols-[1.45fr_1fr] lg:gap-16 lg:py-20">
+    <div className="home-enter">
+      <p className="mb-7 flex items-center gap-3 text-[11px] font-semibold tracking-[0.16em]"><span className="h-2 w-2 bg-primary" aria-hidden="true" />小工具，大有用处<span className="ml-2 font-normal tracking-normal text-muted-foreground">IMAGE SLICING STUDIO</span></p>
+      <h1 className="text-[clamp(48px,6.8vw,92px)] font-black leading-[1.13] tracking-[-0.065em]">
+        <span className="block">好素材，</span>
+        <span className="mt-2 block text-primary">分得漂亮<span className="text-foreground">。</span></span>
+      </h1>
+      <div className="mt-8 flex items-start gap-4 sm:mt-10">
+        <Asterisk aria-hidden="true" className="mt-1 size-7 shrink-0 text-primary" strokeWidth={1.5} />
+        <p className="max-w-sm text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8">LineNest — 让创作更顺手<br /><span className="text-[11px] tracking-[0.12em]">MADE FOR YOUR FLOW</span></p>
+      </div>
     </div>
+    <HomeStartCard />
   </section>
 }

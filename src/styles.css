@@ -20,9 +20,9 @@
   --color-destructive-foreground: #ffffff;
   --color-border: var(--border);
   --color-input: var(--border);
-  --color-ring: #354bff;
-  --color-highlight: #f7ef55;
-  --color-highlight-foreground: #171821;
+  --color-ring: var(--primary);
+  --color-highlight: #f1d66a;
+  --color-highlight-foreground: #30291e;
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -31,15 +31,15 @@
 }
 
 :root {
-  --background: #f5f4f0;
-  --foreground: #171821;
-  --card: #ffffff;
-  --primary: #354bff;
-  --primary-foreground: #ffffff;
-  --secondary: #eff0f5;
-  --accent: #e8ebff;
-  --muted-foreground: #707381;
-  --border: #dbdde6;
+  --background: #faf7f0;
+  --foreground: #252420;
+  --card: #fffdf8;
+  --primary: #bd3e1c;
+  --primary-foreground: #fffaf4;
+  --secondary: #efeae1;
+  --accent: #f8e0d3;
+  --muted-foreground: #79746c;
+  --border: #e2dbd0;
   --radius: 0.75rem;
 }
 
@@ -50,9 +50,22 @@
 }
 
 .canvas-surface {
-  background-color: #edf0f7;
-  background-image: linear-gradient(to right, #dfe3ef 1px, transparent 1px), linear-gradient(to bottom, #dfe3ef 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-color: #eee9e0;
+  background-image: radial-gradient(circle, #cfc6b9 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+}
+
+.home-enter {
+  animation: home-enter 650ms ease-out both;
+}
+
+.home-enter-delayed {
+  animation-delay: 100ms;
+}
+
+@keyframes home-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

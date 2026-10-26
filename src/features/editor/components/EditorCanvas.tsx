@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Group, Image as CanvasImage, Layer, Line, Rect, Stage } from 'react-konva'
 import type Konva from 'konva'
-import { ImagePlus, Maximize, Minus, Plus } from 'lucide-react'
+import { Maximize, Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getImageAsset } from '@/lib/images'
 import { canvasColors } from '@/lib/canvas-colors'
@@ -13,6 +13,7 @@ import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
 import { enterGroup, leaveGroup, rotateSelection } from '../commands'
 import { CanvasContextMenu } from './CanvasContextMenu'
+import { CanvasEmptyState } from './CanvasEmptyState'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -163,11 +164,11 @@ export function EditorCanvas({ onPick, onDrop, busy }: { onPick: () => void; onD
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
       </Group></Layer>
-    </Stage> : <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"><Button size="lg" onClick={onPick} disabled={busy}><ImagePlus />{busy ? '正在读取图片' : '导入图片'}</Button><span className="text-xs text-muted-foreground">或拖入图片</span></div>}
+    </Stage> : <CanvasEmptyState onPick={onPick} busy={busy} />}
     {image && <>
-      {snapshot.scope && <div className="absolute left-4 top-4"><Button variant="outline" size="sm" className="bg-white text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}
+      {snapshot.scope && <div className="absolute left-4 top-4"><Button variant="outline" size="sm" className="bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}
       <div className="pointer-events-none absolute bottom-5 left-5 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}</div>
-      <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-xl border bg-white p-1 shadow-xs">
+      <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-full border bg-card p-1.5 shadow-sm">
         <Button variant="ghost" size="icon-sm" aria-label="缩小" onClick={() => zoom(1 / 1.2)}><Minus /></Button><span className="w-12 text-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span><Button variant="ghost" size="icon-sm" aria-label="放大" onClick={() => zoom(1.2)}><Plus /></Button><span className="mx-1 h-4 border-l" /><Button variant="ghost" size="icon-sm" aria-label="适应画布" title="适应画布" onClick={fit}><Maximize /></Button>
       </div>
     </>}
