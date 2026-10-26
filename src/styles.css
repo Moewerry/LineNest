@@ -56,7 +56,7 @@
 }
 
 .home-page {
-  /* Reveal the remaining content after both cards and the scissors settle. */
+  /* Reveal the remaining text after the cards, scissors, button and divider settle. */
   --home-back-duration: 700ms;
   --home-front-delay: 160ms;
   --home-front-duration: 800ms;
@@ -70,22 +70,28 @@
   animation: home-soft-enter 180ms ease-out backwards;
 }
 
-.home-card-label,
 .home-card-privacy-icon {
   animation: home-soft-enter 160ms ease-out backwards;
 }
 
 .home-header { animation-delay: var(--home-content-start); }
 .home-hero-mark { animation-delay: calc(var(--home-content-start) + 30ms); }
-.home-card-label { animation-delay: var(--home-content-start); }
 .home-card-privacy-icon { animation-delay: calc(var(--home-content-start) + 640ms); }
+
+.home-card-label {
+  animation: home-label-pop 380ms cubic-bezier(0.22, 1, 0.36, 1) var(--home-content-start) backwards;
+}
+
+.home-card-dot {
+  animation: home-dot-pop 480ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--home-content-start) + 240ms) backwards;
+}
 
 .home-text-character {
   animation: home-character-pop 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 .home-workflow-divider {
-  animation: home-rule-reveal 420ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--home-content-start) + 120ms) backwards;
+  animation: home-rule-reveal var(--home-icon-duration) cubic-bezier(0.12, 0.8, 0.2, 1) var(--home-icon-delay) backwards;
 }
 
 .home-workflow-step {
@@ -108,7 +114,7 @@
 }
 
 .home-card-action {
-  animation: home-action-fly-in 360ms cubic-bezier(0.12, 0.8, 0.2, 1) calc(var(--home-content-start) + 180ms) backwards;
+  animation: home-action-fly-in var(--home-icon-duration) cubic-bezier(0.12, 0.8, 0.2, 1) var(--home-icon-delay) backwards;
 }
 
 @keyframes home-soft-enter {
@@ -131,6 +137,20 @@
   60% { opacity: 1; transform: translateY(-0.12em) scale(1.06); }
   82% { opacity: 1; transform: translateY(0.04em) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes home-label-pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.9); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.02); }
+  82% { opacity: 1; transform: translateY(1px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes home-dot-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0); box-shadow: 0 0 0 0 rgb(241 214 106 / 0); }
+  55% { opacity: 1; transform: translateY(-3px) scale(1.45); box-shadow: 0 0 0 3px rgb(241 214 106 / 0.35); }
+  80% { opacity: 1; transform: translateY(0) scale(0.9); box-shadow: 0 0 0 8px rgb(241 214 106 / 0); }
+  to { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 0 0 10px rgb(241 214 106 / 0); }
 }
 
 @keyframes home-back-fly-in {

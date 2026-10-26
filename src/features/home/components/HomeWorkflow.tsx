@@ -12,9 +12,9 @@ export function HomeWorkflow() {
     <span aria-hidden="true" className="home-workflow-divider absolute inset-x-0 top-0 h-px origin-left bg-primary" />
     <ol className="grid gap-4 sm:grid-cols-3 sm:gap-8">
       {steps.map(({ number, icon: Icon, title, description }, index) => <li key={number} className="home-workflow-step flex items-start gap-4">
-        <span className="pt-1 font-mono text-xs text-primary"><HomeAnimatedText delay={180 + index * 100} stagger={45}>{number}</HomeAnimatedText></span>
-        <div><h2 className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.6} /><HomeAnimatedText delay={400 + index * 100}>{title}</HomeAnimatedText></h2>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground"><HomeAnimatedText delay={540 + index * 100} stagger={20}>{description}</HomeAnimatedText></p></div>
+        <span className="pt-1 font-mono text-xs text-foreground"><HomeAnimatedText delay={180 + index * 100} stagger={45}>{number}</HomeAnimatedText></span>
+        <div><h2 className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.6} /><HomeAnimatedText className="text-primary" delay={400 + index * 100}>{title}</HomeAnimatedText></h2>
+        <p className="mt-1 text-xs leading-5 text-foreground"><HomeAnimatedText delay={540 + index * 100} stagger={20}>{description}</HomeAnimatedText></p></div>
       </li>)}
     </ol>
   </section>
