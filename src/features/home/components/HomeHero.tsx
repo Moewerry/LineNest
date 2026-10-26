@@ -2,7 +2,7 @@ import { Feather } from 'lucide-react'
 import { HomeStartCard } from './HomeStartCard'
 
 export function HomeHero() {
-  return <section className="grid flex-1 items-center gap-14 py-14 sm:py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-20 lg:py-16">
+  return <section className="grid flex-1 shrink-0 items-center gap-16 py-14 sm:py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-20 lg:py-20">
     <div>
       <h1 className="text-[clamp(44px,6.2vw,80px)] font-black leading-[1.16] tracking-tight">
         <span className="home-hero-line home-hero-title-line block">好素材，</span>

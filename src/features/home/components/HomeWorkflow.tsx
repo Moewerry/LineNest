@@ -8,7 +8,7 @@ const steps = [
 ]
 
 export function HomeWorkflow() {
-  return <section aria-label="分图操作流程" className="home-workflow relative mt-6 shrink-0 pt-7">
+  return <section aria-label="分图操作流程" className="home-workflow relative mt-auto shrink-0 pt-7">
     <span aria-hidden="true" className="home-workflow-divider absolute inset-x-0 top-0 h-px origin-left bg-primary/25" />
     <ol className="grid gap-4 sm:grid-cols-3 sm:gap-8">
       {steps.map(({ number, icon: Icon, title, description }, index) => <li key={number} className="home-workflow-step flex items-start gap-4">

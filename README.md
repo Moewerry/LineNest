@@ -11,7 +11,7 @@ pnpm install
 pnpm dev
 ```
 
-打开终端显示的本地地址。首页路径为 `/`，编辑器路径为 `/editor`，批量裁剪路径为 `/batch`。编辑器标识菜单可返回首页；页面内切换保留当前图片、线条、模板选区和撤销记录。
+打开终端显示的本地地址。首页路径为 `/`，编辑器路径为 `/#/editor`，批量裁剪路径为 `/#/batch`。编辑器标识菜单可返回首页；页面内切换保留当前图片、线条、模板选区和撤销记录。
 
 ## 检查与构建
 
@@ -176,6 +176,21 @@ macOS 使用 Command 替代 Ctrl。输入框内保留文字编辑快捷键。
 
 模板属于当前浏览器和站点地址，清理站点数据会删除本地模板，请通过模板文件备份。未保存的编辑内容不会在刷新后保留。
 
-部署到静态服务器时，需要将 `/editor` 等前端路由回退到 `index.html`。当前开发服务器已支持此行为。
+部署使用 Hash 路由，静态服务器无需为编辑器和批量页面配置路由回退。部署到子目录时，通过 `PAGES_BASE_PATH` 环境变量设置资源基础路径，例如 `/LineNest/`。
+
+## GitHub Pages 部署
+
+已添加 `.github/workflows/deploy-pages.yml`：推送到 `master` 后，在 GitHub Actions 中安装依赖、执行 `pnpm build` 并发布 `dist`。本地未运行构建，首次构建结果以 Actions 日志为准。
+
+首次启用需手动操作：
+
+1. 打开仓库 Settings → Pages，将 Source 设为 **GitHub Actions**。
+2. 进入 Actions → Deploy LineNest to GitHub Pages，选择 Run workflow，并使用 `master` 分支运行；若首次自动执行因尚未启用 Pages 失败，可在启用后重新执行。
+3. 等待部署成功，使用 Settings → Pages 显示的网址访问。当前仓库预计为 `https://moewerry.github.io/LineNest/`。
+4. 检查首页图标、`#/editor` 和 `#/batch` 的直接访问与刷新，并实际验证图片导入、切图、批量处理和 ZIP 下载。
+
+GitHub Free 的 Pages 适用于公开仓库，私有仓库需相应套餐支持。工作流使用 GitHub 自动提供的令牌，无需个人访问令牌。若仓库改名或改用自定义域名，请同步调整工作流中的 `PAGES_BASE_PATH`。
+
+模板存储属于当前浏览器和站点来源，本地模板不会自动同步到线上；需要时先导出模板文件，再在线上导入。
 
 开发过程中未运行项目、构建、编译、语法检测或自动测试，需由使用者按以上命令和顺序验证。
