@@ -2,6 +2,7 @@ import { HomeHeader } from './HomeHeader'
 import { HomeHero } from './HomeHero'
 import { HomeWorkflow } from './HomeWorkflow'
 import { HomeImageImport } from './HomeImageImport'
+import { HomeFooter } from './HomeFooter'
 
 export function HomePage() {
   return <HomeImageImport>
@@ -10,5 +11,6 @@ export function HomePage() {
       <HomeHero />
       <HomeWorkflow />
     </main>
+    <HomeFooter />
   </HomeImageImport>
 }

@@ -4,7 +4,7 @@ import { HomeStartCard } from './HomeStartCard'
 export function HomeHero() {
   return <section className="grid flex-1 items-center gap-12 py-12 sm:py-16 lg:grid-cols-[1.45fr_1fr] lg:gap-16 lg:py-20">
     <div>
-      <h1 className="text-[clamp(48px,6.8vw,92px)] font-black leading-[1.13] tracking-[-0.025em]">
+      <h1 className="text-[clamp(48px,6.8vw,92px)] font-black leading-[1.13] tracking-[0.02em]">
         <span className="home-hero-line home-hero-title-line block">好素材，</span>
         <span className="home-hero-line home-hero-title-line mt-[0.08em] block text-primary">分得漂亮<span className="text-foreground">。</span></span>
       </h1>
