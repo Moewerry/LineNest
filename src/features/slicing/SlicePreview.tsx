@@ -21,12 +21,12 @@ export function SlicePreview({ doc, result, selected }: { doc: DocumentData; res
       const path = regionPath(region), included = selected.has(region.id)
       context.fillStyle = included ? canvasColors.previewFill : '#ffffffbb'
       context.fill(path, 'evenodd')
-      context.strokeStyle = included ? canvasColors.selection : '#afa597'; context.lineWidth = 1.5 / scale; context.stroke(path)
+      context.strokeStyle = included ? canvasColors.selection : canvasColors.mutedLine; context.lineWidth = 1.5 / scale; context.stroke(path)
     }
     context.font = `600 ${11 / scale}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle'
     for (const region of result.regions) {
       context.beginPath(); context.arc(region.label.x, region.label.y, 11 / scale, 0, Math.PI * 2)
-      context.fillStyle = selected.has(region.id) ? canvasColors.ink : '#79746c'; context.fill()
+      context.fillStyle = selected.has(region.id) ? canvasColors.ink : canvasColors.mutedInk; context.fill()
       context.fillStyle = 'white'; context.fillText(String(region.id), region.label.x, region.label.y)
     }
   }, [doc, result, selected])
