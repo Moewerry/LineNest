@@ -56,22 +56,25 @@
 }
 
 .home-hero-eyebrow,
-.home-hero-description,
+.home-hero-description {
+  animation: home-soft-enter 180ms ease-out backwards;
+}
+
 .home-card-label,
 .home-card-heading,
 .home-card-description,
 .home-card-action,
 .home-card-privacy {
-  animation: home-cut-reveal 260ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
+  animation: home-soft-enter 160ms ease-out backwards;
 }
 
 .home-hero-eyebrow { animation-delay: 0ms; }
-.home-hero-description { animation-delay: 260ms; }
-.home-card-label { animation-delay: 240ms; }
-.home-card-heading { animation-delay: 280ms; }
-.home-card-description { animation-delay: 320ms; }
-.home-card-action { animation-delay: 360ms; }
-.home-card-privacy { animation-delay: 400ms; }
+.home-hero-description { animation-delay: 30ms; }
+.home-card-label { animation-delay: 760ms; }
+.home-card-heading { animation-delay: 940ms; }
+.home-card-description { animation-delay: 1000ms; }
+.home-card-action { animation-delay: 1060ms; }
+.home-card-privacy { animation-delay: 1100ms; }
 
 .home-title-mask {
   overflow: clip;
@@ -82,17 +85,26 @@
 .home-title-mask + .home-title-mask { margin-top: 0.08em; }
 
 .home-title-line {
-  animation: home-cut-reveal 420ms cubic-bezier(0.65, 0, 0.35, 1) 60ms backwards;
+  animation: home-cut-reveal 180ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
 }
 
-.home-title-line-delayed { animation-delay: 150ms; }
+.home-title-line-delayed { animation-delay: 30ms; }
 
 .home-card-back {
-  animation: home-cut-reverse 360ms cubic-bezier(0.65, 0, 0.35, 1) 100ms backwards;
+  animation: home-back-fly-in 440ms cubic-bezier(0.16, 1, 0.3, 1) 220ms backwards;
 }
 
 .home-card-front {
-  animation: home-cut-reveal 420ms cubic-bezier(0.65, 0, 0.35, 1) 160ms backwards;
+  animation: home-front-fly-in 480ms cubic-bezier(0.16, 1, 0.3, 1) 300ms backwards;
+}
+
+.home-card-icon {
+  animation: home-icon-fly-in 380ms cubic-bezier(0.16, 1, 0.3, 1) 780ms backwards;
+}
+
+@keyframes home-soft-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes home-cut-reveal {
@@ -100,9 +112,19 @@
   to { clip-path: inset(0 0 0 0); }
 }
 
-@keyframes home-cut-reverse {
-  from { clip-path: inset(0 0 0 100%); }
-  to { clip-path: inset(0 0 0 0); }
+@keyframes home-back-fly-in {
+  from { transform: translateY(calc(-100vh - 100%)) rotate(-12deg); }
+  to { transform: translateY(0) rotate(0); }
+}
+
+@keyframes home-front-fly-in {
+  from { transform: translateX(100vw) rotate(8deg); }
+  to { transform: translateX(0) rotate(0); }
+}
+
+@keyframes home-icon-fly-in {
+  from { transform: translateY(100vh) rotate(35deg); }
+  to { transform: translateY(0) rotate(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
