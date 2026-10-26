@@ -13,8 +13,10 @@ export function NodeLayer({ snapshot, scale, delta, endpoint, viewport }: { snap
     const shift = active ? delta : { x: 0, y: 0 }
     const node = doc.nodes[segment.id], axis = node.type === 'line' ? node.splitAxis : undefined
     const display = displaySegment({ id: segment.id, start: { x: segment.start.x + shift.x, y: segment.start.y + shift.y }, end: { x: segment.end.x + shift.x, y: segment.end.y + shift.y } }, axis, viewport)
-    return <Group key={segment.id} {...(!axis ? { clipX: 0, clipY: 0, clipWidth: image.width, clipHeight: image.height } : {})}>
-      <Line id={segment.id} points={[display.start.x, display.start.y, display.end.x, display.end.y]} stroke={active ? canvasColors.selection : canvasColors.line} strokeWidth={(active ? 2 : 1.5) / scale} hitStrokeWidth={14 / scale} opacity={isLocked(doc, segment.id) ? 0.4 : target ? 1 : 0.3} lineCap="round" />
+    const points = [display.start.x, display.start.y, display.end.x, display.end.y]
+    return <Group key={segment.id} opacity={isLocked(doc, segment.id) ? 0.4 : target ? 1 : 0.3} {...(!axis ? { clipX: 0, clipY: 0, clipWidth: image.width, clipHeight: image.height } : {})}>
+      <Line points={points} stroke={canvasColors.lineHalo} strokeWidth={4.5 / scale} lineCap="round" listening={false} />
+      <Line id={segment.id} points={points} stroke={active ? canvasColors.selection : canvasColors.line} strokeWidth={(active ? 2 : 1.5) / scale} hitStrokeWidth={14 / scale} lineCap="round" />
     </Group>
   })}</>
 }
