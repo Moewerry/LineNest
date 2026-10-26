@@ -25,6 +25,7 @@ export function useShortcuts() {
         state.move({ x: key === 'arrowleft' ? -step : key === 'arrowright' ? step : 0, y: key === 'arrowup' ? -step : key === 'arrowdown' ? step : 0 })
       }
       else if (!mod && key === 'v') state.setTool('select')
+      else if (!mod && key === 'h') state.setTool('pan')
       else if (!mod && key === 'l') state.setTool('line')
       else if (!mod && key === 'c') state.setTool('crop')
     }

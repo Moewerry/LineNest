@@ -43,7 +43,7 @@ pnpm preview
 
 | 操作 | 快捷键 |
 | --- | --- |
-| 选择 / 画线 / 裁剪 | V / L / C |
+| 选择 / 拖动画布 / 画线 / 裁剪 | V / H / L / C |
 | 多选 | Shift + 点击 |
 | 全选当前层 | Ctrl + A |
 | 编组 / 解组 | Ctrl + G / Ctrl + Shift + G |
@@ -52,7 +52,7 @@ pnpm preview
 | 删除 | Delete / Backspace |
 | 撤销 / 重做 | Ctrl + Z / Ctrl + Shift + Z 或 Ctrl + Y |
 | 移动 1 px / 10 px | 方向键 / Shift + 方向键 |
-| 缩放 / 平移 | 滚轮 / 空格 + 拖动或鼠标中键拖动 |
+| 缩放 / 平移 | 滚轮 / H 后左键拖动、空格 + 拖动或鼠标中键拖动 |
 
 macOS 使用 Command 替代 Ctrl。输入框内保留文字编辑快捷键。
 

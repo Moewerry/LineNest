@@ -17,7 +17,8 @@ import { CanvasEmptyState } from './CanvasEmptyState'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
-  | { type: 'move' | 'pan' }
+  | { type: 'move' }
+  | { type: 'pan'; origin: Point }
   | { type: 'endpoint'; id: string; end: 'start' | 'end' }
   | { type: 'rotate'; center: Point; initialAngle: number }
 )
@@ -63,7 +64,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
     return () => { window.removeEventListener('pointerup', cancel); window.removeEventListener('pointercancel', cancel) }
   }, [])
   useEffect(() => useEditor.subscribe((state, previous) => {
-    if (state.present !== previous.present) updateGesture(null)
+    if (state.present !== previous.present || state.tool !== previous.tool) updateGesture(null)
   }), [])
   const pointer = (): Point => {
     const p = stage.current?.getPointerPosition() ?? zero
@@ -73,7 +74,13 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
   const begin = (event: Konva.KonvaEventObject<PointerEvent>) => {
     if (!image || busy || (event.evt.button !== 0 && event.evt.button !== 1)) return
     const p = pointer(), start = clamp(p), state = useEditor.getState()
-    if (space || event.evt.button === 1) { event.evt.preventDefault(); updateGesture({ type: 'pan', start: p, current: p }); return }
+    if (tool === 'pan' || space || event.evt.button === 1) {
+      event.evt.preventDefault()
+      const screen = stage.current?.getPointerPosition() ?? zero
+      if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
+      updateGesture({ type: 'pan', start: screen, current: screen, origin: { x: view.x, y: view.y } })
+      return
+    }
     const hit = event.target.id()
     if (hit === 'rotate-handle') {
       const box = bounds(snapshot.doc, snapshot.selected)
@@ -108,7 +115,8 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
     if (!active) return
     const p = pointer()
     if (active.type === 'pan') {
-      setView(v => ({ ...v, x: v.x + (p.x - active.start.x) * v.scale, y: v.y + (p.y - active.start.y) * v.scale }))
+      const screen = stage.current?.getPointerPosition()
+      if (screen) setView(v => ({ ...v, x: active.origin.x + screen.x - active.start.x, y: active.origin.y + screen.y - active.start.y }))
     } else updateGesture({ ...active, current: active.type === 'crop' ? clamp(p) : p })
   }
   const finish = () => {
@@ -143,7 +151,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
   const preview = gesture?.type === 'rotate' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
-  return <CanvasContextMenu disabled={busy}><div ref={container} tabIndex={0} role="region" aria-label="编辑画布" className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: space ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
+  return <CanvasContextMenu disabled={busy}><div ref={container} tabIndex={0} role="region" aria-label="编辑画布" className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : tool === 'select' ? 'default' : 'crosshair' }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (tool !== 'select') return
@@ -166,7 +174,7 @@ export function EditorCanvas({ onPick, busy }: { onPick: () => void; busy: boole
     </Stage> : <CanvasEmptyState onPick={onPick} busy={busy} />}
     {image && <>
       {snapshot.scope && <div className="absolute left-4 top-4"><Button variant="outline" size="sm" className="bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button></div>}
-      <div className="pointer-events-none absolute bottom-5 left-5 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}</div>
+      <div className="pointer-events-none absolute bottom-5 left-5 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}<span className="ml-3">{tool === 'pan' ? '按住左键拖动画布 · V 返回选择' : 'H 拖动画布 · 空格 + 拖动临时平移'}</span></div>
       <div className="absolute bottom-4 right-4 flex items-center gap-1 rounded-full border bg-card p-1.5 shadow-sm">
         <Button variant="ghost" size="icon-sm" aria-label="缩小" onClick={() => zoom(1 / 1.2)}><Minus /></Button><span className="w-12 text-center text-xs tabular-nums">{Math.round(view.scale * 100)}%</span><Button variant="ghost" size="icon-sm" aria-label="放大" onClick={() => zoom(1.2)}><Plus /></Button><span className="mx-1 h-4 border-l" /><Button variant="ghost" size="icon-sm" aria-label="适应画布" title="适应画布" onClick={fit}><Maximize /></Button>
       </div>
