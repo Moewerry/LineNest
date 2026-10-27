@@ -37,7 +37,7 @@ type Gesture = { start: Point; current: Point } & (
 )
 const zero = { x: 0, y: 0 }
 
-export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, onDeleteImage }: { busy: boolean; rotating: boolean; onRotateImage: () => void; onReplaceImage: () => void; onDeleteImage: () => void }) {
+export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, onDeleteImage, onImageReady }: { busy: boolean; rotating: boolean; onRotateImage: () => void; onReplaceImage: () => void; onDeleteImage: () => void; onImageReady?: (imageId: string) => void }) {
   const container = useRef<HTMLDivElement>(null), stage = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 1, height: 1 })
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
@@ -65,6 +65,19 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     return () => observer.disconnect()
   }, [])
   useEffect(() => { fit(); updateGesture(null) }, [image?.id, size.width, size.height])
+  useEffect(() => {
+    if (!onImageReady || !image || !asset || size.width <= 1 || size.height <= 1) return
+    // Wait for the fitted canvas to render and paint before completing the import.
+    let paintedFrame: number | undefined
+    const frame = requestAnimationFrame(() => {
+      stage.current?.draw()
+      paintedFrame = requestAnimationFrame(() => onImageReady(image.id))
+    })
+    return () => {
+      cancelAnimationFrame(frame)
+      if (paintedFrame !== undefined) cancelAnimationFrame(paintedFrame)
+    }
+  }, [onImageReady, image, asset, size.width, size.height, view])
   useEffect(() => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }, [image?.id, busy])
   useEffect(() => {
     const changeSplitDirection = (axis: SplitAxis) => {

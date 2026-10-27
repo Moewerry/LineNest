@@ -7,6 +7,7 @@ import { useEditor } from '@/features/editor/model/store'
 import { registerImage, validateImage } from '@/lib/images'
 import { useImageDrop } from '@/hooks/use-image-drop'
 import { ImageDropOverlay } from '@/components/ImageDropOverlay'
+import { LoadingOverlay } from '@/components/LoadingOverlay'
 
 const ImportContext = createContext<{ pickImage: () => void; busy: boolean } | null>(null)
 
@@ -31,11 +32,9 @@ export function HomeImageImport({ children }: { children: ReactNode }) {
       validateImage(file)
       const image = await registerImage(file, file.name)
       useEditor.getState().setImage(image)
-      toast.success('图片已导入')
-      navigate('/editor')
+      navigate('/editor', { state: { importedImageId: image.id } })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '导入失败')
-    } finally {
       loading.current = false
       setBusy(false)
     }
@@ -59,6 +58,7 @@ export function HomeImageImport({ children }: { children: ReactNode }) {
       {children}
       {dragging && <ImageDropOverlay />}
     </div>
+    <LoadingOverlay open={busy} title="正在导入图片" description="正在读取图片并打开工作台，请稍候。" />
     <input ref={input} type="file" className="hidden" aria-label="选择分图图片" accept="image/png,image/jpeg,image/webp,image/avif" disabled={busy} onChange={event => {
       const file = event.target.files?.[0]
       event.target.value = ''
