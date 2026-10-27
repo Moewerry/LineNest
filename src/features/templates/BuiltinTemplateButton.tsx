@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LayoutTemplate } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useEditor } from '@/features/editor/model/store'
 import { toast } from '@/lib/toast'
 import { pickUpBuiltinTemplate } from './apply'
@@ -13,17 +13,23 @@ export function BuiltinTemplateButton({ disabled }: { disabled: boolean }) {
   const hasImage = useEditor(state => !!state.present.doc.image)
   return <Dialog open={open} onOpenChange={setOpen}>
     <DialogTrigger asChild><Button variant="ghost" disabled={disabled} aria-label="打开内置模板" title="内置模板" className="h-14 w-full flex-col gap-1 rounded-xl px-0 text-[10px]"><LayoutTemplate className="size-[18px] text-muted-foreground" /><span>内置模板</span></Button></DialogTrigger>
-    <DialogContent className="gap-6 rounded-2xl bg-card sm:max-w-2xl">
-      <DialogHeader icon={<LayoutTemplate />}><DialogTitle>内置模板</DialogTitle><DialogDescription>选择后拿起模板，移动鼠标定位，滚轮调整大小，再单击画布放下。</DialogDescription></DialogHeader>
-      {!hasImage && <p role="status" className="rounded-lg bg-secondary px-4 py-3 text-xs text-muted-foreground">请先导入图片，再选择模板。</p>}
+    <DialogContent {...(hasImage ? { 'aria-describedby': undefined } : {})} className={`gap-6 rounded-2xl bg-card ${hasImage ? 'sm:max-w-2xl' : 'sm:max-w-sm'}`}>
+      {hasImage ? <>
+      <DialogHeader icon={<LayoutTemplate />}><DialogTitle>内置模板</DialogTitle></DialogHeader>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {builtinTemplates.map(template => <BuiltinTemplateCard key={template.id} template={template} description="四条边组成正方形，可自由定位和等比缩放" disabled={disabled || !hasImage} onSelect={() => {
+        {builtinTemplates.map(template => <BuiltinTemplateCard key={template.id} template={template} disabled={disabled || !hasImage} onSelect={() => {
           if (disabled) return
           try { pickUpBuiltinTemplate(template.id); setOpen(false) }
           catch (error) { toast.error(error instanceof Error ? error.message : '套用失败') }
         }} />)}
       </div>
-      <p className="text-xs leading-5 text-muted-foreground">网站自带，无法删除或重命名。你保存的模板仍在右侧「模板」面板中。</p>
+      </> : <>
+        <DialogHeader icon={<LayoutTemplate />}>
+          <DialogTitle>请先上传图片</DialogTitle>
+          <DialogDescription>使用内置模板前，请先通过右上角「导入图片」上传一张图片。</DialogDescription>
+        </DialogHeader>
+        <DialogFooter><DialogClose asChild><Button>知道了</Button></DialogClose></DialogFooter>
+      </>}
     </DialogContent>
   </Dialog>
 }
