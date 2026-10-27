@@ -12,7 +12,7 @@ export function EditorImportDialog({ open, onOpenChange, onPick }: { open: boole
       </DialogHeader>
       <DialogFooter>
         <Button variant="outline" onClick={() => onOpenChange(false)}>稍后导入</Button>
-        <Button onClick={() => { onOpenChange(false); onPick() }}>选择图片</Button>
+        <Button onClick={onPick}>选择图片</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
