@@ -19,6 +19,8 @@ import { displaySegment } from '../geometry/display-segment'
 import { splitLineAt, splitMoveAxis } from '../geometry/split-line'
 import { SplitLinePreview } from './SplitLinePreview'
 import { CanvasViewControls } from './CanvasViewControls'
+import { emptyCanvasGuides } from './CanvasGuideControls'
+import { CanvasGuideLayer } from './CanvasGuideLayer'
 import { CanvasEmptyState } from './CanvasEmptyState'
 import { toast } from '@/lib/toast'
 import { FloatingFillSettings } from '@/features/fill/FloatingFillSettings'
@@ -46,6 +48,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const container = useRef<HTMLDivElement>(null), stage = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 1, height: 1 })
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
+  const [guides, setGuides] = useState(emptyCanvasGuides)
   const [gesture, setGesture] = useState<Gesture | null>(null), gestureRef = useRef<Gesture | null>(null)
   const [space, setSpace] = useState(false)
   const [pointerInside, setPointerInside] = useState(false)
@@ -346,6 +349,9 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         {gesture?.type === 'split' && <SplitLinePreview point={gesture.current} axis={gesture.axis} image={image} viewport={viewport} scale={view.scale} />}
         {heldTemplate && pointerInside && !busy && <TemplatePlacementPreview placement={heldTemplate} viewScale={view.scale} />}
       </Group></Layer>
+      <Layer listening={false}><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
+        <CanvasGuideLayer image={image} scale={view.scale} guides={guides} />
+      </Group></Layer>
     </Stage> : null}
     {!image && <CanvasEmptyState onPick={onReplaceImage} busy={busy} />}
     {image && <>
@@ -359,7 +365,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
       {tool === 'erase' && <EraserSettings busy={busy} onDeleteImage={onDeleteImage} />}
       <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}{snapshot.doc.marks?.length ? ` · 标记 ${snapshot.doc.marks.length} 块` : ''}</div>
-      <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} onZoom={zoom} onFit={fit} onRotate={onRotateImage} />
+      <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} guides={guides} onGuidesChange={setGuides} onZoom={zoom} onFit={fit} onRotate={onRotateImage} />
     </>}
   </div></CanvasContextMenu>
 }

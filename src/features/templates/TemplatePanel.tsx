@@ -57,7 +57,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
       {loading ? <LoaderCircle aria-hidden="true" className="size-6 animate-spin text-muted-foreground/50 motion-reduce:animate-none" /> : <FolderOpen aria-hidden="true" className="size-8 text-muted-foreground/35" />}
       <div className="space-y-1.5">
         <p className="text-sm text-muted-foreground">{loading ? '正在读取模板' : loadError ? '暂时无法读取模板' : '暂无模板'}</p>
-        {!loading && <p className="text-xs leading-5 text-muted-foreground/70">{loadError ? '请刷新页面重试' : image ? '画好线条后，点击上方保存模板' : '导入图片后即可创建和套用'}</p>}
+        {!loading && <p className="text-xs leading-5 text-muted-foreground/70">{loadError ? '请刷新页面重试' : image ? '画好线条后，点击上方「保存为模板」' : '导入图片后即可创建和套用'}</p>}
       </div>
     </div> : <ScrollArea className="min-h-0 flex-1">
       <div data-editor-settings className="space-y-3 px-4 pb-4">
