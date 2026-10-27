@@ -8,7 +8,10 @@ import { Input } from '@/components/ui/input'
 import { deleteTemplate, listTemplates, readTemplate, renameTemplate, type TemplateRecord } from '@/lib/db'
 import { useEditor } from '@/features/editor/model/store'
 import { exportTemplate, importTemplate } from './portable'
-import { lineTemplateFromDocument, type LineTemplate } from './layout'
+import type { LineTemplate } from './layout'
+import { lineIds } from '@/features/editor/model/object-checks'
+import { SaveTemplateDialog } from './SaveTemplateDialog'
+import type { TemplateRange } from './TemplateSaveRange'
 import { TemplateConfirmation, type TemplateConfirmationState } from './TemplateConfirmation'
 import { TemplateListItem } from './TemplateListItem'
 import { TemplateToolbar } from './TemplateToolbar'
@@ -22,8 +25,11 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
   const [loadError, setLoadError] = useState(false)
   const [rows, setRows] = useState<TemplateRecord[]>([]), [search, setSearch] = useState('')
   const [confirmation, setConfirmation] = useState<TemplateConfirmationState | null>(null)
+  const [exportRange, setExportRange] = useState<TemplateRange | null>(null)
   const fileInput = useRef<HTMLInputElement>(null), operation = useRef(false)
-  const image = useEditor(s => s.present.doc.image)
+  const doc = useEditor(s => s.present.doc)
+  const image = doc.image
+  const hasLines = Object.values(doc.nodes).some(node => node.type === 'line')
   const filtered = rows.filter(row => row.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))
   useEffect(() => {
     const subscription = liveQuery(listTemplates).subscribe({
@@ -47,10 +53,13 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
   })
   return <>
     <div className="px-4 pb-4 pt-5"><h2 className="text-sm font-semibold">我的模板</h2><p className="mt-1.5 text-xs leading-5 text-muted-foreground">保存画好的线条，下次直接复用。</p></div>
-    <TemplateToolbar disabled={disabled || busy} hasImage={!!image}
+    <TemplateToolbar disabled={disabled || busy} hasImage={!!image} hasLines={hasLines}
       onBatch={() => void navigate('/batch')}
       onImport={() => fileInput.current?.click()}
-      onExport={() => void run(async () => { exportTemplate('线条模板', lineTemplateFromDocument(useEditor.getState().present.doc)) })}
+      onExport={() => {
+        const state = useEditor.getState()
+        setExportRange(state.checkedObjects.length || lineIds(state.present.doc, state.present.selected).length ? 'checked' : 'all')
+      }}
     />
     {(rows.length > 4 || search) && <div data-editor-settings className="relative mx-4 mb-4"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索模板" aria-label="搜索我的模板" className="h-10 pl-9 shadow-none" /></div>}
     {loading || loadError || !rows.length ? <div role="status" className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-6 py-8 text-center">
@@ -78,5 +87,6 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     }} />
     <p className="shrink-0 border-t px-4 py-3 text-center text-[11px] leading-5 text-muted-foreground/70">模板保存在此浏览器，建议定期导出备份</p>
     <TemplateConfirmation confirmation={confirmation} busy={busy} disabled={disabled} onCancel={() => setConfirmation(null)} onConfirm={confirm} />
+    {exportRange && <SaveTemplateDialog mode="export" disabled={disabled || busy} initialRange={exportRange} onClose={() => setExportRange(null)} />}
   </>
 }

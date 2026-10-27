@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { SaveTemplateButton } from './SaveTemplateButton'
 
-export function TemplateToolbar({ disabled, hasImage, onBatch, onImport, onExport }: {
+export function TemplateToolbar({ disabled, hasImage, hasLines, onBatch, onImport, onExport }: {
   disabled: boolean
   hasImage: boolean
+  hasLines: boolean
   onBatch: () => void
   onImport: () => void
   onExport: () => void
@@ -16,7 +17,7 @@ export function TemplateToolbar({ disabled, hasImage, onBatch, onImport, onExpor
       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" disabled={disabled} aria-label="模板管理"><MoreHorizontal /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem disabled={!hasImage} onSelect={onImport}><Upload />导入模板</DropdownMenuItem>
-        <DropdownMenuItem disabled={!hasImage} onSelect={onExport}><Download />导出当前线条</DropdownMenuItem>
+        <DropdownMenuItem disabled={!hasImage || !hasLines} onSelect={onExport}><Download />选择线条并导出…</DropdownMenuItem>
         <DropdownMenuItem onSelect={onBatch}><Scissors />前往批量裁剪</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
