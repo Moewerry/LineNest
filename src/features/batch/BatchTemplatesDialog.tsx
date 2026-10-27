@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, ExternalLink, Upload } from 'lucide-react'
+import { ArrowRight, ExternalLink, FolderOpen, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { SaveTemplateButton } from '@/features/templates/SaveTemplateButton'
@@ -13,7 +13,7 @@ export function BatchTemplatesDialog({ open, onOpenChange, templates, selected, 
 }) {
   const selectedCount = templates.filter(template => selected.includes(template.id)).length
   return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-3xl">
-    <DialogHeader className="border-b px-6 py-5 text-left"><DialogTitle className="text-lg">选择模板</DialogTitle><DialogDescription className="sr-only">选择尺寸适配方式和模板，多选时叠加线条裁剪。</DialogDescription></DialogHeader>
+    <DialogHeader icon={<FolderOpen />} className="border-b px-6 py-5 text-left"><DialogTitle className="text-lg">选择模板</DialogTitle><DialogDescription className="sr-only">选择尺寸适配方式和模板，多选时叠加线条裁剪。</DialogDescription></DialogHeader>
     <div className="min-h-0 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
     <div className="flex flex-wrap items-center gap-2">
       <Button variant="outline" disabled={disabled} onClick={onImport} className="shadow-none"><Upload />导入模板</Button>

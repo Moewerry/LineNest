@@ -1,4 +1,5 @@
 import type { ImageInfo } from '@/features/editor/model/types'
+import { Copy, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { LineTemplate } from './layout'
@@ -16,7 +17,7 @@ export function TemplateConfirmation({ confirmation, busy, disabled, onCancel, o
   const deleting = confirmation?.type === 'delete'
   return <Dialog open={!!confirmation} onOpenChange={open => { if (!open && !busy) onCancel() }}>
     <DialogContent onInteractOutside={event => { if (busy) event.preventDefault() }} onEscapeKeyDown={event => { if (busy) event.preventDefault() }}>
-      <DialogHeader>
+      <DialogHeader icon={deleting ? <Trash2 /> : <Copy />}>
         <DialogTitle>{deleting ? '删除这个模板？' : '套用线条到当前图片？'}</DialogTitle>
         <DialogDescription>{deleting ? '删除后无法从模板列表恢复，当前画布不受影响。' : '仅替换线条和分组，保留当前图片、裁剪选区和区域标记。套用后可以撤销。'}</DialogDescription>
       </DialogHeader>

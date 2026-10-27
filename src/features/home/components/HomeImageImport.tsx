@@ -1,3 +1,4 @@
+import { ImagePlus } from 'lucide-react'
 import { createContext, useContext, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from '@/lib/toast'
@@ -64,7 +65,7 @@ export function HomeImageImport({ children }: { children: ReactNode }) {
       event.target.value = ''
       if (file) requestImport(file)
     }} />
-    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条、裁剪选区和区域标记将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => {
+    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader icon={<ImagePlus />}><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条、裁剪选区和区域标记将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => {
       const file = pending
       setPending(null)
       if (file) void load(file)

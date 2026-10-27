@@ -12,7 +12,7 @@ export function HomeStartCard() {
     <div aria-hidden="true" className="home-card-back absolute -inset-3 -rotate-4 rounded-[30px] bg-primary/15 sm:-inset-5" />
     <section aria-label="开始图片分割" className="home-card-front relative rounded-3xl border border-white/10 bg-foreground p-7 text-background shadow-[0_16px_48px_-24px_rgba(40,35,30,0.4)] sm:p-10">
       <div className="flex items-center justify-between">
-        <span className="home-card-label rounded-full border border-background/25 px-3 py-1.5 font-handwriting text-[10px] tracking-[0.15em]"><HomeAnimatedText delay={120} stagger={22}>YOUR NEXT CREATION</HomeAnimatedText></span>
+        <span className="home-card-label rounded-full border border-background/25 px-3 py-1.5 font-brand text-[10px] tracking-[0.15em]"><HomeAnimatedText delay={120} stagger={22}>YOUR NEXT CREATION</HomeAnimatedText></span>
         <span aria-hidden="true" className="home-card-dot size-2 shrink-0 rounded-full bg-highlight" />
       </div>
       <div className="mb-8 mt-10 flex items-center gap-5 sm:gap-6">

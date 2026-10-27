@@ -95,13 +95,22 @@ function DialogBody({ className, children, ...props }: React.ComponentProps<"div
   )
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+function DialogHeader({ className, icon, children, ...props }: React.ComponentProps<"div"> & {
+  icon?: React.ReactNode
+}) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex shrink-0 flex-col gap-2 text-center sm:text-left", className)}
+      className={cn(
+        "flex shrink-0 flex-col gap-2 text-center sm:text-left",
+        icon && "grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 text-left [&_[data-slot=dialog-title]]:min-w-0 [&_[data-slot=dialog-title]]:pr-6 [&_[data-slot=dialog-description]]:col-span-2",
+        className
+      )}
       {...props}
-    />
+    >
+      {icon && <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-primary [&_svg]:size-6">{icon}</span>}
+      {children}
+    </div>
   )
 }
 

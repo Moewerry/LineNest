@@ -5,8 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 export function EditorImportDialog({ open, onOpenChange, onPick }: { open: boolean; onOpenChange: (open: boolean) => void; onPick: () => void }) {
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="sm:max-w-sm">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-accent text-primary"><ImagePlus aria-hidden="true" className="size-6" /></div>
-      <DialogHeader>
+      <DialogHeader icon={<ImagePlus />}>
         <DialogTitle>从一张图片开始</DialogTitle>
         <DialogDescription>导入图片，画线分割。</DialogDescription>
       </DialogHeader>

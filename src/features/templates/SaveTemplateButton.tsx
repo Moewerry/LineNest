@@ -19,7 +19,7 @@ export function SaveTemplateButton({ disabled = false }: { disabled?: boolean })
   return <>
     <Button variant="outline" disabled={disabled || !doc.image || !hasLines} title={hasLines ? '保存线条模板' : '画线后即可保存模板'} onClick={() => { setRange(checkedObjects.length ? 'checked' : 'all'); setOpen(true) }}><Save />保存模板</Button>
     <Dialog open={open} onOpenChange={value => { if (!operation.current) setOpen(value) }}><DialogContent>
-      <DialogHeader><DialogTitle>保存模板</DialogTitle><DialogDescription>仅保存线条及位置，供批量裁剪复用。</DialogDescription></DialogHeader>
+      <DialogHeader icon={<Save />}><DialogTitle>保存模板</DialogTitle><DialogDescription>仅保存线条及位置，供批量裁剪复用。</DialogDescription></DialogHeader>
       <form className="space-y-4" onSubmit={async event => {
         event.preventDefault()
         if (operation.current || disabled) return

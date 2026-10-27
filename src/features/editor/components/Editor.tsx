@@ -13,7 +13,7 @@ import { EditorSidebar } from './EditorSidebar'
 import { ToolBar } from './ToolBar'
 import { TopBar } from './TopBar'
 import { ExportButton } from './ExportButton'
-import { PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { ImagePlus, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useImageDrop } from '@/hooks/use-image-drop'
 import { ImageDropOverlay } from '@/components/ImageDropOverlay'
 import { EditorImportOverlay } from './EditorImportOverlay'
@@ -108,6 +108,6 @@ export function Editor() {
     <LoadingOverlay open={entering} />
     <input ref={input} type="file" className="hidden" aria-label="导入图片" accept="image/png,image/jpeg,image/webp,image/avif" onChange={e => { const file = e.target.files?.[0]; if (file) requestImport(file); e.target.value = '' }} />
     <EditorImportDialog open={importOpen && importGuide === 'dialog'} onOpenChange={open => { if (!open) setImportGuide(null) }} onPick={() => { setImportGuide(null); input.current?.click() }} />
-    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条、裁剪选区和区域标记将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => { const file = pending; setPending(null); if (file) void load(file) }}>替换图片</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={!!pending} onOpenChange={open => { if (!open) setPending(null) }}><DialogContent><DialogHeader icon={<ImagePlus />}><DialogTitle>替换当前图片？</DialogTitle><DialogDescription>当前线条、裁剪选区和区域标记将清空。替换后可以撤销恢复。</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" onClick={() => setPending(null)}>取消</Button><Button onClick={() => { const file = pending; setPending(null); if (file) void load(file) }}>替换图片</Button></DialogFooter></DialogContent></Dialog>
   </main>
 }
