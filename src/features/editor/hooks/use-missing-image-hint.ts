@@ -1,5 +1,5 @@
 import { useEffect, useRef, type PointerEvent } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { useEditor } from '../model/store'
 
 export function useMissingImageHint(enabled: boolean) {

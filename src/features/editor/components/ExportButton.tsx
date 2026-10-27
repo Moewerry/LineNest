@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Download, PaintBucket, Scissors } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { exportImage } from '@/lib/export/image'

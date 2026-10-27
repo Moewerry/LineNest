@@ -1,4 +1,4 @@
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { bounds, childrenOf, containsLocked, identity, isLocked, multiply, translation } from '../geometry'
 import { transformSelection, useEditor } from '../model/store'
 import type { EditorNode, Matrix, Snapshot } from '../model/types'

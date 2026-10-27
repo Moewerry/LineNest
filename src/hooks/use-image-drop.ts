@@ -1,5 +1,5 @@
 import { useRef, useState, type DragEvent } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 export function useImageDrop(onImport: (file: File) => void, disabled = false) {
   const depth = useRef(0)

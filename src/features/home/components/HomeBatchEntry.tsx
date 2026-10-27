@@ -1,6 +1,6 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { listTemplates } from '@/lib/db'
 import { HomeNoTemplatesOverlay } from './HomeNoTemplatesOverlay'
 

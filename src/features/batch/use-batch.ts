@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { liveQuery } from 'dexie'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { listTemplates } from '@/lib/db'
 import { validateImage } from '@/lib/images'
 import { importTemplate } from '@/features/templates/portable'
