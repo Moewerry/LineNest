@@ -40,13 +40,14 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
     finally { exportingRef.current = false; setExporting(false) }
   }
   const close = () => { abort.current?.abort(); onClose() }
-  return <Dialog open onOpenChange={value => { if (!value) close() }}><DialogContent className="flex flex-col overflow-hidden p-0 sm:max-w-3xl">
+  return <Dialog open onOpenChange={value => { if (!value) close() }}><DialogContent className="flex flex-col overflow-hidden p-0 sm:max-w-7xl">
     <DialogHeader icon={mode === 'marked' ? <ScanLine /> : <Scissors />} className="gap-3 px-6 pt-6 pr-12">
       <DialogTitle>{mode === 'marked' ? '导出标记区域' : '按线切图'}</DialogTitle>
       <DialogDescription>{mode === 'marked' ? '每个标记区域保存为一张图片，保留原图颜色。' : '按线条围成的区域切图，每个区域保存为一张图片。'}</DialogDescription>
     </DialogHeader>
-    <DialogBody>
-    {error ? <p role="alert" className="rounded-lg bg-destructive/5 p-4 text-sm text-destructive">{error}</p> : !result ? <p role="status" className="py-16 text-center text-muted-foreground">正在计算切片…</p> : <>
+    <DialogBody className="gap-6 pb-6">
+    {error ? <p role="alert" className="rounded-lg bg-destructive/5 p-4 text-sm text-destructive">{error}</p> : !result ? <p role="status" className="py-16 text-center text-muted-foreground">正在计算切片…</p> : <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="flex min-w-0 flex-col gap-4">
       <SlicePreview doc={doc} result={result} selected={selected} marked={mode === 'marked'} />
       <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
         <span className="rounded-md border px-2 py-1 font-medium text-foreground">{format}</span>
@@ -55,11 +56,14 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
       </div>
       {!result.regions.length && <p role="status" className="text-sm text-muted-foreground">当前图片和裁剪范围内没有有效标记，请返回画布重新标记。</p>}
       <SliceRegionPicker regions={result.regions} selected={selected} disabled={exporting} onChange={setSelected} />
-      <ExportSettings sources={[doc.image?.name ?? 'image.png']} value={options} onChange={setOptions} disabled={exporting} onReady={setReady} />
-      {selected.size > 1 && <SliceDownloadOptions value={downloadMode} disabled={exporting} onChange={setDownloadMode} />}
       {result.unusedEdges > 0 && <p className="text-xs text-muted-foreground">有未围成区域的线段，这些线段不参与切分。</p>}
       {mode === 'all' && result.regions.length === 1 && <p className="text-xs text-muted-foreground">还没有分出多个区域。请让线条连接图片边界，或围成封闭区域。</p>}
-    </>}
+      </div>
+      <div className="flex min-w-0 flex-col gap-6 border-t pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
+        <ExportSettings sources={[doc.image?.name ?? 'image.png']} value={options} onChange={setOptions} disabled={exporting} onReady={setReady} />
+        {selected.size > 1 && <SliceDownloadOptions value={downloadMode} disabled={exporting} onChange={setDownloadMode} />}
+      </div>
+    </div>}
     </DialogBody>
     <DialogFooter className="border-t px-6 py-4">
       {exporting && <span role="status" className="self-center text-xs tabular-nums text-muted-foreground sm:mr-auto">正在导出 {progress} / {selected.size}</span>}

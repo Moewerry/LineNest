@@ -16,9 +16,9 @@ export function ExportConfirmDialog({ sources, onClose, onConfirm }: { sources: 
     catch (error) { toast.error(error instanceof Error ? error.message : '导出失败') }
     finally { working.current = false; setBusy(false) }
   }
-  return <Dialog open onOpenChange={open => { if (!open && !working.current) onClose() }}><DialogContent showCloseButton={!busy}>
+  return <Dialog open onOpenChange={open => { if (!open && !working.current) onClose() }}><DialogContent showCloseButton={!busy} className="sm:max-w-4xl">
     <DialogHeader icon={<Download />}><DialogTitle>确认下载</DialogTitle><DialogDescription>选择导出格式和文件名，确认后开始下载。</DialogDescription></DialogHeader>
-    <ExportSettings sources={sources} value={options} onChange={setOptions} disabled={busy} onReady={setReady} />
+    <ExportSettings sources={sources} value={options} onChange={setOptions} disabled={busy} onReady={setReady} columns />
     <DialogFooter><Button variant="outline" disabled={busy} onClick={onClose}>取消</Button><Button disabled={!ready || busy} onClick={() => void confirm()}>{busy ? '正在导出…' : '确认下载'}</Button></DialogFooter>
   </DialogContent></Dialog>
 }

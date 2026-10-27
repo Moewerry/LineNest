@@ -4,10 +4,11 @@ type HomeAnimatedTextProps = {
   children: string
   delay?: number
   stagger?: number
+  repeatDelay?: number
   className?: string
 }
 
-export function HomeAnimatedText({ children, delay = 0, stagger = 30, className }: HomeAnimatedTextProps) {
+export function HomeAnimatedText({ children, delay = 0, stagger = 30, repeatDelay, className }: HomeAnimatedTextProps) {
   const container = useRef<HTMLSpanElement>(null)
   const characterCount = Array.from(children).filter(character => !/\s/u.test(character)).length
   // Default to readable text; only hide pending characters while typing is active.
@@ -27,21 +28,28 @@ export function HomeAnimatedText({ children, delay = 0, stagger = 30, className 
     // Read the resolved CSS delay to stay in sync with the card entrance sequence.
     const computedDelay = getComputedStyle(container.current).animationDelay.split(',')[0].trim()
     const startDelay = parseFloat(computedDelay) * (computedDelay.endsWith('ms') ? 1 : 1000)
-    setVisibleCount(0)
-    timeout = setTimeout(() => {
-      let count = 1
-      setVisibleCount(count)
-      if (count >= characterCount) return
-      interval = setInterval(() => {
-        count += 1
+    const typeText = () => {
+      let count = 0
+      setVisibleCount(0)
+      const tick = () => {
+        count = Math.min(count + 1, characterCount)
         setVisibleCount(count)
-        if (count >= characterCount) clearInterval(interval)
-      }, Math.max(16, Math.round(stagger * 1.3)))
-    }, Number.isFinite(startDelay) ? Math.max(0, startDelay) : delay)
+        if (count >= characterCount) {
+          clearInterval(interval)
+          if (repeatDelay !== undefined && characterCount > 0) {
+            timeout = setTimeout(typeText, Math.max(0, repeatDelay))
+          }
+        }
+      }
+      tick()
+      if (count < characterCount) interval = setInterval(tick, Math.max(16, Math.round(stagger * 1.3)))
+    }
+    setVisibleCount(0)
+    timeout = setTimeout(typeText, Number.isFinite(startDelay) ? Math.max(0, startDelay) : delay)
     const onMotionChange = () => { if (motion.matches) showAll() }
     motion.addEventListener('change', onMotionChange)
     return () => { stop(); motion.removeEventListener('change', onMotionChange) }
-  }, [children, characterCount, delay, stagger])
+  }, [children, characterCount, delay, stagger, repeatDelay])
 
   let characterIndex = 0
   // Keep English words and trailing punctuation together when the text wraps.

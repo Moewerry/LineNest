@@ -20,7 +20,7 @@ export function SliceRegionPicker({ regions, selected, disabled, onChange }: Pro
       </div>
       <Button size="sm" variant="ghost" disabled={disabled || !regions.length} onClick={() => onChange(selected.size === regions.length ? new Set() : new Set(regions.map(region => region.id)))}>{selected.size === regions.length && regions.length ? '取消全选' : '全选'}</Button>
     </div>
-    {!!regions.length && <div className="grid gap-2 p-1 sm:grid-cols-2 lg:grid-cols-3">
+    {!!regions.length && <div className="grid gap-2 p-1 sm:grid-cols-2">
         {regions.map(region => {
           const included = selected.has(region.id)
           return <Button key={region.id} variant="outline" aria-label={`区域 ${region.id}，${region.box.width} × ${region.box.height} 像素`} aria-pressed={included} disabled={disabled}

@@ -34,5 +34,5 @@ export function SlicePreview({ doc, result, selected, marked = false }: { doc: D
       context.fillStyle = 'white'; context.fillText(String(region.id), region.label.x, region.label.y)
     }
   }, [doc, result, selected, marked])
-  return <div className="canvas-surface flex min-h-40 items-center justify-center overflow-hidden rounded-xl border p-3"><canvas ref={ref} aria-label="切片区域预览" className="max-h-[42vh] max-w-full object-contain" /></div>
+  return <div className="canvas-surface flex min-h-40 items-center justify-center overflow-hidden rounded-xl border p-3"><canvas ref={ref} aria-label="切片区域预览" className="max-h-[50vh] max-w-full object-contain" /></div>
 }

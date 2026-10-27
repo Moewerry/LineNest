@@ -11,7 +11,7 @@ export function HomeHeader() {
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-2">
-      <Button asChild size="sm" className="h-10 rounded-full border-0 bg-primary px-4 tracking-[0.1em] text-white shadow-none hover:bg-primary/90"><Link to="/editor" state={{ showImageImport: true }}><HomeAnimatedText delay={160} stagger={40}>进入工作台</HomeAnimatedText></Link></Button>
+      <Button asChild size="sm" className="home-header-enter h-10 rounded-full border-0 bg-primary px-4 font-semibold tracking-[0.1em] text-white shadow-none hover:bg-primary/90"><Link to="/editor" state={{ showImageImport: true }}><HomeAnimatedText delay={160} stagger={40}>进入工作台</HomeAnimatedText></Link></Button>
     </div>
   </header>
 }
