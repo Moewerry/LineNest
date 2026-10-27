@@ -44,12 +44,6 @@ pnpm build
 pnpm preview
 ```
 
-## 部署
-
-GitHub Pages：在仓库 **Settings → Pages** 中将 Source 设为 **GitHub Actions**，推送到 `master` 后自动构建发布。也可在 Actions 中手动运行部署工作流。
-
-自行部署：将 `pnpm build` 生成的 `dist` 交给静态服务器托管即可，无需后端或 Docker。部署到子目录时，通过 `PAGES_BASE_PATH` 设置路径，例如 `/LineNest/`。
-
 ## 贡献与许可
 
 欢迎提交 [Issue](https://github.com/Moewerry/LineNest/issues) 或 Pull Request，请附复现步骤或改动说明。
