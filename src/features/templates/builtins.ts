@@ -1,5 +1,6 @@
 import type { Box } from '@/features/editor/model/types'
 import type { LineTemplate } from './layout'
+import { squareOutline } from './placement'
 
 export type BuiltinTemplate = { id: string; name: string; description: string; layout: LineTemplate }
 
@@ -7,7 +8,7 @@ export const builtinTemplates: readonly BuiltinTemplate[] = [{
   id: 'builtin:center-square',
   name: '1:1 正方形',
   description: '按原图短边，居中裁出一张正方形',
-  layout: { version: 1, width: 1000, height: 1000, nodes: {}, roots: [] },
+  layout: squareOutline(),
 }]
 
 export const findBuiltinTemplate = (id: string) => builtinTemplates.find(template => template.id === id)

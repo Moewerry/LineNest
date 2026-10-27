@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { BuiltinTemplate } from './builtins'
 
-export function BuiltinTemplateCard({ template, disabled, selected, onSelect }: {
-  template: BuiltinTemplate; disabled: boolean; selected?: boolean; onSelect: () => void
+export function BuiltinTemplateCard({ template, disabled, selected, description, onSelect }: {
+  template: BuiltinTemplate; disabled: boolean; selected?: boolean; description?: string; onSelect: () => void
 }) {
   return <Button variant="outline" disabled={disabled} aria-pressed={selected} onClick={onSelect}
     className={cn('relative h-auto min-w-0 flex-col items-stretch gap-0 overflow-hidden rounded-xl bg-card p-0 text-left whitespace-normal shadow-none hover:border-primary/50 hover:bg-card', selected && 'border-primary')}>
@@ -16,6 +16,6 @@ export function BuiltinTemplateCard({ template, disabled, selected, onSelect }: 
       </svg>
     </span>
     {selected && <span aria-hidden="true" className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground"><Check className="size-3" /></span>}
-    <span className="min-w-0 p-4"><span className="block text-sm font-medium">{template.name}</span><span className="mt-2 block text-xs font-normal leading-6 text-muted-foreground">{template.description}</span></span>
+    <span className="min-w-0 p-4"><span className="block text-sm font-medium">{template.name}</span><span className="mt-2 block text-xs font-normal leading-6 text-muted-foreground">{description ?? template.description}</span></span>
   </Button>
 }

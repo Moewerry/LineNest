@@ -28,6 +28,8 @@ import { useFillRegions } from '@/features/fill/use-fill-regions'
 import { fillCursors } from '@/features/fill/cursors'
 import { eraseStroke } from '../geometry/erase'
 import { EraserSettings } from './EraserSettings'
+import { TemplatePlacementPreview } from '@/features/templates/TemplatePlacementPreview'
+import { TemplatePlacementStatus } from '@/features/templates/TemplatePlacementStatus'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -46,10 +48,13 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
   const [gesture, setGesture] = useState<Gesture | null>(null), gestureRef = useRef<Gesture | null>(null)
   const [space, setSpace] = useState(false)
+  const [pointerInside, setPointerInside] = useState(false)
+  const pointerScreen = useRef<Point | null>(null)
   const spaceRef = useRef(false)
   const [horizontal, setHorizontal] = useState(false)
   const [splitHover, setSplitHover] = useState<SplitAxis | null>(null)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
+  const heldTemplate = useEditor(s => s.heldTemplate)
   const modeGuideVisible = useModeGuide()
   const fillAction = useEditor(s => s.fillAction)
   const fillRegions = useFillRegions(snapshot.doc, tool === 'fill' && fillAction === 'mark' && !busy)
@@ -83,6 +88,12 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   }, [onImageReady, image, asset, size.width, size.height, view])
   useEffect(() => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }, [image?.id, busy])
   useEffect(() => {
+    if (!heldTemplate || !pointerInside || space || gestureRef.current?.type === 'pan' || !pointerScreen.current) return
+    const p = pointerScreen.current
+    useEditor.getState().moveHeldTemplate({ x: (p.x - view.x) / view.scale, y: (p.y - view.y) / view.scale })
+  }, [view, space, pointerInside, heldTemplate?.layout])
+  useEffect(() => () => useEditor.getState().cancelTemplatePlacement(), [])
+  useEffect(() => {
     const changeSplitDirection = (axis: SplitAxis) => {
       setHorizontal(axis === 'horizontal')
       const active = gestureRef.current
@@ -113,6 +124,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         return
       }
       if (isTextTarget(e.target)) return
+      if (state.heldTemplate) return
       if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); changeSplitDirection('horizontal') }
       if (e.key === 'Escape' && gestureRef.current) { e.stopImmediatePropagation(); updateGesture(null) }
     }
@@ -124,7 +136,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       }
       if (e.code === 'KeyW') changeSplitDirection('vertical')
     }
-    const cancel = () => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }
+    const cancel = () => { spaceRef.current = false; setSpace(false); setHorizontal(false); setPointerInside(false); updateGesture(null) }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', cancel)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', cancel) }
   }, [busy])
@@ -134,7 +146,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     return () => { window.removeEventListener('pointerup', cancel); window.removeEventListener('pointercancel', cancel) }
   }, [])
   useEffect(() => useEditor.subscribe((state, previous) => {
-    if (state.present !== previous.present || state.tool !== previous.tool) updateGesture(null)
+    if (state.present !== previous.present || state.tool !== previous.tool || (!!state.heldTemplate !== !!previous.heldTemplate)) updateGesture(null)
   }), [])
   const pointer = (): Point => {
     const p = stage.current?.getPointerPosition() ?? zero
@@ -151,6 +163,13 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       const screen = stage.current?.getPointerPosition() ?? zero
       if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
       updateGesture({ type: 'pan', start: screen, current: screen, origin: { x: view.x, y: view.y }, source: event.evt.button === 1 ? 'middle' : tool === 'pan' ? 'tool' : 'space' })
+      return
+    }
+    if (state.heldTemplate) {
+      if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
+      event.evt.preventDefault()
+      try { state.placeHeldTemplate(p) }
+      catch (error) { toast.error(error instanceof Error ? error.message : '模板放置失败') }
       return
     }
     const hit = event.target.id()
@@ -215,6 +234,11 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const track = () => {
     const active = gestureRef.current
     const p = pointer()
+    pointerScreen.current = stage.current?.getPointerPosition() ?? null
+    if (useEditor.getState().heldTemplate && !spaceRef.current && active?.type !== 'pan') {
+      useEditor.getState().moveHeldTemplate(p)
+      return
+    }
     if (!active) {
       setSplitHover(tool === 'split' && !busy ? splitMoveAxis(useEditor.getState().present, p, view.scale) : null)
       return
@@ -274,14 +298,22 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
   const splitCursor = tool === 'split' && !busy && gesture?.type !== 'split' ? splitHover : null
-  return <CanvasContextMenu disabled={busy || tool === 'erase'} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
-    onPointerLeave={() => setSplitHover(null)}
+  return <CanvasContextMenu disabled={busy || tool === 'erase' || !!heldTemplate} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && heldTemplate ? 'template-placement-status' : image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : heldTemplate ? 'crosshair' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
+    onPointerEnter={event => {
+      const rect = event.currentTarget.getBoundingClientRect()
+      const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top }
+      pointerScreen.current = screen
+      setPointerInside(true)
+      if (!busy && !spaceRef.current) useEditor.getState().moveHeldTemplate({ x: (screen.x - view.x) / view.scale, y: (screen.y - view.y) / view.scale })
+    }}
+    onPointerLeave={() => { setSplitHover(null); setPointerInside(false) }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
-      if (tool !== 'select' || spaceRef.current) return
+      if (tool !== 'select' || spaceRef.current || useEditor.getState().heldTemplate) return
       const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)
       if (id) { updateGesture(null); enterGroup(id) }
     }} onContextMenu={e => {
+      if (useEditor.getState().heldTemplate) { e.evt.preventDefault(); return }
       if (tool === 'erase') {
         e.evt.preventDefault()
         e.evt.stopPropagation()
@@ -294,7 +326,15 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       const hit = e.target.id(), id = hit.startsWith('endpoint:') ? hit.split(':')[2] : hit
       const target = scopeTarget(snapshot.doc, id, snapshot.scope)
       if (target && !snapshot.selected.includes(target)) useEditor.getState().select([target])
-    }} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
+    }} onWheel={e => {
+      e.evt.preventDefault()
+      if (busy || !e.evt.deltaY) return
+      const factor = e.evt.deltaY < 0 ? 1.1 : 1 / 1.1
+      pointerScreen.current = stage.current?.getPointerPosition() ?? null
+      const state = useEditor.getState()
+      if (state.heldTemplate && !spaceRef.current && gestureRef.current?.type !== 'pan') state.resizeHeldTemplate(factor)
+      else zoom(factor, pointerScreen.current ?? undefined)
+    }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
         <RegionMarkLayer marks={preview.doc.marks ?? []} scale={view.scale} />
@@ -302,15 +342,16 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={2 / view.scale} lineCap="round" listening={false} />}
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} viewport={viewport} />
-        {tool !== 'erase' && <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />}
+        {tool !== 'erase' && !heldTemplate && <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />}
         {gesture?.type === 'split' && <SplitLinePreview point={gesture.current} axis={gesture.axis} image={image} viewport={viewport} scale={view.scale} />}
+        {heldTemplate && pointerInside && !busy && <TemplatePlacementPreview placement={heldTemplate} viewScale={view.scale} />}
       </Group></Layer>
     </Stage> : null}
     {!image && <CanvasEmptyState onPick={onReplaceImage} busy={busy} />}
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
       <div className="pointer-events-none absolute left-10 right-5 top-10 flex flex-wrap items-start gap-2">
-        {modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
+        {heldTemplate ? <TemplatePlacementStatus placement={heldTemplate} temporaryView={space || gesture?.type === 'pan'} onCancel={() => useEditor.getState().cancelTemplatePlacement()} /> : modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
           <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
         </div>}
         {snapshot.scope && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button>}

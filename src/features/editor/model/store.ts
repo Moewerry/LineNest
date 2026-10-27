@@ -5,11 +5,19 @@ import { rotateDocumentClockwise } from '../geometry/rotate-document'
 import { containsPoint, ringsKey } from '@/features/fill/geometry'
 import { MAX_MARK_POINTS, MAX_REGION_MARKS } from '@/features/fill/constants'
 import { lineIds, retainedChecks } from './object-checks'
+import { appendTemplatePlacement, createTemplatePlacement, placementCenter, placementScale, type TemplatePlacement } from '@/features/templates/placement'
+import type { LineTemplate } from '@/features/templates/layout'
 
 type EditorState = {
   present: Snapshot; past: Snapshot[]; future: Snapshot[]; tool: Tool
   fillColor: string; fillOpacity: number; fillAction: 'mark' | 'erase'
   checkedObjects: string[]
+  heldTemplate: TemplatePlacement | null
+  pickUpTemplate: (layout: LineTemplate, name: string) => void
+  moveHeldTemplate: (center: Point) => void
+  resizeHeldTemplate: (factor: number) => void
+  placeHeldTemplate: (center: Point) => void
+  cancelTemplatePlacement: () => void
   checkObjects: (ids: string[], checked: boolean) => void
   commit: (change: (draft: Snapshot) => void, action?: 'erase') => void
   setTool: (tool: Tool) => void
@@ -31,6 +39,7 @@ type EditorState = {
   undoErase: () => void
 }
 const eraseSnapshots = new WeakSet<Snapshot>()
+const templatePlacements = new WeakMap<Snapshot, TemplatePlacement>()
 export function transformSelection(draft: Snapshot, matrix: Matrix) {
   if (draft.selected.some(id => containsLocked(draft.doc, id))) return
   if (containsSplit(draft.doc, draft.selected) && (matrix[0] !== 1 || matrix[1] !== 0 || matrix[2] !== 0 || matrix[3] !== 1)) return
@@ -43,7 +52,35 @@ export function transformSelection(draft: Snapshot, matrix: Matrix) {
 export const useEditor = create<EditorState>((set, get) => ({
   present: emptySnapshot(), past: [], future: [], tool: 'split',
   fillColor: '#bd3e1c', fillOpacity: 0.35, fillAction: 'mark',
-  checkedObjects: [],
+  checkedObjects: [], heldTemplate: null,
+  pickUpTemplate(layout, name) {
+    const image = get().present.doc.image
+    if (!image) throw new Error('请先导入图片，再选择模板')
+    set({ heldTemplate: createTemplatePlacement(layout, image, name), tool: 'select' })
+  },
+  moveHeldTemplate(center) {
+    const held = get().heldTemplate
+    if (held && Number.isFinite(center.x) && Number.isFinite(center.y)) set({ heldTemplate: { ...held, center: placementCenter(held, center) } })
+  },
+  resizeHeldTemplate(factor) {
+    const held = get().heldTemplate
+    if (held && Number.isFinite(factor) && factor > 0) {
+      const next = { ...held, scale: placementScale(held.bounds, held.scale * factor) }
+      if (held.center) next.center = placementCenter(next, held.center)
+      set({ heldTemplate: next })
+    }
+  },
+  placeHeldTemplate(center) {
+    const state = get(), held = state.heldTemplate
+    if (!held || !Number.isFinite(center.x) || !Number.isFinite(center.y)) return
+    center = placementCenter(held, center)
+    state.commit(draft => appendTemplatePlacement(draft, held, center))
+    if (get().present !== state.present) {
+      templatePlacements.set(get().present, { ...held, center: { ...center } })
+      set({ heldTemplate: null, tool: 'select' })
+    }
+  },
+  cancelTemplatePlacement: () => set({ heldTemplate: null }),
   checkObjects(ids, checked) {
     const state = get(), lines = lineIds(state.present.doc, ids)
     set({ checkedObjects: checked ? [...new Set([...state.checkedObjects, ...lines])] : state.checkedObjects.filter(id => !lines.includes(id)) })
@@ -55,9 +92,9 @@ export const useEditor = create<EditorState>((set, get) => ({
     if (action === 'erase') eraseSnapshots.add(next)
     set(state => ({ present: next, past: [...state.past, current].slice(-100), future: [], checkedObjects: retainedChecks(next.doc, state.checkedObjects) }))
   },
-  setTool: tool => set({ tool }),
+  setTool: tool => set({ tool, heldTemplate: null }),
   setImage(image) {
-    set({ checkedObjects: [] })
+    set({ checkedObjects: [], heldTemplate: null })
     if (!get().present.doc.image) {
       set({ present: { ...emptySnapshot(), doc: { ...emptySnapshot().doc, image } }, past: [], future: [], tool: 'split' })
       return
@@ -65,8 +102,8 @@ export const useEditor = create<EditorState>((set, get) => ({
     get().commit(draft => Object.assign(draft, emptySnapshot(), { doc: { ...emptySnapshot().doc, image } }))
     set({ tool: 'split' })
   },
-  rotateImage(image) { get().commit(draft => rotateDocumentClockwise(draft.doc, image)) },
-  removeImage() { get().commit(draft => Object.assign(draft, emptySnapshot())) },
+  rotateImage(image) { set({ heldTemplate: null }); get().commit(draft => rotateDocumentClockwise(draft.doc, image)) },
+  removeImage() { set({ heldTemplate: null }); get().commit(draft => Object.assign(draft, emptySnapshot())) },
   setFillColor(color) { if (/^#[0-9a-f]{6}$/i.test(color)) set({ fillColor: color.toLowerCase() }) },
   setFillOpacity(opacity) { if (Number.isFinite(opacity)) set({ fillOpacity: Math.max(0, Math.min(1, opacity)) }) },
   setFillAction: fillAction => set({ fillAction }),
@@ -131,13 +168,17 @@ export const useEditor = create<EditorState>((set, get) => ({
   setCrop(crop) { get().commit(draft => { draft.doc.crop = crop }) },
   undo() {
     const { past, present, future } = get()
-    if (past.length) set({ present: past[past.length - 1], past: past.slice(0, -1), future: [present, ...future], checkedObjects: retainedChecks(past[past.length - 1].doc, get().checkedObjects) })
+    if (past.length) {
+      const previous = past[past.length - 1], placement = templatePlacements.get(present)
+      const heldTemplate = placement && previous.doc.image?.id === placement.imageId ? structuredClone(placement) : null
+      set({ present: previous, past: past.slice(0, -1), future: [present, ...future], checkedObjects: retainedChecks(previous.doc, get().checkedObjects), heldTemplate, ...(heldTemplate ? { tool: 'select' as const } : {}) })
+    }
   },
   undoErase() {
     if (eraseSnapshots.has(get().present)) get().undo()
   },
   redo() {
     const { past, present, future } = get()
-    if (future.length) set({ present: future[0], past: [...past, present].slice(-100), future: future.slice(1), checkedObjects: retainedChecks(future[0].doc, get().checkedObjects) })
+    if (future.length) set({ present: future[0], past: [...past, present].slice(-100), future: future.slice(1), checkedObjects: retainedChecks(future[0].doc, get().checkedObjects), heldTemplate: null })
   },
 }))

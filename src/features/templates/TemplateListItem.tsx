@@ -23,7 +23,7 @@ export function TemplateListItem({ template, disabled, hasImage, onApply, onBatc
       </div>
     </div>
     <div className="mt-3 flex items-center justify-between gap-2">
-      <Button size="sm" variant="secondary" className="flex-1 text-xs" disabled={disabled || !hasImage} title={hasImage ? undefined : '请先导入图片'} onClick={onApply}>套用模板</Button>
+      <Button size="sm" variant="secondary" className="flex-1 text-xs" disabled={disabled || !hasImage} title={hasImage ? '拿起模板后在画布中单击放置' : '请先导入图片'} onClick={onApply}>拿起模板</Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" disabled={disabled} aria-label={`${template.name}的更多操作`}><MoreHorizontal /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">

@@ -12,7 +12,7 @@ import { lineTemplateFromDocument, type LineTemplate } from './layout'
 import { TemplateConfirmation, type TemplateConfirmationState } from './TemplateConfirmation'
 import { TemplateListItem } from './TemplateListItem'
 import { TemplateToolbar } from './TemplateToolbar'
-import { applyTemplate } from './apply'
+import { pickUpTemplate } from './apply'
 
 const message = (error: unknown) => error instanceof Error ? error.message : '操作失败，请检查浏览器存储权限或可用空间'
 
@@ -38,18 +38,12 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     try { await action(); return true } catch (error) { toast.error(message(error)); return false }
     finally { operation.current = false; setBusy(false) }
   }
-  const prepareApply = (template: LineTemplate) => {
-    const currentImage = useEditor.getState().present.doc.image
-    if (!currentImage) throw new Error('请先导入图片，再套用线条模板')
-    setConfirmation({ type: 'apply', template, currentImage })
+  const prepareApply = (template: LineTemplate, name?: string) => {
+    pickUpTemplate(template, name)
   }
   const confirm = () => void run(async () => {
     if (!confirmation) return
-    if (confirmation.type === 'delete') {
-      await deleteTemplate(confirmation.id); setConfirmation(null); toast.success('已删除模板'); return
-    }
-    applyTemplate(confirmation.template, confirmation.currentImage)
-    setConfirmation(null); toast.success('线条已套用')
+    await deleteTemplate(confirmation.id); setConfirmation(null); toast.success('已删除模板')
   })
   return <>
     <div className="px-4 pb-4 pt-5"><h2 className="text-sm font-semibold">我的模板</h2><p className="mt-1.5 text-xs leading-5 text-muted-foreground">保存画好的线条，下次直接复用。</p></div>
@@ -68,7 +62,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     </div> : <ScrollArea className="min-h-0 flex-1">
       <div data-editor-settings className="space-y-3 px-4 pb-4">
         {filtered.map(row => <TemplateListItem key={row.id} template={row} disabled={disabled || busy} hasImage={!!image}
-          onApply={() => void run(async () => prepareApply(await readTemplate(row.id)))}
+          onApply={() => void run(async () => prepareApply(await readTemplate(row.id), row.name))}
           onBatch={() => void navigate(`/batch?template=${encodeURIComponent(row.id)}`)}
           onExport={() => void run(async () => { exportTemplate(row.name, await readTemplate(row.id)) })}
           onDelete={() => setConfirmation({ type: 'delete', id: row.id })}
@@ -79,7 +73,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     </ScrollArea>}
     <input ref={fileInput} type="file" className="hidden" accept=".json" aria-label="导入模板文件" disabled={disabled || busy || !image} onChange={event => {
       const file = event.target.files?.[0]
-      if (file) void run(async () => prepareApply(await importTemplate(file)))
+      if (file) void run(async () => prepareApply(await importTemplate(file), file.name.replace(/\.json$/i, '')))
       event.target.value = ''
     }} />
     <p className="shrink-0 border-t px-4 py-3 text-center text-[11px] leading-5 text-muted-foreground/70">模板保存在此浏览器，建议定期导出备份</p>

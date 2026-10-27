@@ -9,8 +9,15 @@ export function useShortcuts(enabled = true, onMissingImage?: () => void) {
   useEffect(() => {
     if (!enabled) return
     const handle = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && useEditor.getState().heldTemplate && !event.isComposing && !(event.target instanceof HTMLElement && event.target.closest('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]'))) {
+        event.preventDefault(); useEditor.getState().cancelTemplatePlacement(); return
+      }
       if (isTextTarget(event.target) || event.isComposing || event.altKey) return
       const state = useEditor.getState(), key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey
+      if (state.heldTemplate && !(mod && (key === 'z' || key === 'y'))) {
+        if (mod && ['a', 'g', 'd'].includes(key)) event.preventDefault()
+        return
+      }
       if (!state.present.doc.image) {
         if (mod && (key === 'z' || key === 'y')) {
           event.preventDefault()
