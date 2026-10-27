@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -24,8 +24,14 @@ import '../editor-theme.css'
 export function Editor() {
   const location = useLocation()
   const navigate = useNavigate()
+  const navigationType = useNavigationType()
   const currentImageId = useEditor(state => state.present.doc.image?.id)
-  const [importGuide, setImportGuide] = useState<'overlay' | 'dialog' | null>(() => currentImageId ? null : location.state?.showImageImport === true ? 'overlay' : 'dialog')
+  const [importGuide, setImportGuide] = useState<'overlay' | 'dialog' | null>(() => {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+    const refreshing = navigationType === 'POP' && navigation?.type === 'reload'
+    if (currentImageId || refreshing) return null
+    return location.state?.showImageImport === true ? 'overlay' : 'dialog'
+  })
   const importOpen = !currentImageId && importGuide !== null
   const overlayOpen = importOpen && importGuide === 'overlay'
   useEffect(() => {

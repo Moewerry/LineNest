@@ -164,6 +164,10 @@
   animation: home-action-fly-in var(--home-icon-duration) cubic-bezier(0.12, 0.8, 0.2, 1) var(--home-icon-delay) backwards;
 }
 
+.home-card-action-batch {
+  animation-delay: calc(var(--home-icon-delay) + 180ms);
+}
+
 .home-brand-icon {
   animation: home-action-fly-in var(--home-icon-duration) cubic-bezier(0.12, 0.8, 0.2, 1) var(--home-content-start) backwards;
 }
