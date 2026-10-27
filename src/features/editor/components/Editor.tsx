@@ -13,7 +13,7 @@ import { EditorSidebar } from './EditorSidebar'
 import { ToolBar } from './ToolBar'
 import { TopBar } from './TopBar'
 import { ExportButton } from './ExportButton'
-import { ImagePlus, PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { ImagePlus } from 'lucide-react'
 import { useImageDrop } from '@/hooks/use-image-drop'
 import { ImageDropOverlay } from '@/components/ImageDropOverlay'
 import { EditorImportOverlay } from './EditorImportOverlay'
@@ -54,7 +54,6 @@ export function Editor() {
     navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state })
     toast.success('图片已导入', { id: `image-import-${imageId}` })
   }, [location, navigate])
-  const [panelOpen, setPanelOpen] = useState(true)
   const input = useRef<HTMLInputElement>(null), loading = useRef(false)
   const missingImageHint = useMissingImageHint(!busy && !pending && !importOpen)
   useShortcuts(!busy && !pending && !importOpen, missingImageHint.notify)
@@ -100,8 +99,8 @@ export function Editor() {
   }
   return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground [&_button:disabled]:pointer-events-auto" {...dropHandlers} onPointerDownCapture={missingImageHint.onPointerDownCapture}>
     <div inert={overlayOpen} aria-hidden={overlayOpen ? true : undefined} className="flex min-h-0 flex-1 flex-col">
-      <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><Button variant="ghost" size="icon" aria-label={panelOpen ? '收起侧边栏' : '打开侧边栏'} aria-pressed={panelOpen} title={panelOpen ? '收起侧边栏' : '打开侧边栏'} onClick={() => setPanelOpen(!panelOpen)}>{panelOpen ? <PanelRightClose /> : <PanelRightOpen />}</Button><ExportButton disabled={busy} /></TopBar>
-      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /><EditorSidebar disabled={busy} open={panelOpen} /></div>
+      <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><ExportButton disabled={busy} /></TopBar>
+      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /><EditorSidebar disabled={busy} /></div>
     </div>
     {overlayOpen && <EditorImportOverlay onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
     {dragging && !overlayOpen && <ImageDropOverlay />}
