@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { DocumentData } from '@/features/editor/model/types'
 import { lineTemplateFromDocument, validateLineTemplate, type LineTemplate } from '@/features/templates/layout'
+import { selectedTemplateDocument } from '@/features/templates/selected-document'
 
 export type TemplateRecord = { id: string; name: string; layout: LineTemplate; updatedAt: number }
 const db = new Dexie('LineNest') as Dexie & {
@@ -16,10 +17,10 @@ db.version(2).stores({ templates: 'id, updatedAt', images: null }).upgrade(async
 })
 
 export const listTemplates = () => db.templates.orderBy('updatedAt').reverse().toArray()
-export async function saveTemplate(name: string, source: DocumentData) {
+export async function saveTemplate(name: string, source: DocumentData, checkedIds?: string[]) {
   if (!name.trim()) throw new Error('请输入模板名称')
   if (!Object.values(source.nodes).some(node => node.type === 'line')) throw new Error('请先绘制分割线，再保存模板')
-  const layout = lineTemplateFromDocument(source)
+  const layout = lineTemplateFromDocument(checkedIds ? selectedTemplateDocument(source, checkedIds) : source)
   await db.templates.add({ id: crypto.randomUUID(), name: name.trim().slice(0, 80), layout, updatedAt: Date.now() })
 }
 export async function readTemplate(id: string) {
