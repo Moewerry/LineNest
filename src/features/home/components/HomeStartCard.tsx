@@ -21,7 +21,7 @@ export function HomeStartCard() {
       </div>
       <p className="mb-8 text-sm leading-7 tracking-[0.06em] text-background/70"><HomeAnimatedText delay={380}>从画线到分图，简单顺手</HomeAnimatedText></p>
       <Button size="lg" disabled={busy} onClick={pickImage} className="home-card-action group h-14 w-full justify-center gap-2 rounded-xl px-5 text-center text-base tracking-[0.1em] shadow-none hover:bg-primary/90"><HomeAnimatedText stagger={35}>上传图片</HomeAnimatedText><Upload aria-hidden="true" className="size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5" /></Button>
-      <Button disabled={busy || checking} onClick={openBatch} variant="ghost" className="mt-4 h-12 w-full rounded-xl border border-background/10 bg-background/5 text-background hover:bg-background/10 hover:text-background"><Scissors aria-hidden="true" />{checking ? '正在读取…' : '批量裁剪图片'}</Button>
+      <Button disabled={busy || checking} onClick={openBatch} variant="ghost" className="home-card-action mt-4 h-12 w-full rounded-xl border border-background/10 bg-background/5 text-background hover:bg-background/10 hover:text-background"><Scissors aria-hidden="true" />{checking ? '正在读取…' : <HomeAnimatedText stagger={35}>批量裁剪图片</HomeAnimatedText>}</Button>
     </section>
   </div>
 }
