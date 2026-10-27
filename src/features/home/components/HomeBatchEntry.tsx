@@ -1,9 +1,8 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { listTemplates } from '@/lib/db'
+import { HomeNoTemplatesOverlay } from './HomeNoTemplatesOverlay'
 
 const BatchEntryContext = createContext<{ openBatch: () => void; checking: boolean } | null>(null)
 
@@ -37,17 +36,6 @@ export function HomeBatchEntry({ children }: { children: ReactNode }) {
 
   return <BatchEntryContext.Provider value={{ openBatch: () => void openBatch(), checking }}>
     {children}
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent overlayClassName="bg-white/65 backdrop-blur-md" className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>暂无模板</DialogTitle>
-          <DialogDescription>请进入工作台去创建模板。</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
-          <Button onClick={() => { setOpen(false); navigate('/editor') }}>进入工作台</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <HomeNoTemplatesOverlay open={open} onOpenChange={setOpen} onEnter={() => { setOpen(false); navigate('/editor') }} />
   </BatchEntryContext.Provider>
 }
