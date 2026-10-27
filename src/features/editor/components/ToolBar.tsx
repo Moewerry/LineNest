@@ -6,7 +6,7 @@ import { toolGuides, toolOrder } from './tool-guide'
 export function ToolBar({ busy }: { busy: boolean }) {
   const tool = useEditor(s => s.tool), ready = useEditor(s => !!s.present.doc.image)
   const labels = { split: '分割', select: '选择', pan: '移动', line: '画线', crop: '选区', fill: '标记', erase: '擦除' }
-  return <nav data-canvas-shortcuts aria-label="编辑工具" className="flex w-16 shrink-0 flex-col items-center gap-1.5 overflow-y-auto rounded-2xl border bg-card px-1.5 py-3">
+  return <nav data-canvas-shortcuts aria-label="编辑工具" className="flex w-16 shrink-0 flex-col items-center gap-1.5 overflow-y-auto border-r bg-card px-1.5 py-3">
     {toolOrder.map(id => {
       const { label, shortcut, description, icon: Icon } = toolGuides[id]
       return <Tooltip key={id}>

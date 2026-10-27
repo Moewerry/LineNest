@@ -28,7 +28,7 @@ export function EditorSidebar({ disabled }: { disabled: boolean }) {
 
   const toggle = <Button variant="ghost" size="icon" className="shrink-0" aria-label={open ? '收起侧边栏' : '展开侧边栏'} aria-expanded={open} aria-controls={contentId} title={open ? '收起侧边栏' : '展开侧边栏'} onClick={() => setOpen(current => !current)}>{open ? <PanelRightClose /> : <PanelRightOpen />}</Button>
 
-  return <aside ref={sidebar} aria-label="模板与图层" className="relative flex min-h-0 shrink-0 flex-col rounded-2xl border bg-card" style={{ width: open ? Math.min(width, maxWidth) : 52 }}>
+  return <aside ref={sidebar} aria-label="模板与图层" className="relative flex min-h-0 shrink-0 flex-col border-l bg-card" style={{ width: open ? Math.min(width, maxWidth) : 52 }}>
     {open && <SidebarResizeHandle width={width} minWidth={260} maxWidth={maxWidth} onWidthChange={setWidth} controls={contentId} />}
     <Tabs defaultValue="templates" className="min-h-0 flex-1 gap-0">
       <div className="flex shrink-0 items-center gap-2 border-b px-2 py-2">
