@@ -17,7 +17,7 @@ export type DocumentData = {
   marks?: RegionMark[]
 }
 export type Snapshot = { doc: DocumentData; selected: string[]; scope: string | null }
-export type Tool = 'split' | 'select' | 'pan' | 'line' | 'crop' | 'fill'
+export type Tool = 'split' | 'select' | 'pan' | 'line' | 'crop' | 'fill' | 'erase'
 export const emptySnapshot = (): Snapshot => ({
   doc: { version: 1, image: null, nodes: {}, roots: [], crop: null, marks: [] },
   selected: [], scope: null,

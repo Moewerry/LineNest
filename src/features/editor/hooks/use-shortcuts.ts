@@ -18,7 +18,7 @@ export function useShortcuts(enabled = true, onMissingImage?: () => void) {
           else state.undo()
           return
         }
-        const editingKey = mod ? ['a', 'g', 'd'].includes(key) : ['s', 'v', 'h', 'l', 'c', 'b', 'delete', 'backspace', 'enter', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)
+        const editingKey = mod ? ['a', 'g', 'd'].includes(key) : ['s', 'v', 'h', 'l', 'c', 'b', 'e', 'delete', 'backspace', 'enter', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)
         if (editingKey && !event.repeat && !(event.target instanceof HTMLElement && event.target.closest('button, [role="button"]'))) {
           event.preventDefault()
           onMissingImage?.()
@@ -45,6 +45,7 @@ export function useShortcuts(enabled = true, onMissingImage?: () => void) {
       else if (!mod && key === 'l') state.setTool('line')
       else if (!mod && key === 'c') state.setTool('crop')
       else if (!mod && key === 'b') state.setTool('fill')
+      else if (!mod && key === 'e') state.setTool('erase')
     }
     window.addEventListener('keydown', handle)
     return () => window.removeEventListener('keydown', handle)

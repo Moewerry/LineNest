@@ -2,12 +2,16 @@ import { useEffect, useId, useRef, useState, type PointerEvent } from 'react'
 import { ChevronDown, ChevronUp, GripHorizontal, Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { useEditor } from '@/features/editor/model/store'
 import { FillSettings } from './FillSettings'
 
 type Props = { busy: boolean; loading: boolean; error: string }
 type Position = { left: number; bottom: number }
 
 export function FloatingFillSettings(props: Props) {
+  const color = useEditor(state => state.fillColor)
+  const opacity = useEditor(state => state.fillOpacity)
+  const colorLabel = `当前标记颜色：${color}，不透明度：${Number((opacity * 100).toFixed(2))}%`
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<Position>({ left: 40, bottom: 56 })
   const [contentHeight, setContentHeight] = useState(240)
@@ -67,7 +71,12 @@ export function FloatingFillSettings(props: Props) {
           setPosition(value => constrain({ left: value.left + offset.left, bottom: value.bottom + offset.bottom }))
         }}><GripHorizontal className="size-4" /></Button>
       <CollapsibleTrigger asChild><Button className="flex-1 justify-between text-white hover:bg-white/15" variant="ghost" aria-controls={contentId}>
-        <span className="flex items-center gap-2"><Settings2 className="size-4" />标记设置</span>
+        <span className="flex items-center gap-2">
+          <Settings2 className="size-4" />标记设置
+          <span role="img" aria-label={colorLabel} title={colorLabel} className="size-4 shrink-0 overflow-hidden rounded-sm border border-white/70 bg-white ring-1 ring-black/15">
+            <span aria-hidden="true" className="block size-full" style={{ backgroundColor: color, opacity }} />
+          </span>
+        </span>
         {open ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
       </Button></CollapsibleTrigger>
     </div>

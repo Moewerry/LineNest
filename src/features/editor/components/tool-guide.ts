@@ -1,4 +1,4 @@
-import { Crop, Grid2X2, Hand, MousePointer2, PaintBucket, Slash } from 'lucide-react'
+import { Crop, Eraser, Grid2X2, Hand, MousePointer2, PaintBucket, Slash } from 'lucide-react'
 import type { Tool } from '../model/types'
 
 export type ToolInstruction = { action: string; keys?: string[]; gesture?: string; result: string }
@@ -57,8 +57,18 @@ export const toolGuides = {
       { action: '左键单击区域', result: '为这一块添加标记' },
     ],
   },
+  erase: {
+    label: '擦除模式', shortcut: 'E', icon: Eraser,
+    description: '划过即可整项擦除线条、色块和裁剪框，锁定对象需先解锁。',
+    instructions: [
+      { action: '左键单击或按住拖动', result: '擦除划过的对象' },
+      { action: '划过裁剪框边缘', result: '清除裁剪选区' },
+      { action: '松开左键', result: '确认本次擦除，可一次撤销' },
+      { action: '按', keys: ['Esc'], result: '取消本次擦除' },
+    ],
+  },
 } satisfies Record<Tool, {
   label: string; shortcut: string; icon: typeof Hand; description: string; instructions: ToolInstruction[]
 }>
 
-export const toolOrder: Tool[] = ['split', 'select', 'pan', 'line', 'crop', 'fill']
+export const toolOrder: Tool[] = ['split', 'select', 'pan', 'line', 'crop', 'fill', 'erase']

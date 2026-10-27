@@ -6,7 +6,7 @@ import { getImageAsset } from '@/lib/images'
 import { canvasColors } from '@/lib/canvas-colors'
 import { bounds, boxBetween, childrenOf, containsLocked, inBox, isLocked, rotationAround, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
 import { transformSelection, useEditor } from '../model/store'
-import type { Box, Point, SplitAxis } from '../model/types'
+import type { Box, Point, Snapshot, SplitAxis } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
 import { useModeGuide } from '../hooks/use-mode-guide'
 import { NodeLayer } from './NodeLayer'
@@ -26,6 +26,8 @@ import { RegionMarkLayer } from '@/features/fill/RegionMarkLayer'
 import { containsPoint } from '@/features/fill/geometry'
 import { useFillRegions } from '@/features/fill/use-fill-regions'
 import { fillCursors } from '@/features/fill/cursors'
+import { eraseStroke } from '../geometry/erase'
+import { EraserSettings } from './EraserSettings'
 
 type Gesture = { start: Point; current: Point } & (
   | { type: 'line' | 'box' | 'crop'; additive: boolean }
@@ -34,6 +36,7 @@ type Gesture = { start: Point; current: Point } & (
   | { type: 'pan'; origin: Point; source: 'space' | 'tool' | 'middle' }
   | { type: 'endpoint'; id: string; end: 'start' | 'end' }
   | { type: 'rotate'; center: Point; initialAngle: number }
+  | { type: 'erase'; draft: Snapshot }
 )
 const zero = { x: 0, y: 0 }
 
@@ -147,6 +150,15 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       return
     }
     const hit = event.target.id()
+    if (tool === 'erase') {
+      if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
+      event.evt.preventDefault()
+      if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
+      const draft = structuredClone(state.present)
+      eraseStroke(draft, p, p, view.scale, viewport)
+      updateGesture({ type: 'erase', start: p, current: p, draft })
+      return
+    }
     if (tool === 'fill') {
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey || !inBox(p, { x: 0, y: 0, width: image.width, height: image.height })) return
       if (fillAction === 'erase') { state.eraseRegionMark(p); return }
@@ -206,6 +218,10 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     if (active.type === 'pan') {
       const screen = stage.current?.getPointerPosition()
       if (screen) setView(v => ({ ...v, x: active.origin.x + screen.x - active.start.x, y: active.origin.y + screen.y - active.start.y }))
+    } else if (active.type === 'erase') {
+      const draft = structuredClone(active.draft)
+      eraseStroke(draft, active.current, p, view.scale, viewport)
+      updateGesture({ ...active, current: p, draft })
     } else updateGesture({ ...active, current: active.type === 'crop' ? clamp(p) : p })
   }
   const finish = () => {
@@ -213,6 +229,10 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     if (!active) return
     const { start, current } = active, state = useEditor.getState()
     const distance = Math.hypot(current.x - start.x, current.y - start.y) * view.scale
+    if (active.type === 'erase') {
+      eraseStroke(active.draft, current, pointer(), view.scale, viewport)
+      state.commit(draft => Object.assign(draft, active.draft))
+    }
     if (active.type === 'split' && image) {
       const line = splitLineAt(pointer(), active.axis, image)
       state.addLine(line.start, line.end, active.axis)
@@ -246,11 +266,11 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const delta = zero
   const marquee: Box | null = gesture && (gesture.type === 'box' || gesture.type === 'crop') ? boxBetween(gesture.start, gesture.current) : null
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
-  const preview = gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
+  const preview = gesture?.type === 'erase' ? gesture.draft : gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
   const splitCursor = tool === 'split' && !busy && gesture?.type !== 'split' ? splitHover : null
-  return <CanvasContextMenu disabled={busy} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : 'crosshair' }}
+  return <CanvasContextMenu disabled={busy} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
     onPointerLeave={() => setSplitHover(null)}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
@@ -265,12 +285,12 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     }} onWheel={e => { e.evt.preventDefault(); zoom(e.evt.deltaY < 0 ? 1.1 : 1 / 1.1, stage.current?.getPointerPosition() ?? undefined) }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
-        <RegionMarkLayer marks={snapshot.doc.marks ?? []} scale={view.scale} />
-        {snapshot.doc.crop && <Rect {...snapshot.doc.crop} stroke={canvasColors.selection} strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
+        <RegionMarkLayer marks={preview.doc.marks ?? []} scale={view.scale} />
+        {preview.doc.crop && <Rect {...preview.doc.crop} stroke={canvasColors.selection} strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
         {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={2 / view.scale} lineCap="round" listening={false} />}
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} viewport={viewport} />
-        <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />
+        {tool !== 'erase' && <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />}
         {gesture?.type === 'split' && <SplitLinePreview point={gesture.current} axis={gesture.axis} image={image} viewport={viewport} scale={view.scale} />}
       </Group></Layer>
     </Stage> : null}
@@ -284,6 +304,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         {snapshot.scope && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button>}
       </div>
       {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
+      {tool === 'erase' && <EraserSettings busy={busy} onDeleteImage={onDeleteImage} />}
       <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}{snapshot.doc.marks?.length ? ` · 标记 ${snapshot.doc.marks.length} 块` : ''}</div>
       <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} onZoom={zoom} onFit={fit} onRotate={onRotateImage} />
     </>}
