@@ -2,7 +2,7 @@ import type { ImageInfo } from '@/features/editor/model/types'
 type ImageAsset = { blob: Blob; element: HTMLImageElement; url: string }
 const assets = new Map<string, ImageAsset>()
 export const getImageAsset = (id?: string) => id ? assets.get(id) : undefined
-export async function registerImage(blob: Blob, name: string, id = crypto.randomUUID()): Promise<ImageInfo> {
+export async function registerImage(blob: Blob, name: string, id: string = crypto.randomUUID()): Promise<ImageInfo> {
   const existing = assets.get(id)
   if (existing) return { id, name, width: existing.element.naturalWidth, height: existing.element.naturalHeight }
   const url = URL.createObjectURL(blob), element = new Image()
