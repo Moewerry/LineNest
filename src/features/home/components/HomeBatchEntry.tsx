@@ -38,7 +38,7 @@ export function HomeBatchEntry({ children }: { children: ReactNode }) {
   return <BatchEntryContext.Provider value={{ openBatch: () => void openBatch(), checking }}>
     {children}
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent overlayClassName="bg-white/65 backdrop-blur-md" className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>暂无模板</DialogTitle>
           <DialogDescription>请进入工作台去创建模板。</DialogDescription>
