@@ -13,18 +13,18 @@ export function BatchWorkflow({ busy, running, importing, count, selected, total
     { label: running ? '取消裁剪' : total ? '重新裁剪' : '裁剪', description: running ? status : '按所选模板批量分图', icon: Scissors, action: running ? onCancel : onCrop, disabled: !running && (busy || !count || !selected) },
     { label: '下载', description: total ? `${status} · ZIP` : '裁剪完成后下载 ZIP', icon: Download, action: onDownload, disabled: busy || !total },
   ]
-  return <footer className="shrink-0 bg-background px-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
-    <div className="mx-auto max-w-6xl border-t border-primary pt-3">
-      <ol aria-label="批量裁剪操作流程" className="grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4 md:gap-6">
+  return <footer className="shrink-0 border-t bg-card px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-8">
+    <div className="mx-auto max-w-7xl">
+      <ol aria-label="批量裁剪操作流程" className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         {steps.map(({ label, description, icon: Icon, action, disabled }, index) => {
           const active = currentStep === index + 1
           return <li key={index} aria-current={active ? 'step' : undefined}>
-            <Button variant="ghost" disabled={disabled} onClick={action} className={cn(
-              'h-full min-h-20 w-full items-start justify-start gap-3 rounded-lg border bg-transparent px-3 py-3 text-left whitespace-normal transition-colors hover:bg-transparent active:bg-transparent disabled:opacity-100 dark:hover:bg-transparent',
-              active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/60 hover:text-muted-foreground',
+            <Button variant={active ? 'default' : 'ghost'} disabled={disabled} onClick={action} className={cn(
+              'h-full min-h-16 w-full justify-start gap-3 rounded-xl px-4 py-3 text-left whitespace-normal shadow-none',
+              !active && 'text-muted-foreground',
             )}>
-              <span aria-hidden="true" className={cn('shrink-0 font-mono text-lg leading-5 tabular-nums', active ? 'text-primary' : 'text-muted-foreground/45')}>{String(index + 1).padStart(2, '0')}</span>
-              <span className="min-w-0"><span className="flex items-center gap-2"><Icon aria-hidden="true" />{label}</span><span className={cn('mt-1 block text-xs font-normal leading-5', active ? 'text-muted-foreground' : 'text-muted-foreground/50')}>{description}</span></span>
+              <span aria-hidden="true" className={cn('flex size-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs tabular-nums', active ? 'bg-white/15' : 'bg-secondary')}>{String(index + 1).padStart(2, '0')}</span>
+              <span className="min-w-0"><span className="flex items-center gap-2 text-sm"><Icon aria-hidden="true" />{label}</span><span className={cn('mt-1 block text-[11px] font-normal leading-4', active ? 'text-primary-foreground/75' : 'text-muted-foreground')}>{description}</span></span>
             </Button>
           </li>
         })}

@@ -10,6 +10,7 @@ import { useShortcuts } from '../hooks/use-shortcuts'
 import { useMissingImageHint } from '../hooks/use-missing-image-hint'
 import { EditorCanvas } from './EditorCanvas'
 import { EditorSidebar } from './EditorSidebar'
+import { CanvasWorkspace } from './CanvasWorkspace'
 import { ToolBar } from './ToolBar'
 import { TopBar } from './TopBar'
 import { ExportButton } from './ExportButton'
@@ -100,7 +101,7 @@ export function Editor() {
   return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground [&_button:disabled]:pointer-events-auto" {...dropHandlers} onPointerDownCapture={missingImageHint.onPointerDownCapture}>
     <div inert={overlayOpen} aria-hidden={overlayOpen ? true : undefined} className="flex min-h-0 flex-1 flex-col">
       <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><ExportButton disabled={busy} /></TopBar>
-      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /><EditorSidebar disabled={busy} /></div>
+      <div className="flex min-h-0 flex-1 gap-3 p-3 xl:gap-4 xl:p-4"><ToolBar busy={busy} /><CanvasWorkspace busy={busy}><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /></CanvasWorkspace><EditorSidebar disabled={busy} /></div>
     </div>
     {overlayOpen && <EditorImportOverlay onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
     {dragging && !overlayOpen && <ImageDropOverlay />}

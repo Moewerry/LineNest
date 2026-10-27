@@ -1,17 +1,16 @@
-import { Feather } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { HomeStartCard } from './HomeStartCard'
 
 export function HomeHero() {
-  return <section className="grid flex-1 shrink-0 items-center gap-16 py-14 sm:py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-20 lg:py-20">
-    <div>
-      <h1 className="text-[clamp(44px,6.2vw,80px)] font-black leading-[1.16] tracking-tight">
-        <span className="home-hero-line home-hero-title-line block">好素材，</span>
-        <span className="home-hero-line home-hero-title-line mt-[0.08em] block text-primary">分得漂亮<span className="text-foreground">。</span></span>
+  return <section className="grid flex-1 shrink-0 items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1fr_1fr] lg:gap-20 lg:py-24">
+    <div className="max-w-lg">
+      <p className="mb-6 font-brand text-xs tracking-[0.18em] text-muted-foreground">A LITTLE SPACE FOR YOUR CREATION</p>
+      <h1 className="text-[clamp(40px,4.8vw,64px)] font-semibold leading-[1.25] tracking-tight">
+        <span className="block">画一次，</span>
+        <span className="mt-1 block">让好素材<span className="text-primary">各就各位。</span></span>
       </h1>
-      <div className="mt-8 flex items-start gap-4 sm:mt-10">
-        <Feather aria-hidden="true" className="home-hero-mark mt-1 size-10 shrink-0 rounded-xl bg-accent p-2 text-primary ring-1 ring-primary/15" strokeWidth={1.5} />
-        <p className="max-w-sm text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"><span className="home-hero-line home-hero-line-third block text-primary"><span className="font-brand">LineNest</span> — 让创作更顺手</span><span className="home-hero-line home-hero-line-fourth -mt-1 block font-handwriting text-[11px] leading-4 tracking-[0.12em] text-muted-foreground">Made for your flow</span></p>
-      </div>
+      <p className="mt-7 max-w-sm text-base leading-8 text-muted-foreground">画线分图、保存布局，再把同一组线条用到更多图片。给重复的工作，留一个简单的解法。</p>
+      <p className="mt-8 flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck aria-hidden="true" className="size-4" />图片在浏览器本地处理，无需上传原图</p>
     </div>
     <HomeStartCard />
   </section>

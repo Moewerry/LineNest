@@ -1,5 +1,4 @@
 import { Copy, ImagePlus, Scissors } from 'lucide-react'
-import { HomeAnimatedText } from './HomeAnimatedText'
 
 const steps = [
   { number: '01', icon: ImagePlus, title: '导入一张图片', description: '选择图片，或拖入工具台，即可开始。' },
@@ -8,13 +7,12 @@ const steps = [
 ]
 
 export function HomeWorkflow() {
-  return <section aria-label="分图操作流程" className="home-workflow relative mt-auto shrink-0 pt-7">
-    <span aria-hidden="true" className="home-workflow-divider absolute inset-x-0 top-0 h-px origin-left bg-primary/25" />
-    <ol className="grid gap-4 sm:grid-cols-3 sm:gap-8">
-      {steps.map(({ number, icon: Icon, title, description }, index) => <li key={number} className="home-workflow-step flex items-start gap-4">
-        <span className="home-workflow-number inline-block shrink-0 font-mono text-lg leading-5 text-primary">{number}</span>
-        <div className="home-workflow-content"><h2 className="flex items-center gap-2 text-sm font-semibold"><Icon aria-hidden="true" className="size-4 shrink-0 text-foreground" strokeWidth={1.6} /><HomeAnimatedText className="text-foreground" delay={400 + index * 100}>{title}</HomeAnimatedText></h2>
-        <p className="mt-1 text-xs leading-5 tracking-[0.06em] text-muted-foreground"><HomeAnimatedText delay={540 + index * 100} stagger={20}>{description}</HomeAnimatedText></p></div>
+  return <section aria-label="分图操作流程" className="mt-auto shrink-0 border-t pt-8">
+    <ol className="grid gap-8 sm:grid-cols-3 sm:gap-10">
+      {steps.map(({ number, icon: Icon, title, description }) => <li key={number} className="flex items-start gap-4">
+        <span className="shrink-0 font-mono text-xs leading-5 text-muted-foreground/60">{number}</span>
+        <div><h2 className="flex items-center gap-2 text-sm font-medium"><Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.6} />{title}</h2>
+        <p className="mt-2 text-xs leading-6 text-muted-foreground">{description}</p></div>
       </li>)}
     </ol>
   </section>

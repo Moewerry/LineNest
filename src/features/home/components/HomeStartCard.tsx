@@ -1,6 +1,5 @@
-import { Scissors, Upload } from 'lucide-react'
+import { ArrowRight, ImagePlus, Scissors } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { HomeAnimatedText } from './HomeAnimatedText'
 import { useHomeImageImport } from './HomeImageImport'
 import { useHomeBatchEntry } from './HomeBatchEntry'
 
@@ -8,20 +7,19 @@ export function HomeStartCard() {
   const { busy, pickImage } = useHomeImageImport()
   const { openBatch, checking } = useHomeBatchEntry()
 
-  return <div className="relative mx-auto w-full max-w-[480px] lg:mr-0">
-    <div aria-hidden="true" className="home-card-back absolute -inset-3 -rotate-4 rounded-[30px] bg-primary/15 sm:-inset-5" />
-    <section aria-label="开始图片分割" className="home-card-front relative rounded-3xl border border-white/10 bg-foreground p-7 text-background shadow-[0_16px_48px_-24px_rgba(40,35,30,0.4)] sm:p-10">
-      <div className="flex items-center justify-between">
-        <span className="home-card-label rounded-full border border-background/25 px-3 py-1.5 font-brand text-[10px] tracking-[0.15em]"><HomeAnimatedText delay={120} stagger={22}>YOUR NEXT CREATION</HomeAnimatedText></span>
-        <span aria-hidden="true" className="home-card-dot size-2 shrink-0 rounded-full bg-highlight" />
+  return <div className="mx-auto w-full max-w-[460px] lg:mr-0">
+    <section aria-label="开始图片分割" className="rounded-3xl border bg-card p-6 shadow-[0_12px_50px_-30px_rgba(40,35,30,0.18)] sm:p-8">
+      <div className="flex flex-col items-center rounded-2xl border border-dashed bg-background/60 px-5 py-9 text-center sm:py-12">
+        <div className="mb-5 flex size-14 items-center justify-center rounded-2xl border bg-card text-primary"><ImagePlus aria-hidden="true" className="size-6" strokeWidth={1.5} /></div>
+        <h2 className="text-xl font-semibold">从一张图片开始</h2>
+        <p className="mb-6 mt-3 text-sm leading-6 text-muted-foreground">拖入图片，或点击下方选择文件</p>
+        <Button size="lg" disabled={busy} onClick={pickImage} className="h-11 rounded-xl px-7 shadow-none">{busy ? '正在导入…' : '选择图片'}<ArrowRight aria-hidden="true" className="size-4" /></Button>
+        <p className="mt-4 text-[11px] text-muted-foreground">PNG · JPG · WebP · AVIF</p>
       </div>
-      <div className="mb-8 mt-10 flex items-center gap-5 sm:gap-6">
-        <div className="home-card-icon flex size-20 shrink-0 -rotate-6 items-center justify-center rounded-[22px] bg-primary text-primary-foreground"><Scissors aria-hidden="true" className="size-10" strokeWidth={1.4} /></div>
-        <p className="text-2xl font-semibold leading-snug tracking-[0.08em]"><HomeAnimatedText delay={100} stagger={40}>画一次，</HomeAnimatedText><br /><HomeAnimatedText delay={240} stagger={40}>整组复用。</HomeAnimatedText></p>
+      <div className="mt-6 flex items-center justify-between gap-4">
+        <div><p className="text-sm font-medium">处理一整组图片？</p><p className="mt-1 text-xs text-muted-foreground">使用已保存的线条模板</p></div>
+        <Button disabled={busy || checking} onClick={openBatch} variant="ghost" className="h-10 rounded-lg text-xs"><Scissors aria-hidden="true" />{checking ? '读取中…' : '批量裁剪'}</Button>
       </div>
-      <p className="mb-8 text-sm leading-7 tracking-[0.06em] text-background/70"><HomeAnimatedText delay={380} repeatDelay={5000}>从画线到分图，简单顺手的图片分割工具</HomeAnimatedText></p>
-      <Button size="lg" disabled={busy} onClick={pickImage} className="home-card-action group h-14 w-full justify-center gap-2 rounded-xl px-5 text-center text-base tracking-[0.1em] shadow-none hover:bg-primary/90"><HomeAnimatedText stagger={35}>上传图片</HomeAnimatedText><Upload aria-hidden="true" className="size-5 transition-transform motion-reduce:transition-none motion-safe:group-hover:-translate-y-0.5" /></Button>
-      <Button disabled={busy || checking} onClick={openBatch} variant="ghost" className="home-card-action home-card-action-batch mt-4 h-12 w-full rounded-xl border border-background/10 bg-background/5 text-background hover:bg-background/10 hover:text-background"><Scissors aria-hidden="true" />{checking ? '正在读取…' : <HomeAnimatedText delay={180} stagger={35}>批量裁剪图片</HomeAnimatedText>}</Button>
     </section>
   </div>
 }

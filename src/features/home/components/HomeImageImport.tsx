@@ -55,7 +55,7 @@ export function HomeImageImport({ children }: { children: ReactNode }) {
   const { dragging, dropHandlers } = useImageDrop(requestImport, busy || !!pending)
 
   return <ImportContext.Provider value={{ busy, pickImage: () => { if (!loading.current && !pending) input.current?.click() } }}>
-    <div className="home-page flex min-h-dvh flex-col overflow-clip bg-white" {...dropHandlers}>
+    <div className="home-page flex min-h-dvh flex-col overflow-clip bg-background" {...dropHandlers}>
       {children}
       {dragging && <ImageDropOverlay />}
     </div>

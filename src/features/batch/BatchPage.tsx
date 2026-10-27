@@ -7,6 +7,7 @@ import { downloadBlob } from '@/lib/download'
 import { BatchImageList } from './BatchImageList'
 import { BatchPreview } from './BatchPreview'
 import { BatchWorkflow } from './BatchWorkflow'
+import { BatchEmptyState } from './BatchEmptyState'
 import { BatchTemplatesDialog } from './BatchTemplatesDialog'
 import { useBatch } from './use-batch'
 import '@/features/editor/editor-theme.css'
@@ -37,16 +38,17 @@ export function BatchPage() {
   }
 
   return <div className="editor-workspace flex h-dvh flex-col overflow-hidden bg-background">
-    <header className="shrink-0 border-b"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
-      <div className="flex items-center gap-3"><Button asChild={!busy} disabled={busy} variant="ghost" size="icon-sm" aria-label="返回首页">{busy ? <ArrowLeft /> : <Link to="/"><ArrowLeft /></Link>}</Button><h1 className="text-xl font-semibold">批量裁剪图片</h1></div>
+    <header className="shrink-0 border-b bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4 sm:px-8">
+      <div className="flex items-center gap-3"><Button asChild={!busy} disabled={busy} variant="ghost" size="icon-sm" aria-label="返回首页">{busy ? <ArrowLeft /> : <Link to="/"><ArrowLeft /></Link>}</Button><span className="font-brand text-xl font-semibold">LineNest</span></div>
       <WorkspaceModeSwitch mode="batch" disabled={busy} />
     </div></header>
     <main className="min-h-0 flex-1 overflow-y-auto" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (!busy) void batch.addFiles(Array.from(event.dataTransfer.files)) }}>
-      <div className="mx-auto flex min-h-full max-w-6xl flex-col gap-5 px-5 py-7">
-        {active ? <div className="grid items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-          <section className="space-y-3"><div className="flex items-center justify-between"><h2 className="text-base font-semibold">图片 <span className="text-xs font-normal text-muted-foreground">{batch.items.length} / 100</span></h2><Button variant="ghost" size="sm" disabled={busy} onClick={batch.clear}>清空</Button></div><BatchImageList items={batch.items} active={active.id} disabled={busy} onActive={setActiveId} onRemove={batch.remove} /></section>
+      <div className="mx-auto flex min-h-full max-w-7xl flex-col gap-7 px-6 py-8 sm:px-8">
+        <div><h1 className="text-2xl font-semibold tracking-tight">批量裁剪</h1><p className="mt-2 text-sm leading-6 text-muted-foreground">添加图片，套用模板，预览后统一导出。</p></div>
+        {active ? <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <section className="min-w-0 rounded-2xl border bg-card p-4"><div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold">图片 <span className="ml-1 text-xs font-normal text-muted-foreground">{batch.items.length} / 100</span></h2><Button variant="ghost" size="sm" disabled={busy} onClick={batch.clear}>清空</Button></div><BatchImageList items={batch.items} active={active.id} disabled={busy} onActive={setActiveId} onRemove={batch.remove} /></section>
           <BatchPreview key={JSON.stringify([active.id, selected.map(template => template.id)])} item={active} templates={selected} fit={batch.fit} disabled={busy} running={batch.running} status={status} total={batch.result?.total} onDownload={download} onEdit={batch.editPreview} onOffset={batch.updateOffset} onLineOffset={batch.updateLineOffset} onReset={batch.resetPosition} />
-        </div> : <div className="flex min-h-64 flex-1 items-center justify-center"><Button variant="outline" disabled={busy} onClick={() => input.current?.click()} className="h-24 w-52 border-dashed text-muted-foreground shadow-none">{batch.importing ? '正在读取图片…' : '请上传图片'}</Button></div>}
+        </div> : <BatchEmptyState busy={busy} importing={batch.importing} onAdd={() => input.current?.click()} />}
         {batch.templateError && <p role="alert" className="text-sm text-destructive">模板读取失败：{batch.templateError}</p>}
         {batch.error && <p role="alert" className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-destructive/5 p-3 text-sm text-destructive">{batch.error}</p>}
       </div>
