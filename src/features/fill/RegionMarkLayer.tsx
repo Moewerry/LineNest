@@ -18,8 +18,8 @@ export function RegionMarkLayer({ marks, scale }: { marks: RegionMark[]; scale: 
     const light = channels[0] * 0.299 + channels[1] * 0.587 + channels[2] * 0.114 > 170
     return <Group key={mark.id} listening={false}>
       <Shape sceneFunc={draw} fillRule="evenodd" fill={mark.color} opacity={mark.opacity} strokeEnabled={false} listening={false} />
-      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={light ? '#171717' : '#ffffff'} strokeWidth={10 / scale} lineJoin="round" listening={false} />
-      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={mark.color} strokeWidth={7 / scale} lineJoin="round" listening={false} />
+      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={light ? '#171717' : '#ffffff'} strokeWidth={3 / scale} lineJoin="round" listening={false} />
+      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={mark.color} strokeWidth={1.5 / scale} lineJoin="round" listening={false} />
     </Group>
   })}</>
 }
