@@ -1,7 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@font-face {
+  font-family: "Nunito";
+  src: url("./assets/fonts/Nunito-Variable.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+}
+
 @theme inline {
+  --font-brand: "Nunito", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
