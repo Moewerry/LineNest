@@ -95,21 +95,25 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       updateGesture({ ...active, axis })
     }
     const down = (e: KeyboardEvent) => {
-      if (!useEditor.getState().present.doc.image) return
-      if (isTextTarget(e.target)) return
-      if (e.isComposing) return
-      if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); changeSplitDirection('horizontal') }
+      const state = useEditor.getState()
+      if (busy || !state.present.doc.image || e.isComposing) return
       if (e.code === 'Space') {
         if (e.ctrlKey || e.metaKey || e.altKey) return
-        const button = e.target instanceof HTMLElement ? e.target.closest('button, [role="button"]') : null
-        if (button && !button.closest('[data-canvas-shortcuts]')) return
+        const target = e.target instanceof HTMLElement ? e.target : null
+        if (target?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]')) return
+        const button = target?.closest('button, [role="button"]')
+        if (button && !button.closest('[data-canvas-shortcuts], [data-editor-settings]')) return
         e.preventDefault()
+        if (state.tool === 'pan') return
         if (!spaceRef.current) {
           spaceRef.current = true; setSpace(true)
           if (gestureRef.current && gestureRef.current.type !== 'pan') updateGesture(null)
         }
         container.current?.focus({ preventScroll: true })
+        return
       }
+      if (isTextTarget(e.target)) return
+      if (e.code === 'KeyW' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); changeSplitDirection('horizontal') }
       if (e.key === 'Escape' && gestureRef.current) { e.stopImmediatePropagation(); updateGesture(null) }
     }
     const up = (e: KeyboardEvent) => {
@@ -123,7 +127,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     const cancel = () => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', cancel)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', cancel) }
-  }, [])
+  }, [busy])
   useEffect(() => {
     const cancel = (e: PointerEvent) => { if (!stage.current?.container().contains(e.target as Node) || e.type === 'pointercancel') updateGesture(null) }
     window.addEventListener('pointerup', cancel); window.addEventListener('pointercancel', cancel)

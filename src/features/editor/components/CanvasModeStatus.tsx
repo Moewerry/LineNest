@@ -47,9 +47,9 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         </span>
       </div>)}
     </div>
-    {!temporary && tool === 'pan' ? <div className="flex items-start gap-1.5 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
+    {!temporary && tool !== 'pan' ? <div className="flex items-start gap-1.5 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
         <Hand aria-hidden="true" className="mt-0.5 size-3 shrink-0" />
-        <span>在其他模式下，按住 <ShortcutKeys keys={['空格']} variant="highlight" /> 并用鼠标左键拖动，可临时移动画布。</span>
+        <span>按住 <ShortcutKeys keys={['空格']} variant="highlight" /> 临时移动画布，松开恢复当前工具。</span>
       </div>
     : <div className="h-3" />}
   </div>
