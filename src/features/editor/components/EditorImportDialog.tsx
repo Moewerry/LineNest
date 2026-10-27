@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 export function EditorImportDialog({ open, onOpenChange, onPick }: { open: boolean; onOpenChange: (open: boolean) => void; onPick: () => void }) {
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="sm:max-w-sm">
-      <DialogHeader icon={<ImagePlus />}>
+    <DialogContent className="gap-6 py-8 sm:max-w-sm">
+      <DialogHeader icon={<ImagePlus />} className="gap-y-4">
         <DialogTitle>从一张图片开始</DialogTitle>
         <DialogDescription>导入图片，画线分割。</DialogDescription>
       </DialogHeader>

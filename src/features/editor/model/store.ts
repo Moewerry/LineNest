@@ -11,7 +11,7 @@ type EditorState = {
   fillColor: string; fillOpacity: number; fillAction: 'mark' | 'erase'
   checkedObjects: string[]
   checkObjects: (ids: string[], checked: boolean) => void
-  commit: (change: (draft: Snapshot) => void) => void
+  commit: (change: (draft: Snapshot) => void, action?: 'erase') => void
   setTool: (tool: Tool) => void
   setImage: (image: ImageInfo) => void
   removeImage: () => void
@@ -28,7 +28,9 @@ type EditorState = {
   endpoint: (id: string, end: 'start' | 'end', point: Point) => void
   setCrop: (crop: Box | null) => void
   undo: () => void; redo: () => void
+  undoErase: () => void
 }
+const eraseSnapshots = new WeakSet<Snapshot>()
 export function transformSelection(draft: Snapshot, matrix: Matrix) {
   if (draft.selected.some(id => containsLocked(draft.doc, id))) return
   if (containsSplit(draft.doc, draft.selected) && (matrix[0] !== 1 || matrix[1] !== 0 || matrix[2] !== 0 || matrix[3] !== 1)) return
@@ -46,10 +48,11 @@ export const useEditor = create<EditorState>((set, get) => ({
     const state = get(), lines = lineIds(state.present.doc, ids)
     set({ checkedObjects: checked ? [...new Set([...state.checkedObjects, ...lines])] : state.checkedObjects.filter(id => !lines.includes(id)) })
   },
-  commit(change) {
+  commit(change, action) {
     const current = get().present, next = structuredClone(current)
     change(next)
     if (JSON.stringify(current) === JSON.stringify(next)) return
+    if (action === 'erase') eraseSnapshots.add(next)
     set(state => ({ present: next, past: [...state.past, current].slice(-100), future: [], checkedObjects: retainedChecks(next.doc, state.checkedObjects) }))
   },
   setTool: tool => set({ tool }),
@@ -129,6 +132,9 @@ export const useEditor = create<EditorState>((set, get) => ({
   undo() {
     const { past, present, future } = get()
     if (past.length) set({ present: past[past.length - 1], past: past.slice(0, -1), future: [present, ...future], checkedObjects: retainedChecks(past[past.length - 1].doc, get().checkedObjects) })
+  },
+  undoErase() {
+    if (eraseSnapshots.has(get().present)) get().undo()
   },
   redo() {
     const { past, present, future } = get()

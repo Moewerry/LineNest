@@ -64,6 +64,7 @@ export const toolGuides = {
       { action: '左键单击或按住拖动', result: '擦除划过的对象' },
       { action: '划过裁剪框边缘', result: '清除裁剪选区' },
       { action: '松开左键', result: '确认本次擦除，可一次撤销' },
+      { action: '右键单击', result: '撤回上次擦除，可连续撤回' },
       { action: '按', keys: ['Esc'], result: '取消本次擦除' },
     ],
   },

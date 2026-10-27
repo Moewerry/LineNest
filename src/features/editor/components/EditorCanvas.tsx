@@ -231,7 +231,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     const distance = Math.hypot(current.x - start.x, current.y - start.y) * view.scale
     if (active.type === 'erase') {
       eraseStroke(active.draft, current, pointer(), view.scale, viewport)
-      state.commit(draft => Object.assign(draft, active.draft))
+      state.commit(draft => Object.assign(draft, active.draft), 'erase')
     }
     if (active.type === 'split' && image) {
       const line = splitLineAt(pointer(), active.axis, image)
@@ -270,7 +270,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
   const splitCursor = tool === 'split' && !busy && gesture?.type !== 'split' ? splitHover : null
-  return <CanvasContextMenu disabled={busy} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
+  return <CanvasContextMenu disabled={busy || tool === 'erase'} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
     onPointerLeave={() => setSplitHover(null)}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
@@ -278,6 +278,14 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)
       if (id) { updateGesture(null); enterGroup(id) }
     }} onContextMenu={e => {
+      if (tool === 'erase') {
+        e.evt.preventDefault()
+        e.evt.stopPropagation()
+        if (busy) return
+        updateGesture(null)
+        useEditor.getState().undoErase()
+        return
+      }
       updateGesture(null)
       const hit = e.target.id(), id = hit.startsWith('endpoint:') ? hit.split(':')[2] : hit
       const target = scopeTarget(snapshot.doc, id, snapshot.scope)
