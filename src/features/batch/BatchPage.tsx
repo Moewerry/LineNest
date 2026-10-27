@@ -44,7 +44,7 @@ export function BatchPage() {
     </div></header>
     <main className="min-h-0 flex-1 overflow-y-auto" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (!busy) void batch.addFiles(Array.from(event.dataTransfer.files)) }}>
       <div className="mx-auto flex min-h-full max-w-7xl flex-col gap-7 px-6 py-8 sm:px-8">
-        <div><h1 className="text-2xl font-semibold tracking-tight">批量裁剪</h1><p className="mt-2 text-sm leading-6 text-muted-foreground">添加图片，套用模板，预览后统一导出。</p></div>
+        {currentStep === 1 && <div><h1 className="text-2xl font-semibold tracking-tight">批量裁剪</h1><p className="mt-2 text-sm leading-6 text-muted-foreground">添加图片，套用模板，预览后统一导出。</p></div>}
         {active ? <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
           <section className="min-w-0 rounded-2xl border bg-card p-4"><div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold">图片 <span className="ml-1 text-xs font-normal text-muted-foreground">{batch.items.length} / 100</span></h2><Button variant="ghost" size="sm" disabled={busy} onClick={batch.clear}>清空</Button></div><BatchImageList items={batch.items} active={active.id} disabled={busy} onActive={setActiveId} onRemove={batch.remove} /></section>
           <BatchPreview key={JSON.stringify([active.id, selected.map(template => template.id)])} item={active} templates={selected} fit={batch.fit} disabled={busy} running={batch.running} status={status} total={batch.result?.total} onDownload={download} onEdit={batch.editPreview} onOffset={batch.updateOffset} onLineOffset={batch.updateLineOffset} onReset={batch.resetPosition} />
