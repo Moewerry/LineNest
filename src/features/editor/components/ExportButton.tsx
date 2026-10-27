@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, PaintBucket, Scissors } from 'lucide-react'
+import { Crop, Download, Image, ScanLine, Scissors } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -22,8 +22,8 @@ export function ExportButton({ disabled }: { disabled: boolean }) {
     finally { setExporting(false) }
   }
   return <><DropdownMenu><DropdownMenuTrigger asChild><Button disabled={disabled || !doc.image || exporting}><Download />{exporting ? '正在导出' : '导出'}</Button></DropdownMenuTrigger><DropdownMenuContent align="end">
-    <DropdownMenuItem disabled={!doc.marks?.length} onSelect={() => openSlices('marked')}><PaintBucket />导出已标记区域{doc.marks?.length ? ` · ${doc.marks.length} 块` : ''}</DropdownMenuItem>
-    <DropdownMenuItem onSelect={() => openSlices('all')}><Scissors />按线切图 / 下载 ZIP</DropdownMenuItem>
-    <DropdownMenuItem disabled={!doc.crop} onSelect={() => setPending({ doc: structuredClone(doc), cropOnly: true })}>导出选区图片</DropdownMenuItem><DropdownMenuItem onSelect={() => setPending({ doc: structuredClone(doc), cropOnly: false })}>导出原图</DropdownMenuItem>
+    <DropdownMenuItem disabled={!doc.marks?.length} onSelect={() => openSlices('marked')}><ScanLine />导出标记区域{doc.marks?.length ? ` · ${doc.marks.length} 块` : ''}</DropdownMenuItem>
+    <DropdownMenuItem onSelect={() => openSlices('all')}><Scissors />按线切图</DropdownMenuItem>
+    <DropdownMenuItem disabled={!doc.crop} onSelect={() => setPending({ doc: structuredClone(doc), cropOnly: true })}><Crop />导出裁剪选区</DropdownMenuItem><DropdownMenuItem onSelect={() => setPending({ doc: structuredClone(doc), cropOnly: false })}><Image />导出完整图片</DropdownMenuItem>
   </DropdownMenuContent></DropdownMenu>{sliceDoc && <SliceDialog doc={sliceDoc.doc} mode={sliceDoc.mode} onClose={() => setSliceDoc(null)} />}{pending && <ExportConfirmDialog sources={[pending.doc.image?.name ?? 'image.png']} onClose={() => setPending(null)} onConfirm={run} />}</>
 }

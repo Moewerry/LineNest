@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Download, FileArchive, Scissors } from 'lucide-react'
+import { Download, FileArchive, ScanLine, Scissors } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -41,7 +41,7 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
   }
   const close = () => { abort.current?.abort(); onClose() }
   return <Dialog open onOpenChange={value => { if (!value) close() }}><DialogContent className="flex flex-col overflow-hidden p-0 sm:max-w-3xl">
-    <DialogHeader icon={<Scissors />} className="gap-3 px-6 pt-6 pr-12">
+    <DialogHeader icon={mode === 'marked' ? <ScanLine /> : <Scissors />} className="gap-3 px-6 pt-6 pr-12">
       <DialogTitle>{mode === 'marked' ? '导出标记区域' : '按线切图'}</DialogTitle>
       <DialogDescription>{mode === 'marked' ? '每个标记区域保存为一张图片，保留原图颜色。' : '按线条围成的区域切图，每个区域保存为一张图片。'}</DialogDescription>
     </DialogHeader>
