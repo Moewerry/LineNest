@@ -1,10 +1,12 @@
 import { segments } from '@/features/editor/geometry'
 import type { DocumentData, LineNode } from '@/features/editor/model/types'
 import { templateDocument } from '@/features/templates/layout'
+import { centeredSquare, findBuiltinTemplate } from '@/features/templates/builtins'
 import type { BatchFit, BatchItem, BatchTemplate } from './types'
 
 export function batchDocument(item: BatchItem, templates: BatchTemplate[], fit: BatchFit): DocumentData {
   const lines = templates.flatMap(template => {
+    if (findBuiltinTemplate(template.id)) return []
     const sx = fit === 'relative' ? item.width / template.layout.width : 1
     const sy = fit === 'relative' ? item.height / template.layout.height : 1
     const templateOffset = item.templateOffsets?.[template.id] ?? { x: 0, y: 0 }
@@ -25,10 +27,12 @@ export function batchDocument(item: BatchItem, templates: BatchTemplate[], fit: 
       }
     })
   })
+  const square = templates.find(template => findBuiltinTemplate(template.id))
+  const squareOffset = square ? item.templateOffsets?.[square.id] ?? { x: 0, y: 0 } : { x: 0, y: 0 }
   return {
     version: 1,
     image: { id: item.id, name: item.file.name, width: item.width, height: item.height },
-    crop: null,
+    crop: square ? centeredSquare(item.width, item.height, { x: item.offsetX + squareOffset.x, y: item.offsetY + squareOffset.y }) : null,
     roots: lines.map(line => line.id),
     nodes: Object.fromEntries(lines.map(line => [line.id, line])),
   }

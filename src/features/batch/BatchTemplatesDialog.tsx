@@ -20,13 +20,13 @@ export function BatchTemplatesDialog({ open, onOpenChange, templates, selected, 
       <SaveTemplateButton disabled={disabled} />
       <Button asChild variant="ghost" className="text-muted-foreground"><Link to="/editor" target="_blank" rel="noopener noreferrer"><ExternalLink />新标签页画线</Link></Button>
     </div>
-    {loading ? <p role="status" className="text-sm text-muted-foreground">正在读取模板…</p> : error ? <p role="alert" className="text-sm text-destructive">模板读取失败：{error}</p> : templates.length ?
-      <BatchTemplatePicker templates={templates} selected={selected} fit={fit} disabled={disabled} onToggle={onToggle} onFit={onFit} /> :
-      <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">还没有模板，请先画线并保存，或导入模板。</p>}
+    {loading && <p role="status" className="text-sm text-muted-foreground">正在读取我的模板…</p>}
+    {error && <p role="alert" className="text-sm text-destructive">我的模板读取失败：{error}，仍可使用内置模板。</p>}
+    <BatchTemplatePicker templates={templates} selected={selected} fit={fit} disabled={disabled} onToggle={onToggle} onFit={onFit} />
     </div>
     <DialogFooter className="items-center justify-between gap-3 border-t bg-secondary/30 px-6 py-4 sm:justify-between">
       <span className="text-xs text-muted-foreground">{selectedCount ? `已选 ${selectedCount} 个模板` : '请选择模板'}</span>
-      <Button disabled={disabled || loading || !selectedCount} onClick={() => { onConfirm(); onOpenChange(false) }} className="w-full gap-3 rounded-lg sm:w-auto">完成选择<ArrowRight className="size-4" /></Button>
+      <Button disabled={disabled || !selectedCount} onClick={() => { onConfirm(); onOpenChange(false) }} className="w-full gap-3 rounded-lg sm:w-auto">完成选择<ArrowRight className="size-4" /></Button>
     </DialogFooter>
   </DialogContent></Dialog>
 }

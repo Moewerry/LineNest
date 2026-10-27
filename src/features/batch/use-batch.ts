@@ -5,6 +5,7 @@ import { listTemplates } from '@/lib/db'
 import { validateImage } from '@/lib/images'
 import { importTemplate } from '@/features/templates/portable'
 import { validateLineTemplate } from '@/features/templates/layout'
+import { builtinTemplates } from '@/features/templates/builtins'
 import { exportBatch } from './export'
 import type { Point } from '@/features/editor/model/types'
 import type { BatchFit, BatchItem, BatchTemplate } from './types'
@@ -14,7 +15,7 @@ const message = (error: unknown) => error instanceof Error ? error.message : 'æ“
 
 export function useBatch(initialTemplate: string | null) {
   const [items, setItems] = useState<BatchItem[]>([])
-  const [templates, setTemplates] = useState<BatchTemplate[]>([])
+  const [templates, setTemplates] = useState<BatchTemplate[]>(() => [...builtinTemplates])
   const [selected, setSelected] = useState<string[]>(initialTemplate ? [initialTemplate] : [])
   const [loading, setLoading] = useState(true), [templateError, setTemplateError] = useState('')
   const [fit, setFit] = useState<BatchFit>('relative')
@@ -31,8 +32,8 @@ export function useBatch(initialTemplate: string | null) {
       next: rows => {
         try {
           const valid = rows.map(row => ({ ...row, layout: validateLineTemplate(row.layout) }))
-          setTemplates(previous => [...valid, ...previous.filter(row => row.id.startsWith('import-'))])
-          if (!initialized.current) { initialized.current = true; if (!initialSelection.current && valid[0]) setSelected([valid[0].id]) }
+          setTemplates(previous => [...builtinTemplates, ...valid, ...previous.filter(row => row.id.startsWith('import-'))])
+          if (!initialized.current) { initialized.current = true; if (!initialSelection.current) setSelected([valid[0]?.id ?? builtinTemplates[0].id]) }
           setTemplateError('')
         } catch (value) { setTemplateError(message(value)) }
         setLoading(false)
@@ -128,7 +129,7 @@ export function useBatch(initialTemplate: string | null) {
     setItems(rows => rows.map(row => row.id === id ? { ...row, templateOffsets: { ...row.templateOffsets, [templateId]: { x: 0, y: 0 } }, lineOffsets: Object.fromEntries(Object.entries(row.lineOffsets ?? {}).filter(([lineId]) => !lineIds.has(lineId))) } : row))
   }
   const editPreview = () => { if (!operation.current) invalidate() }
-  const toggleTemplate = (id: string) => { if (!operation.current) { invalidate(); setSelected(ids => ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id]) } }
+  const toggleTemplate = (id: string) => { if (!operation.current) { initialized.current = true; invalidate(); setSelected(ids => ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id]) } }
   const start = async (options?: ExportOptions) => {
     if (operation.current) return
     const chosen = templates.filter(template => selected.includes(template.id))

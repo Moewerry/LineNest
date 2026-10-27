@@ -57,7 +57,7 @@ export function SliceDialog({ doc, mode = 'all', onClose }: { doc: DocumentData;
       {!result.regions.length && <p role="status" className="text-sm text-muted-foreground">当前图片和裁剪范围内没有有效标记，请返回画布重新标记。</p>}
       <SliceRegionPicker regions={result.regions} selected={selected} disabled={exporting} onChange={setSelected} />
       {result.unusedEdges > 0 && <p className="text-xs text-muted-foreground">有未围成区域的线段，这些线段不参与切分。</p>}
-      {mode === 'all' && result.regions.length === 1 && <p className="text-xs text-muted-foreground">还没有分出多个区域。请让线条连接图片边界，或围成封闭区域。</p>}
+      {mode === 'all' && !doc.crop && result.regions.length === 1 && <p className="text-xs text-muted-foreground">还没有分出多个区域。请让线条连接图片边界，或围成封闭区域。</p>}
       </div>
       <div className="flex min-w-0 flex-col gap-6 border-t pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
         <ExportSettings sources={[doc.image?.name ?? 'image.png']} value={options} onChange={setOptions} disabled={exporting} onReady={setReady} />

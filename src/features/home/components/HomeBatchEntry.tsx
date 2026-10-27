@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { listTemplates } from '@/lib/db'
 import { HomeNoTemplatesOverlay } from './HomeNoTemplatesOverlay'
+import { builtinTemplates } from '@/features/templates/builtins'
 
 const BatchEntryContext = createContext<{ openBatch: () => void; checking: boolean } | null>(null)
 
@@ -19,6 +20,7 @@ export function HomeBatchEntry({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
 
   const openBatch = async () => {
+    if (builtinTemplates.length) { navigate('/batch'); return }
     if (checkingRef.current) return
     checkingRef.current = true
     setChecking(true)
