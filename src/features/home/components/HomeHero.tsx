@@ -10,7 +10,7 @@ export function HomeHero() {
       </h1>
       <div className="mt-8 flex items-start gap-4 sm:mt-10">
         <Feather aria-hidden="true" className="home-hero-mark mt-1 size-10 shrink-0 rounded-xl bg-accent p-2 text-primary ring-1 ring-primary/15" strokeWidth={1.5} />
-        <p className="max-w-sm text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"><span className="home-hero-line home-hero-line-third block text-primary">LineNest — 让创作更顺手</span><span className="home-hero-line home-hero-line-fourth -mt-1 block text-[11px] leading-4 tracking-[0.12em] text-muted-foreground">Made for your flow</span></p>
+        <p className="max-w-sm text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8"><span className="home-hero-line home-hero-line-third block text-primary"><span className="font-brand">LineNest</span> — 让创作更顺手</span><span className="home-hero-line home-hero-line-fourth -mt-1 block font-handwriting text-[11px] leading-4 tracking-[0.12em] text-muted-foreground">Made for your flow</span></p>
       </div>
     </div>
     <HomeStartCard />
