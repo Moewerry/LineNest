@@ -52,7 +52,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     await deleteTemplate(confirmation.id); setConfirmation(null); toast.success('已删除模板')
   })
   return <>
-    <div className="px-4 pb-4 pt-5"><h2 className="text-sm font-semibold">我的模板</h2><p className="mt-1.5 text-xs leading-5 text-muted-foreground">保存线条和标记块，下次直接复用。</p></div>
+    <div className="px-4 pb-4 pt-5"><h2 className="text-sm font-semibold">我的模板</h2></div>
     <TemplateToolbar disabled={disabled || busy} hasImage={!!image} hasContent={hasContent}
       onBatch={() => void navigate('/batch')}
       onImport={() => fileInput.current?.click()}

@@ -12,7 +12,7 @@ export function BuiltinTemplateButton({ disabled }: { disabled: boolean }) {
   const [open, setOpen] = useState(false)
   const hasImage = useEditor(state => !!state.present.doc.image)
   return <Dialog open={open} onOpenChange={setOpen}>
-    <DialogTrigger asChild><Button variant="ghost" disabled={disabled} aria-label="打开内置模板" title="内置模板" className="h-14 w-full flex-col gap-1 rounded-xl px-0 text-[10px]"><LayoutTemplate className="size-[18px] text-muted-foreground" /><span>内置模板</span></Button></DialogTrigger>
+    <DialogTrigger asChild><Button variant="ghost" size="icon" disabled={disabled} aria-label="打开内置模板" title="内置模板" className="size-11 rounded-xl"><LayoutTemplate aria-hidden="true" className="size-[18px] text-muted-foreground" /></Button></DialogTrigger>
     <DialogContent {...(hasImage ? { 'aria-describedby': undefined } : {})} className={`gap-6 rounded-2xl bg-card ${hasImage ? 'sm:max-w-2xl' : 'sm:max-w-sm'}`}>
       {hasImage ? <>
       <DialogHeader icon={<LayoutTemplate />}><DialogTitle>内置模板</DialogTitle></DialogHeader>
