@@ -12,14 +12,14 @@ export function PropertyPanel() {
   const box = bounds(doc, selected), blocked = !selected.length || selected.some(id => containsLocked(doc, id))
   const hasGroup = selected.some(id => doc.nodes[id].type === 'group')
   const fixedDirection = containsSplit(doc, selected)
-  return <div className="shrink-0 space-y-4 border-t p-4">
+  return <div className="shrink-0 space-y-4 border-t border-[var(--workspace-divider)] p-4">
     <div className="flex items-center justify-between"><h2 className="text-xs font-medium">{selected.length ? `已选 ${selected.length} 项` : '属性'}</h2>
       <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" disabled={!selected.length} aria-label="对象操作"><MoreHorizontal /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem disabled={blocked || fixedDirection} onSelect={() => mirrorSelection('horizontal')}><FlipHorizontal2 />水平镜像</DropdownMenuItem>
           <DropdownMenuItem disabled={blocked || fixedDirection} onSelect={() => mirrorSelection('vertical')}><FlipVertical2 />垂直镜像</DropdownMenuItem>
           <DropdownMenuItem disabled={blocked || fixedDirection} onSelect={() => rotateSelection(90)}><RotateCw />旋转 90°</DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="bg-[var(--workspace-divider)]" />
           <DropdownMenuItem onSelect={lockSelection}><LockKeyhole />锁定</DropdownMenuItem>
           <DropdownMenuItem disabled={blocked} variant="destructive" onSelect={deleteSelection}><Trash2 />删除</DropdownMenuItem>
         </DropdownMenuContent>
@@ -44,6 +44,6 @@ export function PropertyPanel() {
       {fixedDirection && <p className="text-[11px] text-muted-foreground">分割线保持贯穿图片：横线上下移动，竖线左右移动，不支持旋转或镜像。</p>}
       {blocked && <p className="text-[11px] text-muted-foreground">包含锁定对象，请先在对象列表解锁。</p>}
     </> : <p className="text-xs text-muted-foreground">选择线条或组群</p>}
-    {doc.crop && <div className="flex items-center justify-between border-t pt-3"><span className="text-[11px] text-muted-foreground">选区 {Math.round(doc.crop.width)} × {Math.round(doc.crop.height)}</span><Button variant="ghost" size="sm" className="text-xs" onClick={() => useEditor.getState().setCrop(null)}>清除</Button></div>}
+    {doc.crop && <div className="flex items-center justify-between border-t border-[var(--workspace-divider)] pt-3"><span className="text-[11px] text-muted-foreground">选区 {Math.round(doc.crop.width)} × {Math.round(doc.crop.height)}</span><Button variant="ghost" size="sm" className="text-xs" onClick={() => useEditor.getState().setCrop(null)}>清除</Button></div>}
   </div>
 }
