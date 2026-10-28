@@ -104,7 +104,9 @@
 }
 
 .home-card-dot {
-  animation: home-dot-pop 480ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--home-content-start) + 240ms) backwards;
+  animation:
+    home-dot-pop 480ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--home-content-start) + 240ms) backwards,
+    home-dot-idle 2400ms ease-in-out calc(var(--home-content-start) + 720ms) infinite;
 }
 
 .home-typing-cursor::after {
@@ -134,23 +136,30 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
+.home-workflow {
+  --home-workflow-start: var(--home-content-start);
+  --home-workflow-step-gap: 600ms;
+}
+
 .home-workflow-divider {
-  animation: home-rule-reveal 1400ms cubic-bezier(0.45, 0, 0.55, 1) var(--home-icon-delay) both;
+  animation: home-rule-reveal calc(var(--home-workflow-step-gap) * 3) linear var(--home-workflow-start) both;
 }
 
 .home-workflow-step {
   --home-step-delay: 180ms;
+  /* Give the number, icon and typing animation the same per-step clock. */
+  --home-content-start: calc(var(--home-workflow-start) + var(--home-step-delay));
 }
 
-.home-workflow-step:nth-child(2) { --home-step-delay: 280ms; }
-.home-workflow-step:nth-child(3) { --home-step-delay: 380ms; }
+.home-workflow-step:nth-child(2) { --home-step-delay: calc(180ms + var(--home-workflow-step-gap)); }
+.home-workflow-step:nth-child(3) { --home-step-delay: calc(180ms + var(--home-workflow-step-gap) * 2); }
 
 .home-workflow-content {
-  animation: home-workflow-enter 360ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--home-content-start) + var(--home-step-delay)) backwards;
+  animation: home-workflow-enter 360ms cubic-bezier(0.16, 1, 0.3, 1) var(--home-content-start) backwards;
 }
 
 .home-workflow-number {
-  animation: home-number-slide-in 440ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--home-content-start) + var(--home-step-delay)) backwards;
+  animation: home-number-slide-in 440ms cubic-bezier(0.16, 1, 0.3, 1) var(--home-content-start) backwards;
 }
 
 .home-card-back {
@@ -216,6 +225,11 @@
   55% { opacity: 1; transform: translateY(-3px) scale(1.45); box-shadow: 0 0 0 3px rgb(241 214 106 / 0.35); }
   80% { opacity: 1; transform: translateY(0) scale(0.9); box-shadow: 0 0 0 8px rgb(241 214 106 / 0); }
   to { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 0 0 10px rgb(241 214 106 / 0); }
+}
+
+@keyframes home-dot-idle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
 }
 
 @keyframes home-back-fly-in {
