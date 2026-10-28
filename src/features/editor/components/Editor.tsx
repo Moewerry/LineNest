@@ -3,8 +3,7 @@ import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { discardImageAsset, registerImage, rotateImageClockwise, validateImage } from '@/lib/images'
-import type { ImageInfo } from '../model/types'
+import { registerImage, validateImage } from '@/lib/images'
 import { useEditor } from '../model/store'
 import { useShortcuts } from '../hooks/use-shortcuts'
 import { useMissingImageHint } from '../hooks/use-missing-image-hint'
@@ -26,29 +25,30 @@ export function Editor() {
   const location = useLocation()
   const navigate = useNavigate()
   const navigationType = useNavigationType()
-  const currentImageId = useEditor(state => state.present.doc.image?.id)
+  const hasImage = useEditor(state => !!state.present.doc.image)
   const [importGuide, setImportGuide] = useState<'overlay' | 'dialog' | null>(() => {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
     const refreshing = navigationType === 'POP' && navigation?.type === 'reload'
-    if (currentImageId || refreshing) return null
+    if (hasImage || refreshing) return null
     return location.state?.showImageImport === true ? 'overlay' : 'dialog'
   })
-  const importOpen = !currentImageId && importGuide !== null
+  const importOpen = !hasImage && importGuide !== null
   const overlayOpen = importOpen && importGuide === 'overlay'
   useEffect(() => {
     if (location.state?.showImageImport !== true) return
     const { showImageImport: _, ...state } = location.state
     navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state })
   }, [location, navigate])
-  const [operation, setOperation] = useState<'import' | 'rotate' | null>(null), [pending, setPending] = useState<File | null>(null)
-  const entering = typeof location.state?.importedImageId === 'string' && location.state.importedImageId === currentImageId
+  const [importing, setImporting] = useState(false), [pending, setPending] = useState<File | null>(null)
+  const importedImageId = location.state?.importedImageId
+  const entering = useEditor(state => typeof importedImageId === 'string' && importedImageId === state.present.doc.image?.id)
   useEffect(() => {
     if (typeof location.state?.importedImageId !== 'string' || entering) return
     // A refresh can retain navigation state after the in-memory image is gone.
     const { importedImageId: _, ...state } = location.state
     navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state })
   }, [entering, location, navigate])
-  const busy = operation !== null || entering
+  const busy = importing || entering
   const onImageReady = useCallback((imageId: string) => {
     if (location.state?.importedImageId !== imageId) return
     const { importedImageId: _, ...state } = location.state
@@ -60,7 +60,7 @@ export function Editor() {
   useShortcuts(!busy && !pending && !importOpen, missingImageHint.notify)
   const load = async (file: File) => {
     if (loading.current) return
-    loading.current = true; setOperation('import')
+    loading.current = true; setImporting(true)
     try {
       validateImage(file)
       const image = await registerImage(file, file.name)
@@ -68,23 +68,7 @@ export function Editor() {
       setImportGuide(null)
       toast.success('图片已导入')
     } catch (error) { toast.error(error instanceof Error ? error.message : '导入失败') }
-    finally { loading.current = false; setOperation(null) }
-  }
-  const rotateImage = async () => {
-    const source = useEditor.getState().present, currentImage = source.doc.image
-    if (loading.current || pending || !currentImage) return
-    loading.current = true; setOperation('rotate')
-    let rotated: ImageInfo | null = null
-    try {
-      rotated = await rotateImageClockwise(currentImage)
-      const state = useEditor.getState()
-      if (state.present !== source) throw new Error('画布已发生变化，请重新旋转图片')
-      if (rotated.width !== currentImage.height || rotated.height !== currentImage.width) throw new Error('图片旋转失败，请重试')
-      state.rotateImage(rotated)
-    } catch (error) {
-      if (rotated && useEditor.getState().present.doc.image?.id !== rotated.id) discardImageAsset(rotated.id)
-      toast.error(error instanceof Error ? error.message : '旋转失败')
-    } finally { loading.current = false; setOperation(null) }
+    finally { loading.current = false; setImporting(false) }
   }
   const requestImport = (file: File) => {
     if (loading.current || pending) return
@@ -100,8 +84,8 @@ export function Editor() {
   }
   return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground [&_button:disabled]:pointer-events-auto" {...dropHandlers} onPointerDownCapture={missingImageHint.onPointerDownCapture}>
     <div inert={overlayOpen} aria-hidden={overlayOpen ? true : undefined} className="flex min-h-0 flex-1 flex-col">
-      <TopBar onImport={requestImport} busy={busy} busyLabel={operation === 'rotate' ? '正在旋转' : '正在读取'}><ExportButton disabled={busy} /></TopBar>
-      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><CanvasWorkspace busy={busy}><EditorCanvas busy={busy} rotating={operation === 'rotate'} onRotateImage={() => void rotateImage()} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /></CanvasWorkspace><EditorSidebar disabled={busy} /></div>
+      <TopBar onImport={requestImport} busy={busy}><ExportButton disabled={busy} /></TopBar>
+      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><CanvasWorkspace busy={busy}><EditorCanvas busy={busy} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /></CanvasWorkspace><EditorSidebar disabled={busy} /></div>
     </div>
     {overlayOpen && <EditorImportOverlay onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
     {dragging && !overlayOpen && <ImageDropOverlay />}

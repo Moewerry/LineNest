@@ -18,9 +18,14 @@ export const toolGuides = {
   },
   select: {
     label: '选择与微调', shortcut: 'V', icon: MousePointer2,
-    description: '选中已有的线条，再调整位置。',
+    description: '调整线条和模板的位置、大小与组内布局。',
     instructions: [
       { action: '左键单击后拖动', result: '选择并移动线条' },
+      { action: '拖动组群四角手柄', result: '等比放大或缩小模板' },
+      { action: '拖动组群边缘手柄', result: '单独调整宽度或高度' },
+      { action: '双击组群或点击「编辑线条」', result: '进入组内调整线条位置' },
+      { action: '拖动选中线条的端点', result: '调整线条长度与方向' },
+      { action: '按', keys: ['Esc'], result: '退出组内编辑' },
       { action: '按住', keys: ['Shift'], result: '选中多条线', gesture: '＋左键单击' },
       { action: '按', keys: ['↑', '↓', '←', '→'], result: '微调 1 px' },
     ],

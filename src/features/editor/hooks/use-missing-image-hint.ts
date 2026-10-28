@@ -3,9 +3,9 @@ import { toast } from '@/lib/toast'
 import { useEditor } from '../model/store'
 
 export function useMissingImageHint(enabled: boolean) {
-  const imageId = useEditor(s => s.present.doc.image?.id)
+  const hasImage = useEditor(s => !!s.present.doc.image)
   const attempts = useRef({ count: 0, last: 0 })
-  useEffect(() => { attempts.current = { count: 0, last: 0 } }, [enabled, imageId])
+  useEffect(() => { attempts.current = { count: 0, last: 0 } }, [enabled, hasImage])
   const notify = () => {
     if (!enabled || useEditor.getState().present.doc.image) {
       attempts.current = { count: 0, last: 0 }

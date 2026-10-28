@@ -1,16 +1,19 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Group, Image as CanvasImage, Layer, Line, Rect, Stage } from 'react-konva'
 import type Konva from 'konva'
 import { Button } from '@/components/ui/button'
-import { getImageAsset } from '@/lib/images'
+import { getImageAsset, isSameImageSource } from '@/lib/images'
 import { canvasColors } from '@/lib/canvas-colors'
-import { bounds, boxBetween, childrenOf, containsLocked, inBox, isLocked, rotationAround, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
+import { bounds, boxBetween, childrenOf, containsLocked, containsSplit, inBox, isLocked, rotationAround, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
+import { resizeHandleFromId, selectionResizeMatrix, type SelectionResizeHandle } from '../geometry/resize-selection'
 import { transformSelection, useEditor } from '../model/store'
-import type { Box, Point, Snapshot, SplitAxis } from '../model/types'
+import type { Box, ImageInfo, Point, Snapshot, SplitAxis } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
 import { useModeGuide } from '../hooks/use-mode-guide'
+import { useCanvasRotation } from '../hooks/use-canvas-rotation'
 import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
+import { SelectionEditControls } from './SelectionEditControls'
 import { enterGroup, leaveGroup, rotateSelection } from '../commands'
 import { CanvasContextMenu } from './CanvasContextMenu'
 import { CanvasRulers, RULER_SIZE } from './CanvasRulers'
@@ -40,14 +43,18 @@ type Gesture = { start: Point; current: Point } & (
   | { type: 'pan'; origin: Point; source: 'space' | 'tool' | 'middle' }
   | { type: 'endpoint'; id: string; end: 'start' | 'end' }
   | { type: 'rotate'; center: Point; initialAngle: number }
+  | { type: 'resize'; box: Box; handle: SelectionResizeHandle }
   | { type: 'erase'; draft: Snapshot }
 )
 const zero = { x: 0, y: 0 }
 
-export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, onDeleteImage, onImageReady }: { busy: boolean; rotating: boolean; onRotateImage: () => void; onReplaceImage: () => void; onDeleteImage: () => void; onImageReady?: (imageId: string) => void }) {
+export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, onImageReady }: { busy: boolean; onReplaceImage: () => void; onDeleteImage: () => void; onImageReady?: (imageId: string) => void }) {
+  const { rotating, rotateImage } = useCanvasRotation(editorBusy)
+  const busy = editorBusy || rotating
   const container = useRef<HTMLDivElement>(null), stage = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 1, height: 1 })
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 })
+  const previousViewport = useRef<{ image: ImageInfo | null; width: number; height: number } | null>(null)
   const [guides, setGuides] = useState(emptyCanvasGuides)
   const [gesture, setGesture] = useState<Gesture | null>(null), gestureRef = useRef<Gesture | null>(null)
   const [space, setSpace] = useState(false)
@@ -56,6 +63,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const spaceRef = useRef(false)
   const [horizontal, setHorizontal] = useState(false)
   const [splitHover, setSplitHover] = useState<SplitAxis | null>(null)
+  const [selectionHover, setSelectionHover] = useState<string | null>(null)
   const snapshot = useEditor(s => s.present), tool = useEditor(s => s.tool)
   const heldTemplate = useEditor(s => s.heldTemplate)
   const modeGuideVisible = useModeGuide()
@@ -63,7 +71,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const fillRegions = useFillRegions(snapshot.doc, tool === 'fill' && fillAction === 'mark' && !busy)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
   const viewport: Box = { x: (RULER_SIZE - view.x) / view.scale, y: (RULER_SIZE - view.y) / view.scale, width: Math.max(0, size.width - RULER_SIZE) / view.scale, height: Math.max(0, size.height - RULER_SIZE) / view.scale }
-  const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value); if (!value) setSplitHover(null) }
+  const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value); if (!value) { setSplitHover(null); setSelectionHover(null) } }
   const fit = () => {
     if (!image) return
     const scale = Math.max(0.01, Math.min((size.width - RULER_SIZE - 96) / image.width, (size.height - RULER_SIZE - 96) / image.height, 1))
@@ -75,7 +83,15 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     observer.observe(container.current)
     return () => observer.disconnect()
   }, [])
-  useEffect(() => { fit(); updateGesture(null) }, [image?.id, size.width, size.height])
+  useLayoutEffect(() => {
+    const previous = previousViewport.current, previousImage = previous?.image
+    if (image && previous && previousImage && image.id !== previousImage.id && previous.width === size.width && previous.height === size.height && isSameImageSource(previousImage.id, image.id)) {
+      // Rotate around the image's existing screen center, retaining zoom and pan, including on undo/redo.
+      setView(current => ({ ...current, x: current.x + (previousImage.width - image.width) * current.scale / 2, y: current.y + (previousImage.height - image.height) * current.scale / 2 }))
+    } else fit()
+    previousViewport.current = { image, width: size.width, height: size.height }
+    updateGesture(null)
+  }, [image?.id, size.width, size.height])
   useEffect(() => {
     if (!onImageReady || !image || !asset || size.width <= 1 || size.height <= 1) return
     // Wait for the fitted canvas to render and paint before completing the import.
@@ -90,11 +106,11 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     }
   }, [onImageReady, image, asset, size.width, size.height, view])
   useEffect(() => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }, [image?.id, busy])
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!heldTemplate || !pointerInside || space || gestureRef.current?.type === 'pan' || !pointerScreen.current) return
     const p = pointerScreen.current
     useEditor.getState().moveHeldTemplate({ x: (p.x - view.x) / view.scale, y: (p.y - view.y) / view.scale })
-  }, [view, space, pointerInside, heldTemplate?.layout])
+  }, [view, space, pointerInside, heldTemplate?.layout, heldTemplate?.imageId])
   useEffect(() => () => useEditor.getState().cancelTemplatePlacement(), [])
   useEffect(() => {
     const changeSplitDirection = (axis: SplitAxis) => {
@@ -159,6 +175,10 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const begin = (event: Konva.KonvaEventObject<PointerEvent>) => {
     if (!image || busy || (event.evt.button !== 0 && event.evt.button !== 1)) return
     const p = pointer(), start = clamp(p), state = useEditor.getState()
+    const capture = () => {
+      event.evt.preventDefault()
+      if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
+    }
     const screenPoint = stage.current?.getPointerPosition()
     if (screenPoint && (screenPoint.x < RULER_SIZE || screenPoint.y < RULER_SIZE)) return
     if (tool === 'pan' || spaceRef.current || event.evt.button === 1) {
@@ -206,10 +226,23 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       updateGesture({ type: 'split', axis: horizontal ? 'horizontal' : 'vertical', start: p, current: p })
       return
     }
+    const resizeHandle = tool === 'select' ? resizeHandleFromId(hit) : undefined
+    if (resizeHandle) {
+      const box = bounds(snapshot.doc, snapshot.selected)
+      if (!box || snapshot.selected.some(id => containsLocked(snapshot.doc, id)) || containsSplit(snapshot.doc, snapshot.selected)) return
+      capture()
+      updateGesture({ type: 'resize', box, handle: resizeHandle, start: p, current: p }); return
+    }
+    if (hit === 'selection-move' && tool === 'select') {
+      if (snapshot.selected.some(id => containsLocked(snapshot.doc, id))) return
+      capture()
+      updateGesture({ type: 'move', start: p, current: p }); return
+    }
     if (hit === 'rotate-handle') {
       const box = bounds(snapshot.doc, snapshot.selected)
       if (!box || snapshot.selected.some(id => containsLocked(snapshot.doc, id))) return
       const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+      capture()
       updateGesture({ type: 'rotate', center, initialAngle: Math.atan2(p.y - center.y, p.x - center.x), start: p, current: p }); return
     }
     if (tool === 'crop') {
@@ -222,6 +255,7 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     if (hit.startsWith('endpoint:')) {
       const [, end, id] = hit.split(':')
       if (event.evt.shiftKey) { state.select(snapshot.selected.filter(selected => selected !== id)); return }
+      capture()
       updateGesture({ type: 'endpoint', id, end: end as 'start' | 'end', start: p, current: p }); return
     }
     const target = hit ? scopeTarget(snapshot.doc, hit, snapshot.scope) : null
@@ -231,19 +265,31 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         state.select(snapshot.selected.includes(target) ? snapshot.selected.filter(id => id !== target) : [...snapshot.selected, target]); return
       }
       if (!snapshot.selected.includes(target)) state.select([target])
-      if (!useEditor.getState().present.selected.some(id => containsLocked(snapshot.doc, id))) updateGesture({ type: 'move', start: p, current: p })
+      if (!useEditor.getState().present.selected.some(id => containsLocked(snapshot.doc, id))) {
+        capture()
+        updateGesture({ type: 'move', start: p, current: p })
+      }
     } else updateGesture({ type: 'box', start: p, current: p, additive: event.evt.shiftKey })
   }
-  const track = () => {
+  const track = (event: Konva.KonvaEventObject<PointerEvent>) => {
     const active = gestureRef.current
     const p = pointer()
     pointerScreen.current = stage.current?.getPointerPosition() ?? null
     if (useEditor.getState().heldTemplate && !spaceRef.current && active?.type !== 'pan') {
-      useEditor.getState().moveHeldTemplate(p)
       return
     }
     if (!active) {
       setSplitHover(tool === 'split' && !busy ? splitMoveAxis(useEditor.getState().present, p, view.scale) : null)
+      const hit = event.target.id(), handle = resizeHandleFromId(hit)
+      const target = scopeTarget(snapshot.doc, hit, snapshot.scope)
+      let cursor: string | null = null
+      if (tool === 'select' && !busy) {
+        if (handle) cursor = handle.cursor
+        else if (hit === 'rotate-handle') cursor = 'grab'
+        else if (hit.startsWith('endpoint:')) cursor = 'crosshair'
+        else if (hit === 'selection-move' || (target && snapshot.selected.includes(target) && !containsLocked(snapshot.doc, target))) cursor = 'move'
+      }
+      setSelectionHover(cursor)
       return
     }
     if (active.type === 'pan') {
@@ -258,7 +304,8 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const finish = () => {
     const active = gestureRef.current
     if (!active) return
-    const { start, current } = active, state = useEditor.getState()
+    const { start } = active, state = useEditor.getState()
+    const current = ['move', 'endpoint', 'resize', 'rotate'].includes(active.type) ? pointer() : active.current
     const distance = Math.hypot(current.x - start.x, current.y - start.y) * view.scale
     if (active.type === 'erase') {
       eraseStroke(active.draft, current, pointer(), view.scale, viewport)
@@ -271,7 +318,8 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
     if (active.type === 'line' && distance > 3 && image && segmentIntersectsBox(start, current, { x: 0, y: 0, width: image.width, height: image.height })) state.addLine(start, current)
     if (active.type === 'move' && distance > 1) state.move({ x: current.x - start.x, y: current.y - start.y })
     if (active.type === 'endpoint' && distance > 1) state.endpoint(active.id, active.end, current)
-    if (active.type === 'rotate' && distance > 1) rotateSelection(rotationDegrees(active))
+    if (active.type === 'rotate' && distance > 1) rotateSelection(rotationDegrees({ ...active, current }))
+    if (active.type === 'resize' && distance > 1) state.commit(draft => transformSelection(draft, selectionResizeMatrix(active.box, active.handle, start, current)))
     if (active.type === 'crop' && distance > 3) {
       const b = boxBetween(start, current)
       if (b.width >= 1 && b.height >= 1) state.setCrop(b)
@@ -297,23 +345,32 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
   const delta = zero
   const marquee: Box | null = gesture && (gesture.type === 'box' || gesture.type === 'crop') ? boxBetween(gesture.start, gesture.current) : null
   const endpoint = gesture?.type === 'endpoint' ? { id: gesture.id, end: gesture.end, point: gesture.current } : null
-  const preview = gesture?.type === 'erase' ? gesture.draft : gesture?.type === 'rotate' || gesture?.type === 'move' ? structuredClone(snapshot) : snapshot
+  const preview = gesture?.type === 'erase' ? gesture.draft : gesture?.type === 'rotate' || gesture?.type === 'move' || gesture?.type === 'resize' ? structuredClone(snapshot) : snapshot
   if (gesture?.type === 'rotate') transformSelection(preview, rotationAround(gesture.center, rotationDegrees(gesture)))
   if (gesture?.type === 'move') transformSelection(preview, [1, 0, 0, 1, gesture.current.x - gesture.start.x, gesture.current.y - gesture.start.y])
+  if (gesture?.type === 'resize') transformSelection(preview, selectionResizeMatrix(gesture.box, gesture.handle, gesture.start, gesture.current))
   const splitCursor = tool === 'split' && !busy && gesture?.type !== 'split' ? splitHover : null
-  return <CanvasContextMenu disabled={busy || tool === 'erase' || !!heldTemplate} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && heldTemplate ? 'template-placement-status' : image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : heldTemplate ? 'crosshair' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? 'default' : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
+  const selectionCursor = gesture?.type === 'resize' ? gesture.handle.cursor : gesture?.type === 'move' ? 'move' : gesture?.type === 'rotate' ? 'grabbing' : gesture?.type === 'endpoint' ? 'crosshair' : selectionHover ?? 'default'
+  return <CanvasContextMenu disabled={busy || tool === 'erase' || !!heldTemplate} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && heldTemplate ? 'template-placement-status' : image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : heldTemplate ? 'crosshair' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? selectionCursor : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
     onPointerEnter={event => {
       const rect = event.currentTarget.getBoundingClientRect()
       const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top }
       pointerScreen.current = screen
       setPointerInside(true)
-      if (!busy && !spaceRef.current) useEditor.getState().moveHeldTemplate({ x: (screen.x - view.x) / view.scale, y: (screen.y - view.y) / view.scale })
+      if (!editorBusy && !spaceRef.current) useEditor.getState().moveHeldTemplate({ x: (screen.x - view.x) / view.scale, y: (screen.y - view.y) / view.scale })
     }}
-    onPointerLeave={() => { setSplitHover(null); setPointerInside(false) }}
+    onPointerMoveCapture={event => {
+      const rect = event.currentTarget.getBoundingClientRect()
+      const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top }
+      pointerScreen.current = screen
+      if (!editorBusy && !spaceRef.current && gestureRef.current?.type !== 'pan') useEditor.getState().moveHeldTemplate({ x: (screen.x - view.x) / view.scale, y: (screen.y - view.y) / view.scale })
+    }}
+    onPointerLeave={() => { setSplitHover(null); setSelectionHover(null); setPointerInside(false) }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
-      if (tool !== 'select' || spaceRef.current || useEditor.getState().heldTemplate) return
-      const id = scopeTarget(snapshot.doc, e.target.id(), snapshot.scope)
+      if (busy || tool !== 'select' || spaceRef.current || useEditor.getState().heldTemplate) return
+      const hit = e.target.id()
+      const id = hit === 'selection-move' && snapshot.selected.length === 1 ? snapshot.selected[0] : scopeTarget(snapshot.doc, hit, snapshot.scope)
       if (id) { updateGesture(null); enterGroup(id) }
     }} onContextMenu={e => {
       if (useEditor.getState().heldTemplate) { e.evt.preventDefault(); return }
@@ -331,12 +388,12 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
       if (target && !snapshot.selected.includes(target)) useEditor.getState().select([target])
     }} onWheel={e => {
       e.evt.preventDefault()
-      if (busy || !e.evt.deltaY) return
+      if (editorBusy || !e.evt.deltaY) return
       const factor = e.evt.deltaY < 0 ? 1.1 : 1 / 1.1
       pointerScreen.current = stage.current?.getPointerPosition() ?? null
       const state = useEditor.getState()
       if (state.heldTemplate && !spaceRef.current && gestureRef.current?.type !== 'pan') state.resizeHeldTemplate(factor)
-      else zoom(factor, pointerScreen.current ?? undefined)
+      else if (!rotating) zoom(factor, pointerScreen.current ?? undefined)
     }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
@@ -345,9 +402,9 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={2 / view.scale} lineCap="round" listening={false} />}
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} viewport={viewport} />
-        {tool !== 'erase' && !heldTemplate && <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} />}
+        {tool !== 'erase' && !heldTemplate && <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} interactive={tool === 'select' && !space && !busy} />}
         {gesture?.type === 'split' && <SplitLinePreview point={gesture.current} axis={gesture.axis} image={image} viewport={viewport} scale={view.scale} />}
-        {heldTemplate && pointerInside && !busy && <TemplatePlacementPreview placement={heldTemplate} viewScale={view.scale} />}
+        {heldTemplate && pointerInside && !editorBusy && <TemplatePlacementPreview placement={heldTemplate} viewScale={view.scale} />}
       </Group></Layer>
       <Layer listening={false}><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <CanvasGuideLayer image={image} scale={view.scale} guides={guides} />
@@ -360,12 +417,13 @@ export function EditorCanvas({ busy, rotating, onRotateImage, onReplaceImage, on
         {heldTemplate ? <TemplatePlacementStatus placement={heldTemplate} temporaryView={space || gesture?.type === 'pan'} onCancel={() => useEditor.getState().cancelTemplatePlacement()} /> : modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
           <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
         </div>}
-        {snapshot.scope && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" onClick={leaveGroup}>退出组内编辑 · Esc</Button>}
+        {!heldTemplate && tool === 'select' && !busy && !space && gesture?.type !== 'pan' && <SelectionEditControls snapshot={preview} />}
+        {snapshot.scope && tool !== 'select' && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" disabled={busy} onClick={leaveGroup}>退出组内编辑（Esc）</Button>}
       </div>
       {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
       {tool === 'erase' && <EraserSettings busy={busy} onDeleteImage={onDeleteImage} />}
       <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}{snapshot.doc.marks?.length ? ` · 标记 ${snapshot.doc.marks.length} 块` : ''}</div>
-      <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} guides={guides} onGuidesChange={setGuides} onZoom={zoom} onFit={fit} onRotate={onRotateImage} />
+      <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} guides={guides} onGuidesChange={setGuides} onZoom={zoom} onFit={fit} onRotate={() => void rotateImage()} />
     </>}
   </div></CanvasContextMenu>
 }

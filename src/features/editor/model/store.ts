@@ -7,6 +7,7 @@ import { MAX_MARK_POINTS, MAX_REGION_MARKS } from '@/features/fill/constants'
 import { lineIds, retainedChecks } from './object-checks'
 import { appendTemplatePlacement, createTemplatePlacement, placementCenter, placementScale, type TemplatePlacement } from '@/features/templates/placement'
 import type { LineTemplate } from '@/features/templates/layout'
+import { isSameImageSource } from '@/lib/images'
 
 type EditorState = {
   present: Snapshot; past: Snapshot[]; future: Snapshot[]; tool: Tool
@@ -40,6 +41,13 @@ type EditorState = {
 }
 const eraseSnapshots = new WeakSet<Snapshot>()
 const templatePlacements = new WeakMap<Snapshot, TemplatePlacement>()
+function committedSnapshot(state: EditorState, next: Snapshot) {
+  return { present: next, past: [...state.past, state.present].slice(-100), future: [], checkedObjects: retainedChecks(next.doc, state.checkedObjects) }
+}
+function carriedTemplate(held: TemplatePlacement | null, image: ImageInfo | null): TemplatePlacement | null {
+  if (!held || !image || !isSameImageSource(held.imageId, image.id)) return null
+  return held.imageId === image.id ? held : { ...held, imageId: image.id }
+}
 export function transformSelection(draft: Snapshot, matrix: Matrix) {
   if (draft.selected.some(id => containsLocked(draft.doc, id))) return
   if (containsSplit(draft.doc, draft.selected) && (matrix[0] !== 1 || matrix[1] !== 0 || matrix[2] !== 0 || matrix[3] !== 1)) return
@@ -90,7 +98,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     change(next)
     if (JSON.stringify(current) === JSON.stringify(next)) return
     if (action === 'erase') eraseSnapshots.add(next)
-    set(state => ({ present: next, past: [...state.past, current].slice(-100), future: [], checkedObjects: retainedChecks(next.doc, state.checkedObjects) }))
+    set(state => committedSnapshot(state, next))
   },
   setTool: tool => set({ tool, heldTemplate: null }),
   setImage(image) {
@@ -102,7 +110,16 @@ export const useEditor = create<EditorState>((set, get) => ({
     get().commit(draft => Object.assign(draft, emptySnapshot(), { doc: { ...emptySnapshot().doc, image } }))
     set({ tool: 'split' })
   },
-  rotateImage(image) { set({ heldTemplate: null }); get().commit(draft => rotateDocumentClockwise(draft.doc, image)) },
+  rotateImage(image) {
+    set(state => {
+      const previous = state.present.doc.image
+      if (!previous || image.width !== previous.height || image.height !== previous.width) return state
+      const next = structuredClone(state.present)
+      rotateDocumentClockwise(next.doc, image)
+      // The carried template stays in cursor space; only placed content rotates with the image.
+      return { ...committedSnapshot(state, next), heldTemplate: carriedTemplate(state.heldTemplate, image) }
+    })
+  },
   removeImage() { set({ heldTemplate: null }); get().commit(draft => Object.assign(draft, emptySnapshot())) },
   setFillColor(color) { if (/^#[0-9a-f]{6}$/i.test(color)) set({ fillColor: color.toLowerCase() }) },
   setFillOpacity(opacity) { if (Number.isFinite(opacity)) set({ fillOpacity: Math.max(0, Math.min(1, opacity)) }) },
@@ -167,10 +184,10 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   setCrop(crop) { get().commit(draft => { draft.doc.crop = crop }) },
   undo() {
-    const { past, present, future } = get()
+    const state = get(), { past, present, future } = state
     if (past.length) {
       const previous = past[past.length - 1], placement = templatePlacements.get(present)
-      const heldTemplate = placement && previous.doc.image?.id === placement.imageId ? structuredClone(placement) : null
+      const heldTemplate = placement && previous.doc.image?.id === placement.imageId ? structuredClone(placement) : carriedTemplate(state.heldTemplate, previous.doc.image)
       set({ present: previous, past: past.slice(0, -1), future: [present, ...future], checkedObjects: retainedChecks(previous.doc, get().checkedObjects), heldTemplate, ...(heldTemplate ? { tool: 'select' as const } : {}) })
     }
   },
@@ -178,7 +195,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     if (eraseSnapshots.has(get().present)) get().undo()
   },
   redo() {
-    const { past, present, future } = get()
-    if (future.length) set({ present: future[0], past: [...past, present].slice(-100), future: future.slice(1), checkedObjects: retainedChecks(future[0].doc, get().checkedObjects), heldTemplate: null })
+    const state = get(), { past, present, future } = state
+    if (future.length) set({ present: future[0], past: [...past, present].slice(-100), future: future.slice(1), checkedObjects: retainedChecks(future[0].doc, state.checkedObjects), heldTemplate: templatePlacements.has(future[0]) ? null : carriedTemplate(state.heldTemplate, future[0].doc.image) })
   },
 }))

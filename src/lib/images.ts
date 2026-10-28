@@ -1,7 +1,13 @@
 import type { ImageInfo } from '@/features/editor/model/types'
-type ImageAsset = { blob: Blob; element: HTMLImageElement; url: string }
+type ImageAsset = { blob: Blob; element: HTMLImageElement; url: string; sourceId: string }
 const assets = new Map<string, ImageAsset>()
 export const getImageAsset = (id?: string) => id ? assets.get(id) : undefined
+export function isSameImageSource(firstId?: string, secondId?: string) {
+  if (!firstId || !secondId) return false
+  if (firstId === secondId) return true
+  const sourceId = assets.get(firstId)?.sourceId
+  return sourceId !== undefined && sourceId === assets.get(secondId)?.sourceId
+}
 export async function registerImage(blob: Blob, name: string, id: string = crypto.randomUUID()): Promise<ImageInfo> {
   const existing = assets.get(id)
   if (existing) return { id, name, width: existing.element.naturalWidth, height: existing.element.naturalHeight }
@@ -10,7 +16,7 @@ export async function registerImage(blob: Blob, name: string, id: string = crypt
   try {
     await element.decode()
     if (!element.naturalWidth || !element.naturalHeight) throw new Error('图片尺寸无效')
-    assets.set(id, { blob, element, url })
+    assets.set(id, { blob, element, url, sourceId: id })
     return { id, name, width: element.naturalWidth, height: element.naturalHeight }
   } catch {
     URL.revokeObjectURL(url)
@@ -29,7 +35,9 @@ export async function rotateImageClockwise(image: ImageInfo): Promise<ImageInfo>
     context.setTransform(0, 1, -1, 0, image.height, 0)
     context.drawImage(asset.element, 0, 0)
     const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('旋转失败，图片可能过大')), 'image/png'))
-    return await registerImage(blob, image.name)
+    const rotated = await registerImage(blob, image.name)
+    assets.get(rotated.id)!.sourceId = asset.sourceId
+    return rotated
   } finally {
     canvas.width = 1; canvas.height = 1
   }
