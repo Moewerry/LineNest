@@ -14,7 +14,7 @@ body:has(.editor-workspace) {
 
 body:has(.editor-workspace) .canvas-surface {
   background-color: var(--card);
-  background-image: none;
+  background-image: radial-gradient(circle, var(--workspace-divider) 0.7px, transparent 0.7px);
 }
 
 /* Remove decorative shadows while retaining Tailwind's keyboard focus rings. */
@@ -26,7 +26,7 @@ body:has(.editor-workspace) [data-slot="scroll-area-thumb"] {
   background-color: var(--foreground);
 }
 
-body:has(.editor-workspace) :is([data-slot="button"][data-variant="ghost"], [data-slot="button"][data-variant="outline"]):not(:disabled):hover,
+body:has(.editor-workspace) :is([data-slot="button"][data-variant="ghost"], [data-slot="button"][data-variant="outline"]):not(:disabled):not([data-sidebar-toggle]):hover,
 body:has(.editor-workspace) label:has(> [data-slot="checkbox"]:not(:disabled)):hover {
   outline: 1px solid currentColor;
   outline-offset: -1px;

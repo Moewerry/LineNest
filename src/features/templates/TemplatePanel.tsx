@@ -85,7 +85,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
       if (file) void run(async () => prepareApply(await importTemplate(file), file.name.replace(/\.json$/i, '')))
       event.target.value = ''
     }} />
-    <p className="shrink-0 border-t px-4 py-3 text-center text-[11px] leading-5 text-muted-foreground">模板保存在此浏览器，建议定期导出备份</p>
+    <p className="shrink-0 border-t border-dashed px-4 py-3 text-center text-[11px] leading-5 text-muted-foreground">模板保存在此浏览器，建议定期导出备份</p>
     <TemplateConfirmation confirmation={confirmation} busy={busy} disabled={disabled} onCancel={() => setConfirmation(null)} onConfirm={confirm} />
     {exportRange && <SaveTemplateDialog mode="export" disabled={disabled || busy} initialRange={exportRange} onClose={() => setExportRange(null)} />}
   </>
