@@ -6,7 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
@@ -40,16 +39,15 @@ export function CanvasGuideControls({ guides, busy, onChange }: Props) {
         <ScanLine />
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" side="top" sideOffset={12} className="w-48">
+    <DropdownMenuContent data-canvas-guide-menu align="end" side="top" sideOffset={12} className="w-48 space-y-2 border-0 p-2 shadow-none">
       <DropdownMenuLabel>辅助线</DropdownMenuLabel>
-      {options.map(option => <DropdownMenuCheckboxItem key={option.key} checked={guides[option.key]}
+      {options.map(option => <DropdownMenuCheckboxItem key={option.key} checked={guides[option.key]} disabled={busy} className="min-h-9"
         onSelect={event => event.preventDefault()}
         onCheckedChange={checked => onChange({ ...guides, [option.key]: checked === true })}>
         {option.label}
       </DropdownMenuCheckboxItem>)}
-      <DropdownMenuSeparator />
-      <DropdownMenuItem disabled={!active} onClick={() => onChange({ ...emptyCanvasGuides })}>隐藏全部辅助线</DropdownMenuItem>
-      <p className="px-2 py-1.5 text-xs text-muted-foreground">仅辅助查看，不参与导出</p>
+      <DropdownMenuItem disabled={busy || !active} className="min-h-9 pl-8" onClick={() => onChange({ ...emptyCanvasGuides })}>隐藏全部辅助线</DropdownMenuItem>
+      <p className="px-2 py-1.5 text-xs text-[var(--workspace-muted-foreground)]">仅辅助查看，不参与导出</p>
     </DropdownMenuContent>
   </DropdownMenu>
 }

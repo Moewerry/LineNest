@@ -9,6 +9,7 @@ body:has(.editor-workspace) {
   --muted-foreground: var(--foreground);
   --border: #000000;
   --workspace-divider: color-mix(in srgb, var(--foreground) 20%, var(--card));
+  --workspace-muted-foreground: color-mix(in srgb, var(--foreground) 55%, var(--card));
   scrollbar-color: var(--foreground) var(--card);
 }
 
@@ -67,6 +68,32 @@ body:has(.editor-workspace) [data-template-menu] [role="menuitem"][data-disabled
 body:has(.editor-workspace) [data-template-menu] [role="menuitem"]:is([data-highlighted], :hover, :active):not([data-disabled]) {
   background-color: var(--primary);
   color: var(--primary-foreground);
+}
+
+/* Guide actions show availability separately from their checked state. */
+body:has(.editor-workspace) [data-canvas-guide-menu] [role^="menuitem"]:not([data-disabled]) {
+  border: 0;
+  background-color: var(--foreground);
+  color: var(--card);
+  cursor: pointer;
+}
+
+body:has(.editor-workspace) [data-canvas-guide-menu] [role="menuitemcheckbox"][data-state="checked"]:not([data-disabled]) {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+body:has(.editor-workspace) [data-canvas-guide-menu] [role^="menuitem"][data-disabled] {
+  border: 0;
+  background-color: transparent;
+  color: var(--workspace-muted-foreground);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+body:has(.editor-workspace) [data-canvas-guide-menu] [role^="menuitem"]:focus-visible:not([data-disabled]) {
+  text-decoration-line: underline;
+  text-underline-offset: 4px;
 }
 
 body:has(.editor-workspace) [data-slot="dialog-close"] {
