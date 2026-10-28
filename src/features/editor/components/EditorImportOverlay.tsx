@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyStateNavigation } from './EmptyStateNavigation'
 
 export function EditorImportOverlay({ onPick, busy, dragging }: { onPick: () => void; busy: boolean; dragging: boolean }) {
-  return <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/65 px-12 py-10 backdrop-blur-md">
+  return <div className="absolute inset-0 z-20 flex items-center justify-center bg-card px-12 py-10">
     <EmptyStateNavigation busy={busy} />
     <section aria-labelledby="image-import-heading" aria-busy={busy} className="w-full max-w-4xl">
       <div className="grid gap-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-16 sm:gap-y-12 lg:gap-x-28 lg:gap-y-16">

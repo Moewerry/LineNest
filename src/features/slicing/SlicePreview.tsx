@@ -21,17 +21,21 @@ export function SlicePreview({ doc, result, selected, marked = false }: { doc: D
       const path = regionPath(region), included = selected.has(region.id)
       const mark = marked ? doc.marks?.[region.id - 1] : undefined
       context.save()
-      context.fillStyle = included ? mark?.color ?? canvasColors.previewFill : '#ffffffbb'
+      context.fillStyle = included ? mark?.color ?? canvasColors.previewFill : 'transparent'
       if (included && mark) context.globalAlpha = mark.opacity
       context.fill(path, 'evenodd')
       context.restore()
+      context.setLineDash(included ? [] : [4 / scale, 3 / scale])
       context.strokeStyle = included ? mark?.color ?? canvasColors.selection : canvasColors.mutedLine; context.lineWidth = 1.5 / scale; context.stroke(path)
     }
+    context.setLineDash([])
     context.font = `600 ${11 / scale}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle'
     for (const region of result.regions) {
       context.beginPath(); context.arc(region.label.x, region.label.y, 11 / scale, 0, Math.PI * 2)
-      context.fillStyle = selected.has(region.id) ? canvasColors.ink : canvasColors.mutedInk; context.fill()
-      context.fillStyle = 'white'; context.fillText(String(region.id), region.label.x, region.label.y)
+      const included = selected.has(region.id)
+      context.fillStyle = included ? canvasColors.ink : canvasColors.handle; context.fill()
+      context.strokeStyle = canvasColors.ink; context.lineWidth = 1 / scale; context.stroke()
+      context.fillStyle = included ? canvasColors.handle : canvasColors.ink; context.fillText(String(region.id), region.label.x, region.label.y)
     }
   }, [doc, result, selected, marked])
   return <div className="canvas-surface flex min-h-40 items-center justify-center overflow-hidden rounded-xl border p-3"><canvas ref={ref} aria-label="切片区域预览" className="max-h-[50vh] max-w-full object-contain" /></div>

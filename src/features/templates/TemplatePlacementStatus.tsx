@@ -4,7 +4,7 @@ import { ShortcutKeys } from '@/features/editor/components/ShortcutKeys'
 import type { TemplatePlacement } from './placement'
 
 export function TemplatePlacementStatus({ placement, temporaryView, dragging = false, onCancel }: { placement: TemplatePlacement; temporaryView: boolean; dragging?: boolean; onCancel: () => void }) {
-  return <div id="template-placement-status" className="pointer-events-auto max-w-full rounded-xl border bg-card/95 px-3 py-2.5 shadow-xs">
+  return <div id="template-placement-status" className="pointer-events-auto max-w-full rounded-xl border bg-card px-3 py-2.5">
     <div className="flex items-center gap-3">
       <p role="status" className="min-w-0 flex-1 truncate text-xs font-medium">{temporaryView ? '临时调整图片视图' : `待放置：${placement.name}`}</p>
       <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{Math.round(placement.bounds.width * placement.scale)} × {Math.round(placement.bounds.height * placement.scale)}</span>

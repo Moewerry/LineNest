@@ -6,7 +6,7 @@ export function BatchPreviewOverlay({ running, status, total, onDownload, onEdit
 }) {
   if (!running && !total) return null
 
-  return <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/60 p-6 text-center backdrop-blur-sm">
+  return <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-card p-6 text-center">
     <div role="status" aria-live="polite" className="flex flex-col items-center gap-3">
       {running
         ? <LoaderCircle aria-hidden="true" className="size-12 animate-spin text-primary" strokeWidth={2.5} />

@@ -28,13 +28,13 @@ export function CanvasRulers({ image, view, size }: Props) {
   return <div aria-hidden="true" className="pointer-events-none absolute inset-0 text-muted-foreground">
     <svg className="absolute left-0 top-0 border-b bg-card" width={size.width} height={RULER_SIZE}>
       {horizontal.map(tick => <g key={tick.label}>
-        <line x1={tick.position} x2={tick.position} y1={tick.major ? 15 : 20} y2={RULER_SIZE} stroke="currentColor" strokeOpacity={0.5} />
+        <line x1={tick.position} x2={tick.position} y1={tick.major ? 15 : 20} y2={RULER_SIZE} stroke="currentColor" />
         {tick.major && <text x={tick.position + 3} y={11} fill="currentColor" fontSize={9}>{tick.label}</text>}
       </g>)}
     </svg>
     <svg className="absolute left-0 top-6 border-r bg-card" width={RULER_SIZE} height={Math.max(0, size.height - RULER_SIZE)}>
       {vertical.map(tick => <g key={tick.label} transform={`translate(0 ${tick.position - RULER_SIZE})`}>
-        <line x1={tick.major ? 15 : 20} x2={RULER_SIZE} y1={0} y2={0} stroke="currentColor" strokeOpacity={0.5} />
+        <line x1={tick.major ? 15 : 20} x2={RULER_SIZE} y1={0} y2={0} stroke="currentColor" />
         {tick.major && <text transform="translate(11 -3) rotate(-90)" fill="currentColor" fontSize={9}>{tick.label}</text>}
       </g>)}
     </svg>

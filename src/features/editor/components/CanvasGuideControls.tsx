@@ -36,7 +36,7 @@ export function CanvasGuideControls({ guides, busy, onChange }: Props) {
   const active = Object.values(guides).some(Boolean)
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button variant={active ? 'secondary' : 'ghost'} size="icon-sm" aria-label="辅助线设置" title="辅助线设置" disabled={busy}>
+      <Button variant={active ? 'selected' : 'ghost'} size="icon-sm" aria-label="辅助线设置" title="辅助线设置" disabled={busy}>
         <ScanLine />
       </Button>
     </DropdownMenuTrigger>

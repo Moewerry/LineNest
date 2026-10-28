@@ -33,8 +33,8 @@ export function EditorSidebar({ disabled }: { disabled: boolean }) {
     <Tabs defaultValue="templates" className="min-h-0 flex-1 gap-0">
       <div className="flex shrink-0 items-center gap-2 border-b px-2 py-2">
         <TabsList data-editor-settings aria-label="侧边栏内容" className={`${open ? 'inline-flex' : 'hidden'} h-10 min-w-0 flex-1 bg-transparent p-0`}>
-          <TabsTrigger className="h-full py-2 data-[state=active]:bg-secondary data-[state=active]:shadow-none" value="templates"><FolderOpen className="size-3.5" />模板<span className="min-w-4 text-[10px] text-muted-foreground tabular-nums" aria-live="polite">{templateCount ?? '…'}</span></TabsTrigger>
-          <TabsTrigger className="h-full py-2 data-[state=active]:bg-secondary data-[state=active]:shadow-none" value="layers"><Layers className="size-3.5" />图层</TabsTrigger>
+          <TabsTrigger className="h-full py-2 data-[state=active]:bg-foreground data-[state=active]:text-card data-[state=active]:shadow-none" value="templates"><FolderOpen className="size-3.5" />模板<span className="min-w-4 text-[10px] tabular-nums" aria-live="polite">{templateCount ?? '…'}</span></TabsTrigger>
+          <TabsTrigger className="h-full py-2 data-[state=active]:bg-foreground data-[state=active]:text-card data-[state=active]:shadow-none" value="layers"><Layers className="size-3.5" />图层</TabsTrigger>
         </TabsList>
         {toggle}
       </div>

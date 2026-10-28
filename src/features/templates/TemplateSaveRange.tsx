@@ -26,7 +26,7 @@ export function TemplateSaveRange({ value, onChange, total, checked, marks, chec
         return <label key={option.value} htmlFor={`${id}-${option.value}`} className={cn(
           'flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors',
           value === option.value ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
-          unavailable && 'cursor-not-allowed opacity-50',
+          unavailable && 'cursor-not-allowed border-dashed',
         )}>
           <RadioGroupItem id={`${id}-${option.value}`} value={option.value} disabled={unavailable} className="mt-0.5" />
           <span className="min-w-0 flex-1 space-y-1.5">

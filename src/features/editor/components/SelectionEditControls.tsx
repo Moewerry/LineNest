@@ -20,7 +20,7 @@ export function SelectionEditControls({ snapshot }: { snapshot: Snapshot }) {
     : fixedDirection ? '分割线保持贯穿图片：横线上下移动，竖线左右移动。'
       : '拖动线条调整位置，拖动端点调整形状；双击子组继续编辑。'
 
-  return <div className="pointer-events-auto max-w-full space-y-2 rounded-xl border bg-card/95 px-3 py-2.5 shadow-xs">
+  return <div className="pointer-events-auto max-w-full space-y-2 rounded-xl border bg-card px-3 py-2.5">
     <div className="flex flex-wrap items-center gap-2">
       <span className="min-w-0 max-w-48 truncate text-xs font-medium">{group?.name ?? doc.nodes[scope!].name}</span>
       {box && <span className="text-xs tabular-nums text-muted-foreground">{Math.round(box.width)} × {Math.round(box.height)} px</span>}

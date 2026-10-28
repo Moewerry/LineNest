@@ -5,7 +5,7 @@ import { RegionMarkPreview } from '@/features/fill/RegionMarkPreview'
 
 export function TemplateThumbnail({ layout, className }: { layout: LineTemplate; className?: string }) {
   const lines = segments(templateDocument(layout))
-  return <span className={cn('flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-secondary/70 p-1', className)}>
+  return <span className={cn('flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-card p-1', className)}>
     <svg viewBox={`0 0 ${layout.width} ${layout.height}`} role="img" aria-label="模板预览" className="size-full text-primary">
       <rect x="0" y="0" width={layout.width} height={layout.height} fill="var(--background)" stroke="var(--border)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
       <RegionMarkPreview marks={layout.marks ?? []} />

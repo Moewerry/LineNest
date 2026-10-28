@@ -106,7 +106,7 @@
 .home-card-dot {
   animation:
     home-dot-pop 480ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--home-content-start) + 240ms) backwards,
-    home-dot-idle 2400ms ease-in-out calc(var(--home-content-start) + 720ms) infinite;
+    home-dot-highlight 2800ms ease-in-out calc(var(--home-content-start) + 720ms) infinite;
 }
 
 .home-typing-cursor::after {
@@ -186,6 +186,18 @@
   animation: home-action-fly-in var(--home-icon-duration) cubic-bezier(0.12, 0.8, 0.2, 1) var(--home-content-start) backwards;
 }
 
+.home-brand-wordmark {
+  transform-origin: left center;
+  animation: home-wordmark-enter 820ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--home-content-start) + var(--home-icon-duration)) backwards;
+}
+
+@keyframes home-wordmark-enter {
+  from { opacity: 0; transform: translate(-40px, 10px) rotate(-5deg) scale(0.72); filter: blur(8px); }
+  60% { opacity: 1; transform: translate(8px, -2px) rotate(1deg) scale(1.1); filter: blur(0); }
+  80% { transform: translate(-3px, 0) rotate(-0.5deg) scale(0.98); }
+  to { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); filter: blur(0); }
+}
+
 @keyframes home-soft-enter {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -227,9 +239,19 @@
   to { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 0 0 10px rgb(241 214 106 / 0); }
 }
 
-@keyframes home-dot-idle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.65; }
+@keyframes home-dot-highlight {
+  0%, 25%, 100% {
+    background-color: var(--color-highlight);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-highlight) 0%, transparent), 0 0 0 color-mix(in srgb, var(--color-highlight) 0%, transparent);
+  }
+  50% {
+    background-color: color-mix(in srgb, var(--color-highlight) 70%, white);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-highlight) 16%, transparent), 0 0 10px color-mix(in srgb, var(--color-highlight) 50%, transparent);
+  }
+  75% {
+    background-color: var(--color-highlight);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-highlight) 0%, transparent), 0 0 4px color-mix(in srgb, var(--color-highlight) 12%, transparent);
+  }
 }
 
 @keyframes home-back-fly-in {

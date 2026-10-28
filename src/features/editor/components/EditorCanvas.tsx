@@ -425,7 +425,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
       </div>
       {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
       {tool === 'erase' && <EraserSettings busy={busy} onDeleteImage={onDeleteImage} />}
-      <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}{snapshot.doc.marks?.length ? ` · 标记 ${snapshot.doc.marks.length} 块` : ''}</div>
+      <div className="pointer-events-none absolute bottom-5 left-10 max-w-[calc(100%-300px)] rounded bg-card px-2 py-1 text-[11px] text-muted-foreground">{image.width} × {image.height} px{snapshot.selected.length ? ` · 已选 ${snapshot.selected.length} 项` : ''}{snapshot.doc.marks?.length ? ` · 标记 ${snapshot.doc.marks.length} 块` : ''}</div>
       <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} guides={guides} onGuidesChange={setGuides} onZoom={zoom} onFit={fit} onRotate={() => void rotateImage()} />
     </>}
   </div></CanvasContextMenu>

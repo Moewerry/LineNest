@@ -19,7 +19,7 @@ export function RegionMarkLayer({ marks, scale, selectable = false }: { marks: R
     const listening = selectable && !!mark.groupId
     return <Group key={mark.id} listening={listening}>
       <Shape id={listening ? mark.groupId : undefined} sceneFunc={draw} fillRule="evenodd" fill={mark.color} opacity={mark.opacity} strokeEnabled={false} listening={listening} />
-      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={light ? '#171717' : '#ffffff'} strokeWidth={3 / scale} lineJoin="round" listening={false} />
+      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={light ? '#000000' : '#ffffff'} strokeWidth={3 / scale} lineJoin="round" listening={false} />
       <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={mark.color} strokeWidth={1.5 / scale} lineJoin="round" listening={false} />
     </Group>
   })}</>

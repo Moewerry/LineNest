@@ -13,21 +13,21 @@ export function HistoryToolBar({ busy }: { busy: boolean }) {
       <TooltipTrigger asChild><Button variant="ghost" size="icon" aria-label="撤回" disabled={busy || !canUndo} onClick={() => useEditor.getState().undo()}><Undo2 /></Button></TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={10} className="max-w-60 space-y-1.5 rounded-lg px-3 py-2.5 text-left">
         <p className="font-medium">撤回</p>
-        <p className="text-[11px] leading-relaxed opacity-75">撤回上一步操作（Ctrl+Z / ⌘Z）。</p>
+        <p className="text-[11px] leading-relaxed">撤回上一步操作（Ctrl+Z / ⌘Z）。</p>
       </TooltipContent>
     </Tooltip>
     <Tooltip>
       <TooltipTrigger asChild><Button variant="ghost" size="icon" aria-label="恢复" disabled={busy || !canRedo} onClick={() => useEditor.getState().redo()}><Redo2 /></Button></TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={10} className="max-w-60 space-y-1.5 rounded-lg px-3 py-2.5 text-left">
         <p className="font-medium">恢复</p>
-        <p className="text-[11px] leading-relaxed opacity-75">恢复已撤回的操作（Ctrl+Shift+Z / ⌘⇧Z）。</p>
+        <p className="text-[11px] leading-relaxed">恢复已撤回的操作（Ctrl+Shift+Z / ⌘⇧Z）。</p>
       </TooltipContent>
     </Tooltip>
     <Tooltip>
       <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" aria-label="清除所有线条" disabled={busy || !hasLines} onClick={() => useEditor.getState().clearLines()}><X /></Button></TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={10} className="max-w-60 space-y-1.5 rounded-lg px-3 py-2.5 text-left">
         <p className="font-medium">清除所有线条</p>
-        <p className="text-[11px] leading-relaxed opacity-75">清除所有线条（包括锁定线条），可撤回。</p>
+        <p className="text-[11px] leading-relaxed">清除所有线条（包括锁定线条），可撤回。</p>
       </TooltipContent>
     </Tooltip>
   </nav>

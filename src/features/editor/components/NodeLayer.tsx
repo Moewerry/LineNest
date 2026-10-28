@@ -14,8 +14,9 @@ export function NodeLayer({ snapshot, scale, delta, endpoint, viewport }: { snap
     const node = doc.nodes[segment.id], axis = node.type === 'line' ? node.splitAxis : undefined
     const display = displaySegment({ id: segment.id, start: { x: segment.start.x + shift.x, y: segment.start.y + shift.y }, end: { x: segment.end.x + shift.x, y: segment.end.y + shift.y } }, axis, viewport)
     const points = [display.start.x, display.start.y, display.end.x, display.end.y]
-    return <Group key={segment.id} opacity={isLocked(doc, segment.id) ? 0.4 : target ? 1 : 0.3} {...(!axis ? { clipX: 0, clipY: 0, clipWidth: image.width, clipHeight: image.height } : {})}>
-      <Line id={segment.id} points={points} stroke={active ? canvasColors.selection : canvasColors.line} strokeWidth={(active ? 2 : 1.5) / scale} hitStrokeWidth={14 / scale} lineCap="round" />
+    const dash = isLocked(doc, segment.id) ? [4 / scale, 4 / scale] : !target ? [1 / scale, 4 / scale] : undefined
+    return <Group key={segment.id} {...(!axis ? { clipX: 0, clipY: 0, clipWidth: image.width, clipHeight: image.height } : {})}>
+      <Line id={segment.id} points={points} stroke={active ? canvasColors.selection : canvasColors.line} strokeWidth={(active ? 2 : 1.5) / scale} dash={dash} hitStrokeWidth={14 / scale} lineCap="round" />
     </Group>
   })}</>
 }

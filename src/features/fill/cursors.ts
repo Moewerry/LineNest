@@ -14,7 +14,7 @@ const eraserPaths = [
 function iconCursor(paths: string[], x: number, y: number) {
   const shapes = paths.map(path => `<path d="${path}"/>`).join('')
   // A white halo keeps the dark icon visible over both light and dark images.
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><g transform="translate(3 3)" fill="none" stroke-linecap="round" stroke-linejoin="round"><g stroke="white" stroke-width="4">${shapes}</g><g stroke="#171717" stroke-width="2">${shapes}</g></g></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><g transform="translate(3 3)" fill="none" stroke-linecap="round" stroke-linejoin="round"><g stroke="white" stroke-width="4">${shapes}</g><g stroke="#000000" stroke-width="2">${shapes}</g></g></svg>`
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${x} ${y}, default`
 }
 

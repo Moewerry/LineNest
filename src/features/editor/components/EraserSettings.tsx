@@ -7,7 +7,7 @@ export function EraserSettings({ busy, onDeleteImage }: { busy: boolean; onDelet
   const [open, setOpen] = useState(false)
 
   return <Dialog open={open} onOpenChange={setOpen}>
-    <div data-editor-settings className="absolute bottom-14 left-10 z-10 rounded-xl bg-card p-1.5 shadow-lg" onContextMenu={event => event.stopPropagation()}>
+    <div data-editor-settings className="absolute bottom-14 left-10 z-10 rounded-xl border bg-card p-1.5" onContextMenu={event => event.stopPropagation()}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" disabled={busy} aria-label="删除图片及全部内容" title="删除图片及全部内容" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
           <Trash2 className="size-4" />

@@ -5,8 +5,8 @@ export const canvasColors = {
   cropFill: '#bd3e1c14',
   previewFill: '#bd3e1c33',
   handle: '#ffffff',
-  ink: '#171717',
-  line: '#525252',
-  mutedInk: '#737373',
-  mutedLine: '#a3a3a3',
+  ink: '#000000',
+  line: '#000000',
+  mutedInk: '#000000',
+  mutedLine: '#000000',
 } as const
