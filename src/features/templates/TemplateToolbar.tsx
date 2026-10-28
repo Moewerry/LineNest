@@ -11,7 +11,7 @@ export function TemplateToolbar({ disabled, hasImage, hasContent, onBatch, onImp
   onImport: () => void
   onExport: () => void
 }) {
-  return <div data-editor-settings className="flex shrink-0 items-center justify-between gap-3 px-4 pb-4">
+  return <div data-editor-settings className="flex shrink-0 items-center justify-between gap-3 p-4">
     <SaveTemplateButton disabled={disabled} />
     <DropdownMenu>
       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" disabled={disabled} aria-label="模板管理"><MoreHorizontal /></Button></DropdownMenuTrigger>

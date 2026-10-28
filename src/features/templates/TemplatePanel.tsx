@@ -52,7 +52,6 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     await deleteTemplate(confirmation.id); setConfirmation(null); toast.success('已删除模板')
   })
   return <>
-    <div className="px-4 pb-4 pt-5"><h2 className="text-sm font-semibold">我的模板</h2></div>
     <TemplateToolbar disabled={disabled || busy} hasImage={!!image} hasContent={hasContent}
       onBatch={() => void navigate('/batch')}
       onImport={() => fileInput.current?.click()}
@@ -85,7 +84,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
       if (file) void run(async () => prepareApply(await importTemplate(file), file.name.replace(/\.json$/i, '')))
       event.target.value = ''
     }} />
-    <p className="shrink-0 border-t border-dashed px-4 py-3 text-center text-[11px] leading-5 text-muted-foreground">模板保存在此浏览器，建议定期导出备份</p>
+    <p className="shrink-0 px-4 py-3 text-center text-[11px] leading-5 text-[var(--workspace-muted-foreground)]">模板保存在此浏览器，建议定期导出备份</p>
     <TemplateConfirmation confirmation={confirmation} busy={busy} disabled={disabled} onCancel={() => setConfirmation(null)} onConfirm={confirm} />
     {exportRange && <SaveTemplateDialog mode="export" disabled={disabled || busy} initialRange={exportRange} onClose={() => setExportRange(null)} />}
   </>

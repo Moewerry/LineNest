@@ -16,7 +16,7 @@ export function TemplateListItem({ template, disabled, hasImage, onApply, onBatc
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(template.name)
   const cardHandlers = useTemplateCard(template, disabled || !hasImage, onApply)
-  return <article className="relative border-b border-dashed border-[var(--workspace-divider)] bg-card">
+  return <article className="relative border-b border-solid border-[var(--workspace-divider)] bg-card last:border-b-0">
     <Button data-template-row variant="ghost" disabled={disabled || !hasImage} {...cardHandlers}
       aria-label={`套用模板：${template.name}`} title={hasImage ? '单击自动居中放置，拖动到画布指定位置' : '请先导入图片'}
       className="h-auto w-full justify-start gap-3 rounded-none p-3.5 pr-12 text-left whitespace-normal shadow-none enabled:cursor-grab enabled:active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-100">

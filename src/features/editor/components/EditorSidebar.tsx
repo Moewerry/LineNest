@@ -31,7 +31,7 @@ export function EditorSidebar({ disabled }: { disabled: boolean }) {
   return <aside ref={sidebar} aria-label="模板与图层" className={`relative flex min-h-0 min-w-0 shrink-0 flex-col ${open ? 'border-l border-[var(--workspace-divider)] bg-card' : ''}`} style={{ width: open ? Math.min(width, maxWidth) : 0 }}>
     {open && <SidebarResizeHandle width={width} minWidth={260} maxWidth={maxWidth} onWidthChange={setWidth} controls={contentId} />}
     <Tabs defaultValue="templates" className="min-h-0 flex-1 gap-0">
-      <div className={`flex shrink-0 items-center gap-2 ${open ? 'border-b border-dashed border-[var(--workspace-divider)] px-2 py-2' : 'absolute right-3 top-10 z-30'}`}>
+      <div className={`flex shrink-0 items-center gap-2 ${open ? 'px-2 py-2' : 'absolute right-3 top-10 z-30'}`}>
         {toggle}
         <TabsList data-editor-settings aria-label="侧边栏内容" className={`${open ? 'inline-flex' : 'hidden'} h-10 min-w-0 flex-1 gap-3 bg-transparent p-0`}>
           <TabsTrigger className="h-full py-2 focus-visible:underline focus-visible:underline-offset-4 focus-visible:ring-0 data-[state=active]:bg-foreground data-[state=active]:text-card data-[state=active]:shadow-none" value="templates"><FolderOpen className="size-3.5" />模板<span className="min-w-4 text-[10px] tabular-nums" aria-live="polite">{templateCount ?? '…'}</span></TabsTrigger>
