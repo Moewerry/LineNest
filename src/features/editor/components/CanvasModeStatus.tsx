@@ -28,7 +28,7 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         ]
         : mode.instructions
 
-  return <Collapsible className="pointer-events-auto max-w-full rounded-xl border bg-card/95 text-foreground shadow-xs">
+  return <Collapsible data-tool-guide onKeyDown={event => event.stopPropagation()} className="pointer-events-auto max-w-full rounded-xl border bg-card/95 text-foreground shadow-xs">
     <div className="flex items-center gap-3 px-3 py-2">
       <Icon aria-hidden="true" className="size-4 shrink-0 text-primary" />
       <p id="canvas-mode-status" role="status" aria-atomic="true" className="text-xs font-medium">{temporary ? '临时移动画布' : tool === 'fill' && erasing ? '清除色块标记' : mode.label}</p>

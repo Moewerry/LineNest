@@ -14,6 +14,7 @@ type EditorState = {
   fillColor: string; fillOpacity: number; fillAction: 'mark' | 'erase'
   checkedObjects: string[]
   heldTemplate: TemplatePlacement | null
+  toolGuideRequest: number
   applyTemplate: (layout: LineTemplate, name: string) => void
   pickUpTemplate: (layout: LineTemplate, name: string) => void
   moveHeldTemplate: (center: Point) => void
@@ -22,7 +23,7 @@ type EditorState = {
   cancelTemplatePlacement: () => void
   checkObjects: (ids: string[], checked: boolean) => void
   commit: (change: (draft: Snapshot) => void, action?: 'erase') => void
-  setTool: (tool: Tool) => void
+  setTool: (tool: Tool, showGuide?: boolean) => void
   setImage: (image: ImageInfo) => void
   removeImage: () => void
   rotateImage: (image: ImageInfo) => void
@@ -67,7 +68,7 @@ export function transformSelection(draft: Snapshot, matrix: Matrix) {
 export const useEditor = create<EditorState>((set, get) => ({
   present: emptySnapshot(), past: [], future: [], tool: 'split',
   fillColor: '#bd3e1c', fillOpacity: 0.35, fillAction: 'mark',
-  checkedObjects: [], heldTemplate: null,
+  checkedObjects: [], heldTemplate: null, toolGuideRequest: 0,
   applyTemplate(layout, name) {
     const state = get(), image = state.present.doc.image
     if (!image) throw new Error('请先导入图片，再选择模板')
@@ -115,7 +116,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     if (action === 'erase') eraseSnapshots.add(next)
     set(state => committedSnapshot(state, next))
   },
-  setTool: tool => set({ tool, heldTemplate: null }),
+  setTool: (tool, showGuide = false) => set(state => ({ tool, heldTemplate: null, toolGuideRequest: state.toolGuideRequest + (showGuide ? 1 : 0) })),
   setImage(image) {
     set({ checkedObjects: [], heldTemplate: null })
     if (!get().present.doc.image) {

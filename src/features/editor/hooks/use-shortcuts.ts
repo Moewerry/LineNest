@@ -46,13 +46,13 @@ export function useShortcuts(enabled = true, onMissingImage?: () => void) {
         const step = event.shiftKey ? 10 : 1
         state.move({ x: key === 'arrowleft' ? -step : key === 'arrowright' ? step : 0, y: key === 'arrowup' ? -step : key === 'arrowdown' ? step : 0 })
       }
-      else if (!mod && key === 's') state.setTool('split')
-      else if (!mod && key === 'v') state.setTool('select')
-      else if (!mod && key === 'h') state.setTool('pan')
-      else if (!mod && key === 'l') state.setTool('line')
-      else if (!mod && key === 'c') state.setTool('crop')
-      else if (!mod && key === 'b') state.setTool('fill')
-      else if (!mod && key === 'e') state.setTool('erase')
+      else if (!mod && key === 's') state.setTool('split', true)
+      else if (!mod && key === 'v') state.setTool('select', true)
+      else if (!mod && key === 'h') state.setTool('pan', true)
+      else if (!mod && key === 'l') state.setTool('line', true)
+      else if (!mod && key === 'c') state.setTool('crop', true)
+      else if (!mod && key === 'b') state.setTool('fill', true)
+      else if (!mod && key === 'e') state.setTool('erase', true)
     }
     window.addEventListener('keydown', handle)
     return () => window.removeEventListener('keydown', handle)

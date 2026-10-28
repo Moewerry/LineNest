@@ -6,29 +6,33 @@ export function useModeGuide() {
 
   useEffect(() => {
     const dismiss = () => setVisible(false)
+    const dismissOutside = (event: Event) => {
+      if (event.target instanceof Element && event.target.closest('[data-tool-guide]')) return
+      dismiss()
+    }
     const dismissDrag = (event: PointerEvent) => {
-      if (event.buttons !== 0) dismiss()
+      if (event.buttons !== 0) dismissOutside(event)
     }
     // Capture before tool buttons and shortcuts run, so a new mode can show its guide.
-    document.addEventListener('pointerdown', dismiss, true)
+    document.addEventListener('pointerdown', dismissOutside, true)
     document.addEventListener('pointermove', dismissDrag, true)
-    document.addEventListener('wheel', dismiss, { capture: true, passive: true })
-    document.addEventListener('keydown', dismiss, true)
-    document.addEventListener('dragstart', dismiss, true)
+    document.addEventListener('wheel', dismissOutside, { capture: true, passive: true })
+    document.addEventListener('keydown', dismissOutside, true)
+    document.addEventListener('dragstart', dismissOutside, true)
     window.addEventListener('blur', dismiss)
 
     const unsubscribe = useEditor.subscribe((state, previous) => {
-      if (state.tool !== previous.tool) setVisible(true)
+      if (state.tool !== previous.tool || state.toolGuideRequest !== previous.toolGuideRequest) setVisible(true)
       else if (state.present !== previous.present) dismiss()
     })
 
     return () => {
       unsubscribe()
-      document.removeEventListener('pointerdown', dismiss, true)
+      document.removeEventListener('pointerdown', dismissOutside, true)
       document.removeEventListener('pointermove', dismissDrag, true)
-      document.removeEventListener('wheel', dismiss, true)
-      document.removeEventListener('keydown', dismiss, true)
-      document.removeEventListener('dragstart', dismiss, true)
+      document.removeEventListener('wheel', dismissOutside, true)
+      document.removeEventListener('keydown', dismissOutside, true)
+      document.removeEventListener('dragstart', dismissOutside, true)
       window.removeEventListener('blur', dismiss)
     }
   }, [])
