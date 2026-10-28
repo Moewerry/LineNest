@@ -15,7 +15,7 @@ export function TemplateToolbar({ disabled, hasImage, hasContent, onBatch, onImp
     <SaveTemplateButton disabled={disabled} />
     <DropdownMenu>
       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" disabled={disabled} aria-label="模板管理"><MoreHorizontal /></Button></DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent data-template-menu align="end" className="border-[var(--workspace-divider)]">
         <DropdownMenuItem disabled={!hasImage} onSelect={onImport}><Upload />导入模板</DropdownMenuItem>
         <DropdownMenuItem disabled={!hasImage || !hasContent} onSelect={onExport}><Download />选择内容并导出…</DropdownMenuItem>
         <DropdownMenuItem onSelect={onBatch}><Scissors />前往批量裁剪</DropdownMenuItem>

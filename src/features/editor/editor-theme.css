@@ -26,7 +26,7 @@ body:has(.editor-workspace) [data-slot="scroll-area-thumb"] {
   background-color: var(--foreground);
 }
 
-body:has(.editor-workspace) :is([data-slot="button"][data-variant="ghost"], [data-slot="button"][data-variant="outline"]):not(:disabled):not([data-sidebar-toggle]):hover,
+body:has(.editor-workspace) :is([data-slot="button"][data-variant="ghost"], [data-slot="button"][data-variant="outline"]):not(:disabled):not([data-sidebar-toggle]):not([data-template-row]):hover,
 body:has(.editor-workspace) label:has(> [data-slot="checkbox"]:not(:disabled)):hover {
   outline: 1px solid currentColor;
   outline-offset: -1px;
@@ -43,11 +43,30 @@ body:has(.editor-workspace) [role^="menuitem"][data-highlighted]:not([data-disab
 }
 
 /* Use dashed edges, rather than faded text, to distinguish unavailable controls. */
-body:has(.editor-workspace) :is([data-slot="button"], [data-slot="input"], [data-slot="checkbox"], [data-slot="radio-group-item"], [data-slot="tabs-trigger"]):disabled,
+body:has(.editor-workspace) :is([data-slot="button"], [data-slot="input"], [data-slot="checkbox"], [data-slot="radio-group-item"], [data-slot="tabs-trigger"]):disabled:not([data-template-row]):not([data-variant="toolbar"]),
 body:has(.editor-workspace) [role^="menuitem"][data-disabled] {
   border: 1px dashed currentColor;
   opacity: 1;
   cursor: not-allowed;
+}
+
+/* Template management uses borderless actions inside a gray menu frame. */
+body:has(.editor-workspace) [data-template-menu] [role="menuitem"] {
+  border: 0;
+  color: var(--foreground);
+}
+
+body:has(.editor-workspace) [data-template-menu] [role="menuitem"] svg {
+  color: currentColor;
+}
+
+body:has(.editor-workspace) [data-template-menu] [role="menuitem"][data-disabled] {
+  color: color-mix(in srgb, var(--foreground) 45%, var(--card));
+}
+
+body:has(.editor-workspace) [data-template-menu] [role="menuitem"]:is([data-highlighted], :hover, :active):not([data-disabled]) {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
 body:has(.editor-workspace) [data-slot="dialog-close"] {

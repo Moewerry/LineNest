@@ -19,6 +19,8 @@ const buttonVariants = cva(
           "bg-primary text-primary-foreground shadow-none hover:bg-primary hover:text-primary-foreground",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        toolbar:
+          "border-0 bg-transparent text-foreground shadow-none hover:bg-foreground hover:text-background focus-visible:bg-foreground focus-visible:text-background focus-visible:ring-0 active:bg-foreground active:text-background aria-pressed:bg-foreground aria-pressed:text-background disabled:cursor-not-allowed",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

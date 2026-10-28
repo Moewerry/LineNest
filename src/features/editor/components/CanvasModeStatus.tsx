@@ -28,7 +28,7 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         ]
         : mode.instructions
 
-  return <Collapsible data-tool-guide onKeyDown={event => event.stopPropagation()} className="pointer-events-auto w-[360px] max-w-full overflow-hidden rounded-xl border bg-card text-foreground">
+  return <Collapsible data-tool-guide onKeyDown={event => event.stopPropagation()} className="pointer-events-auto w-[360px] max-w-full overflow-hidden rounded-xl bg-card text-foreground">
     <div className="flex items-start gap-2.5 px-4 pb-2.5 pt-4">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon aria-hidden="true" className="size-[18px]" /></span>
       <div className="min-w-0 flex-1">
@@ -41,7 +41,7 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
       <CollapsibleTrigger asChild><Button variant="ghost" size="icon-xs" aria-label="操作说明" title="展开或收起操作说明" className="text-muted-foreground [&[data-state=open]_svg]:rotate-180"><ChevronDown className="size-3 transition-transform" /></Button></CollapsibleTrigger>
     </div>
     <CollapsibleContent className="max-h-[40dvh] overflow-y-auto pb-3">
-    <div className="mx-3 space-y-2.5 px-3 py-3 text-primary">
+    <div className="mx-3 space-y-2.5 rounded-lg border border-dashed border-primary px-3 py-3 text-primary">
       {instructions.map(instruction => <div key={instruction.result} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 text-[11px] leading-relaxed">
         <span className="font-medium">{instruction.result}</span>
         <span className="flex flex-wrap items-center justify-end gap-1 text-foreground">

@@ -61,7 +61,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
         setExportRange(state.checkedObjects.length || lineIds(state.present.doc, state.present.selected).length ? 'checked' : 'all')
       }}
     />
-    {(rows.length > 4 || search) && <div data-editor-settings className="relative mx-4 mb-4"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索模板" aria-label="搜索我的模板" className="h-10 pl-9 shadow-none" /></div>}
+    {(rows.length > 4 || search) && <div data-editor-settings className="relative mx-4 mb-4"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索模板" aria-label="搜索我的模板" className="h-10 border-[var(--workspace-divider)] pl-9 shadow-none focus-visible:border-[var(--workspace-divider)] focus-visible:ring-[var(--workspace-divider)]" /></div>}
     {loading || loadError || !rows.length ? <div role="status" className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-6 py-8 text-center">
       {loading ? <LoaderCircle aria-hidden="true" className="size-6 animate-spin text-muted-foreground motion-reduce:animate-none" /> : <FolderOpen aria-hidden="true" className="size-8 text-muted-foreground" />}
       <div className="space-y-1.5">
@@ -69,7 +69,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
         {!loading && <p className="text-xs leading-5 text-muted-foreground">{loadError ? '请刷新页面重试' : image ? '画线或标记后，点击上方「保存为模板」' : '导入图片后即可创建和套用'}</p>}
       </div>
     </div> : <ScrollArea className="min-h-0 flex-1">
-      <div data-editor-settings className="space-y-3 px-4 pb-4">
+      <div data-editor-settings className="px-4 pb-4">
         {filtered.map(row => <TemplateListItem key={row.id} template={row} disabled={disabled || busy} hasImage={!!image}
           onApply={() => void run(async () => useEditor.getState().applyTemplate(await readTemplate(row.id), row.name))}
           onBatch={() => void navigate(`/batch?template=${encodeURIComponent(row.id)}`)}
