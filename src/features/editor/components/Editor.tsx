@@ -85,7 +85,7 @@ export function Editor() {
   return <main className="editor-workspace relative isolate flex h-dvh min-w-[760px] flex-col overflow-hidden bg-background text-foreground [&_button:disabled]:pointer-events-auto" {...dropHandlers} onPointerDownCapture={missingImageHint.onPointerDownCapture}>
     <div inert={overlayOpen} aria-hidden={overlayOpen ? true : undefined} className="flex min-h-0 flex-1 flex-col">
       <TopBar onImport={requestImport} busy={busy}><ExportButton disabled={busy} /></TopBar>
-      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><CanvasWorkspace busy={busy}><EditorCanvas busy={busy} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /></CanvasWorkspace><EditorSidebar disabled={busy} /></div>
+      <div className="flex min-h-0 flex-1"><ToolBar busy={busy} /><CanvasWorkspace><EditorCanvas busy={busy} onReplaceImage={() => input.current?.click()} onDeleteImage={removeImage} onImageReady={entering ? onImageReady : undefined} /></CanvasWorkspace><EditorSidebar disabled={busy} /></div>
     </div>
     {overlayOpen && <EditorImportOverlay onPick={() => input.current?.click()} busy={busy} dragging={dragging} />}
     {dragging && !overlayOpen && <ImageDropOverlay />}
