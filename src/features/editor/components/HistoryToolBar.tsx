@@ -6,9 +6,9 @@ import { useEditor } from '../model/store'
 export function HistoryToolBar({ busy }: { busy: boolean }) {
   const canUndo = useEditor(s => s.past.length > 0)
   const canRedo = useEditor(s => s.future.length > 0)
-  const hasLines = useEditor(s => Object.values(s.present.doc.nodes).some(node => node.type === 'line'))
+  const hasContent = useEditor(s => Object.keys(s.present.doc.nodes).length > 0 || (s.present.doc.marks?.length ?? 0) > 0)
 
-  return <nav data-canvas-shortcuts aria-label="编辑历史和线条工具" className="flex shrink-0 items-center gap-1">
+  return <nav data-canvas-shortcuts aria-label="编辑历史和清除工具" className="flex shrink-0 items-center gap-1">
     <Tooltip>
       <TooltipTrigger asChild><Button variant="ghost" size="icon" aria-label="撤回" disabled={busy || !canUndo} onClick={() => useEditor.getState().undo()}><Undo2 /></Button></TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={10} className="max-w-60 space-y-1.5 rounded-lg px-3 py-2.5 text-left">
@@ -24,10 +24,10 @@ export function HistoryToolBar({ busy }: { busy: boolean }) {
       </TooltipContent>
     </Tooltip>
     <Tooltip>
-      <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" aria-label="清除所有线条" disabled={busy || !hasLines} onClick={() => useEditor.getState().clearLines()}><X /></Button></TooltipTrigger>
+      <TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" aria-label="清除所有" disabled={busy || !hasContent} onClick={() => useEditor.getState().clearAll()}><X /></Button></TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={10} className="max-w-60 space-y-1.5 rounded-lg px-3 py-2.5 text-left">
-        <p className="font-medium">清除所有线条</p>
-        <p className="text-[11px] leading-relaxed">清除所有线条（包括锁定线条），可撤回。</p>
+        <p className="font-medium">清除所有</p>
+        <p className="text-[11px] leading-relaxed">清除所有线条和标记色块（包括锁定内容），可撤回。</p>
       </TooltipContent>
     </Tooltip>
   </nav>

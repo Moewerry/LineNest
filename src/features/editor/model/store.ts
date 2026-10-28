@@ -34,7 +34,7 @@ type EditorState = {
   eraseRegionMark: (point: Point) => void
   select: (ids: string[]) => void
   addLine: (start: Point, end: Point, splitAxis?: SplitAxis) => void
-  clearLines: () => void
+  clearAll: () => void
   move: (delta: Point) => void
   endpoint: (id: string, end: 'start' | 'end', point: Point) => void
   setCrop: (crop: Box | null) => void
@@ -183,12 +183,12 @@ export const useEditor = create<EditorState>((set, get) => ({
       draft.selected = [id]
     })
   },
-  clearLines() {
+  clearAll() {
     get().commit(draft => {
-      if (!Object.keys(draft.doc.nodes).length) return
+      if (!Object.keys(draft.doc.nodes).length && !draft.doc.marks?.length) return
       draft.doc.nodes = {}
       draft.doc.roots = []
-      for (const mark of draft.doc.marks ?? []) delete mark.groupId
+      draft.doc.marks = []
       draft.selected = []
       draft.scope = null
     })
