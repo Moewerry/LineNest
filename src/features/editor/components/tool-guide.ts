@@ -77,4 +77,4 @@ export const toolGuides = {
   label: string; shortcut: string; icon: typeof Hand; description: string; instructions: ToolInstruction[]
 }>
 
-export const toolOrder: Tool[] = ['split', 'select', 'pan', 'line', 'crop', 'fill', 'erase']
+export const toolOrder: Tool[] = ['split', 'select', 'line', 'erase', 'fill', 'crop', 'pan']

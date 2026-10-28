@@ -29,7 +29,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
   const fileInput = useRef<HTMLInputElement>(null), operation = useRef(false)
   const doc = useEditor(s => s.present.doc)
   const image = doc.image
-  const hasLines = Object.values(doc.nodes).some(node => node.type === 'line')
+  const hasContent = Object.values(doc.nodes).some(node => node.type === 'line') || !!doc.marks?.length
   const filtered = rows.filter(row => row.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))
   useEffect(() => {
     const subscription = liveQuery(listTemplates).subscribe({
@@ -52,8 +52,8 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     await deleteTemplate(confirmation.id); setConfirmation(null); toast.success('已删除模板')
   })
   return <>
-    <div className="px-4 pb-4 pt-5"><h2 className="text-sm font-semibold">我的模板</h2><p className="mt-1.5 text-xs leading-5 text-muted-foreground">保存画好的线条，下次直接复用。</p></div>
-    <TemplateToolbar disabled={disabled || busy} hasImage={!!image} hasLines={hasLines}
+    <div className="px-4 pb-4 pt-5"><h2 className="text-sm font-semibold">我的模板</h2><p className="mt-1.5 text-xs leading-5 text-muted-foreground">保存线条和标记块，下次直接复用。</p></div>
+    <TemplateToolbar disabled={disabled || busy} hasImage={!!image} hasContent={hasContent}
       onBatch={() => void navigate('/batch')}
       onImport={() => fileInput.current?.click()}
       onExport={() => {
@@ -66,12 +66,12 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
       {loading ? <LoaderCircle aria-hidden="true" className="size-6 animate-spin text-muted-foreground/50 motion-reduce:animate-none" /> : <FolderOpen aria-hidden="true" className="size-8 text-muted-foreground/35" />}
       <div className="space-y-1.5">
         <p className="text-sm text-muted-foreground">{loading ? '正在读取模板' : loadError ? '暂时无法读取模板' : '暂无模板'}</p>
-        {!loading && <p className="text-xs leading-5 text-muted-foreground/70">{loadError ? '请刷新页面重试' : image ? '画好线条后，点击上方「保存为模板」' : '导入图片后即可创建和套用'}</p>}
+        {!loading && <p className="text-xs leading-5 text-muted-foreground/70">{loadError ? '请刷新页面重试' : image ? '画线或标记后，点击上方「保存为模板」' : '导入图片后即可创建和套用'}</p>}
       </div>
     </div> : <ScrollArea className="min-h-0 flex-1">
       <div data-editor-settings className="space-y-3 px-4 pb-4">
         {filtered.map(row => <TemplateListItem key={row.id} template={row} disabled={disabled || busy} hasImage={!!image}
-          onApply={() => void run(async () => prepareApply(await readTemplate(row.id), row.name))}
+          onApply={() => void run(async () => useEditor.getState().applyTemplate(await readTemplate(row.id), row.name))}
           onBatch={() => void navigate(`/batch?template=${encodeURIComponent(row.id)}`)}
           onExport={() => void run(async () => { exportTemplate(row.name, await readTemplate(row.id)) })}
           onDelete={() => setConfirmation({ type: 'delete', id: row.id })}

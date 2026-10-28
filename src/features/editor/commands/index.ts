@@ -1,7 +1,8 @@
 import { toast } from '@/lib/toast'
-import { bounds, childrenOf, containsLocked, identity, isLocked, multiply, translation } from '../geometry'
+import { belongsToSelection, bounds, childrenOf, containsLocked, identity, isLocked, multiply, translation } from '../geometry'
 import { transformSelection, useEditor } from '../model/store'
 import type { EditorNode, Matrix, Snapshot } from '../model/types'
+import { MAX_MARK_POINTS, MAX_REGION_MARKS } from '@/features/fill/constants'
 
 const editable = (s: Snapshot) => s.selected.length > 0 && s.selected.every(id => !containsLocked(s.doc, id))
 export const canEditSelection = () => editable(useEditor.getState().present)
@@ -34,6 +35,11 @@ export function ungroupSelection() {
         child.parentId = node.parentId
       }
       siblings.splice(index, 1, ...node.children)
+      for (const mark of s.doc.marks ?? []) {
+        if (mark.groupId !== id) continue
+        if (node.parentId) mark.groupId = node.parentId
+        else delete mark.groupId
+      }
       next.push(...node.children)
       delete s.doc.nodes[id]
     }
@@ -43,11 +49,17 @@ export function ungroupSelection() {
 
 export function duplicateSelection() {
   if (!canEditSelection()) return
+  const current = useEditor.getState().present, selected = new Set(current.selected)
+  const combined = [...(current.doc.marks ?? []), ...(current.doc.marks ?? []).filter(mark => mark.groupId && belongsToSelection(current.doc, mark.groupId, selected))]
+  if (combined.length > MAX_REGION_MARKS) { toast.error(`复制后最多支持 ${MAX_REGION_MARKS} 个标记块`); return }
+  if (combined.reduce((total, mark) => total + mark.rings.reduce((count, ring) => count + ring.length, 0), 0) > MAX_MARK_POINTS) { toast.error('区域轮廓过于复杂，请减少标记后重试'); return }
   useEditor.getState().commit(s => {
+    const copies = new Map<string, string>()
     const copy = (oldId: string, parentId: string | null): string => {
       const original = s.doc.nodes[oldId], id = crypto.randomUUID()
       const node: EditorNode = { ...structuredClone(original), id, parentId }
       s.doc.nodes[id] = node
+      copies.set(oldId, id)
       if (node.type === 'group') node.children = node.children.map(child => copy(child, id))
       return id
     }
@@ -57,6 +69,10 @@ export function duplicateSelection() {
       siblings.splice(siblings.indexOf(id) + 1, 0, newId)
       return newId
     })
+    const marks = (s.doc.marks ?? []).filter(mark => mark.groupId && copies.has(mark.groupId)).map(mark => ({
+      ...structuredClone(mark), id: crypto.randomUUID(), groupId: copies.get(mark.groupId!)!,
+    }))
+    s.doc.marks = [...(s.doc.marks ?? []), ...marks]
   })
   useEditor.getState().setTool('select')
   toast.success('已复制，拖动到需要的位置')
@@ -76,6 +92,7 @@ export function deleteSelection() {
       remove(id)
     }
     s.selected = []
+    s.doc.marks = (s.doc.marks ?? []).filter(mark => !mark.groupId || !!s.doc.nodes[mark.groupId])
   })
 }
 

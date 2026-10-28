@@ -11,6 +11,7 @@ import type { Box, ImageInfo, Point, Snapshot, SplitAxis } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
 import { useModeGuide } from '../hooks/use-mode-guide'
 import { useCanvasRotation } from '../hooks/use-canvas-rotation'
+import { useTemplateDrop } from '../hooks/use-template-drop'
 import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
 import { SelectionEditControls } from './SelectionEditControls'
@@ -70,6 +71,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
   const fillAction = useEditor(s => s.fillAction)
   const fillRegions = useFillRegions(snapshot.doc, tool === 'fill' && fillAction === 'mark' && !busy)
   const image = snapshot.doc.image, asset = getImageAsset(image?.id)
+  const { dragOver: templateDragOver, dropHandlers: templateDropHandlers } = useTemplateDrop(view, busy || !asset)
   const viewport: Box = { x: (RULER_SIZE - view.x) / view.scale, y: (RULER_SIZE - view.y) / view.scale, width: Math.max(0, size.width - RULER_SIZE) / view.scale, height: Math.max(0, size.height - RULER_SIZE) / view.scale }
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value); if (!value) { setSplitHover(null); setSelectionHover(null) } }
   const fit = () => {
@@ -352,6 +354,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
   const splitCursor = tool === 'split' && !busy && gesture?.type !== 'split' ? splitHover : null
   const selectionCursor = gesture?.type === 'resize' ? gesture.handle.cursor : gesture?.type === 'move' ? 'move' : gesture?.type === 'rotate' ? 'grabbing' : gesture?.type === 'endpoint' ? 'crosshair' : selectionHover ?? 'default'
   return <CanvasContextMenu disabled={busy || tool === 'erase' || !!heldTemplate} onReplaceImage={onReplaceImage} onDeleteImage={onDeleteImage}><div ref={container} data-canvas-shortcuts tabIndex={0} role="region" aria-label="编辑画布" aria-describedby={image && heldTemplate ? 'template-placement-status' : image && modeGuideVisible ? 'canvas-mode-status' : undefined} className="canvas-surface relative min-h-0 min-w-0 flex-1 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring" style={{ cursor: gesture?.type === 'pan' ? 'grabbing' : space || tool === 'pan' ? 'grab' : heldTemplate ? 'crosshair' : splitCursor ? splitCursor === 'horizontal' ? 'ns-resize' : 'ew-resize' : tool === 'select' ? selectionCursor : tool === 'fill' ? fillCursors[fillAction] : tool === 'erase' ? fillCursors.erase : 'crosshair' }}
+    {...templateDropHandlers}
     onPointerEnter={event => {
       const rect = event.currentTarget.getBoundingClientRect()
       const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top }
@@ -397,14 +400,14 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     }}>
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
-        <RegionMarkLayer marks={preview.doc.marks ?? []} scale={view.scale} />
+        <RegionMarkLayer marks={preview.doc.marks ?? []} scale={view.scale} selectable={tool === 'select' && !space && !busy && !heldTemplate} />
         {preview.doc.crop && <Rect {...preview.doc.crop} stroke={canvasColors.selection} strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
         {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={2 / view.scale} lineCap="round" listening={false} />}
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} viewport={viewport} />
         {tool !== 'erase' && !heldTemplate && <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} interactive={tool === 'select' && !space && !busy} />}
         {gesture?.type === 'split' && <SplitLinePreview point={gesture.current} axis={gesture.axis} image={image} viewport={viewport} scale={view.scale} />}
-        {heldTemplate && pointerInside && !editorBusy && <TemplatePlacementPreview placement={heldTemplate} viewScale={view.scale} />}
+        {heldTemplate && (pointerInside || templateDragOver) && !editorBusy && <TemplatePlacementPreview placement={heldTemplate} viewScale={view.scale} />}
       </Group></Layer>
       <Layer listening={false}><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <CanvasGuideLayer image={image} scale={view.scale} guides={guides} />
@@ -414,7 +417,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
       <div className="pointer-events-none absolute left-10 right-5 top-10 flex flex-wrap items-start gap-2">
-        {heldTemplate ? <TemplatePlacementStatus placement={heldTemplate} temporaryView={space || gesture?.type === 'pan'} onCancel={() => useEditor.getState().cancelTemplatePlacement()} /> : modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
+        {heldTemplate ? <TemplatePlacementStatus placement={heldTemplate} dragging={templateDragOver} temporaryView={space || gesture?.type === 'pan'} onCancel={() => useEditor.getState().cancelTemplatePlacement()} /> : modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
           <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
         </div>}
         {!heldTemplate && tool === 'select' && !busy && !space && gesture?.type !== 'pan' && <SelectionEditControls snapshot={preview} />}

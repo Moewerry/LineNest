@@ -10,10 +10,10 @@ export function SaveTemplateButton({ disabled = false }: { disabled?: boolean })
   const doc = useEditor(s => s.present.doc)
   const checkedObjects = useEditor(s => s.checkedObjects)
   const selected = useEditor(s => s.present.selected)
-  const hasLines = Object.values(doc.nodes).some(node => node.type === 'line')
+  const hasContent = Object.values(doc.nodes).some(node => node.type === 'line') || !!doc.marks?.length
   const [range, setRange] = useState<TemplateRange | null>(null)
   return <>
-    <Button variant="outline" disabled={disabled || !doc.image || !hasLines} title={hasLines ? '将当前线条保存为可复用的模板' : '画线后即可保存模板'} onClick={() => setRange(checkedObjects.length || lineIds(doc, selected).length ? 'checked' : 'all')}><Save />保存为模板</Button>
+    <Button variant="outline" disabled={disabled || !doc.image || !hasContent} title={hasContent ? '将当前线条和标记块保存为可复用的模板' : '画线或添加标记块后即可保存模板'} onClick={() => setRange(checkedObjects.length || lineIds(doc, selected).length ? 'checked' : 'all')}><Save />保存为模板</Button>
     {range && <SaveTemplateDialog disabled={disabled} initialRange={range} onClose={() => setRange(null)} />}
   </>
 }

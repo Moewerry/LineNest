@@ -12,6 +12,7 @@ export function validRegionMarks(value: unknown): value is RegionMark[] {
   for (const mark of value) {
     if (!record(mark) || typeof mark.id !== 'string' || !mark.id.length || mark.id.length > 300 || ids.has(mark.id)) return false
     ids.add(mark.id)
+    if (mark.groupId !== undefined && (typeof mark.groupId !== 'string' || !mark.groupId.length || mark.groupId.length > 300)) return false
     if (typeof mark.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(mark.color) || typeof mark.opacity !== 'number' || !Number.isFinite(mark.opacity) || mark.opacity < 0 || mark.opacity > 1 || !point(mark.label)) return false
     if (!Array.isArray(mark.rings) || !mark.rings.length) return false
     for (const ring of mark.rings) {

@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import { apply, childrenOf, containsLocked, containsSplit, identity, inverse, isLocked, multiply, normalizeSplitLines, segments, translation, worldMatrix } from '../geometry'
+import { apply, belongsToSelection, childrenOf, containsLocked, containsSplit, identity, inverse, isLocked, multiply, normalizeSplitLines, segments, translation, worldMatrix } from '../geometry'
 import { emptySnapshot, type Box, type ImageInfo, type Matrix, type Point, type Snapshot, type SplitAxis, type Tool } from './types'
 import { rotateDocumentClockwise } from '../geometry/rotate-document'
-import { containsPoint, ringsKey } from '@/features/fill/geometry'
+import { containsPoint, ringsKey, transformRings } from '@/features/fill/geometry'
 import { MAX_MARK_POINTS, MAX_REGION_MARKS } from '@/features/fill/constants'
 import { lineIds, retainedChecks } from './object-checks'
 import { appendTemplatePlacement, createTemplatePlacement, placementCenter, placementScale, type TemplatePlacement } from '@/features/templates/placement'
@@ -14,6 +14,7 @@ type EditorState = {
   fillColor: string; fillOpacity: number; fillAction: 'mark' | 'erase'
   checkedObjects: string[]
   heldTemplate: TemplatePlacement | null
+  applyTemplate: (layout: LineTemplate, name: string) => void
   pickUpTemplate: (layout: LineTemplate, name: string) => void
   moveHeldTemplate: (center: Point) => void
   resizeHeldTemplate: (factor: number) => void
@@ -55,12 +56,26 @@ export function transformSelection(draft: Snapshot, matrix: Matrix) {
     const node = draft.doc.nodes[id], parent = worldMatrix(draft.doc, node.parentId)
     node.matrix = multiply(multiply(multiply(inverse(parent), matrix), parent), node.matrix)
   }
+  const selected = new Set(draft.selected)
+  for (const mark of draft.doc.marks ?? []) {
+    if (!mark.groupId || !belongsToSelection(draft.doc, mark.groupId, selected)) continue
+    mark.rings = transformRings(mark.rings, matrix)
+    mark.label = apply(matrix, mark.label)
+  }
   normalizeSplitLines(draft.doc)
 }
 export const useEditor = create<EditorState>((set, get) => ({
   present: emptySnapshot(), past: [], future: [], tool: 'split',
   fillColor: '#bd3e1c', fillOpacity: 0.35, fillAction: 'mark',
   checkedObjects: [], heldTemplate: null,
+  applyTemplate(layout, name) {
+    const state = get(), image = state.present.doc.image
+    if (!image) throw new Error('请先导入图片，再选择模板')
+    const placement = createTemplatePlacement(layout, image, name)
+    const center = placementCenter(placement, { x: image.width / 2, y: image.height / 2 })
+    state.commit(draft => appendTemplatePlacement(draft, placement, center))
+    set({ heldTemplate: null, tool: 'select' })
+  },
   pickUpTemplate(layout, name) {
     const image = get().present.doc.image
     if (!image) throw new Error('请先导入图片，再选择模板')
@@ -130,19 +145,21 @@ export const useEditor = create<EditorState>((set, get) => ({
       if (!draft.doc.image) return
       const marks = draft.doc.marks ?? [], key = ringsKey(rings)
       const index = marks.findIndex(mark => ringsKey(mark.rings) === key)
+      const groupId = index >= 0 ? marks[index].groupId : undefined
+      if (groupId && isLocked(draft.doc, groupId)) return
       if (index >= 0 && index === marks.length - 1 && marks[index].color === color && marks[index].opacity === opacity) return
       const retained = marks.filter((_, current) => current !== index)
       if (retained.length >= MAX_REGION_MARKS) throw new Error(`最多标记 ${MAX_REGION_MARKS} 个裁切区域`)
       const vertices = [...retained.map(mark => mark.rings), rings].reduce((sum, value) => sum + value.reduce((count, ring) => count + ring.length, 0), 0)
       if (vertices > MAX_MARK_POINTS) throw new Error('区域轮廓过于复杂，请减少标记后重试')
-      draft.doc.marks = [...retained, { id: index >= 0 ? marks[index].id : crypto.randomUUID(), rings: structuredClone(rings), label: { ...label }, color, opacity }]
+      draft.doc.marks = [...retained, { id: index >= 0 ? marks[index].id : crypto.randomUUID(), rings: structuredClone(rings), label: { ...label }, color, opacity, ...(groupId ? { groupId } : {}) }]
     })
   },
   eraseRegionMark(point) {
     get().commit(draft => {
       const marks = draft.doc.marks ?? []
       let index = marks.length - 1
-      while (index >= 0 && !containsPoint(marks[index].rings, point)) index--
+      while (index >= 0 && (!containsPoint(marks[index].rings, point) || (marks[index].groupId && isLocked(draft.doc, marks[index].groupId!)))) index--
       if (index >= 0) draft.doc.marks = marks.filter((_, current) => current !== index)
     })
   },
@@ -167,9 +184,10 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   clearLines() {
     get().commit(draft => {
-      if (!Object.values(draft.doc.nodes).some(node => node.type === 'line')) return
+      if (!Object.keys(draft.doc.nodes).length) return
       draft.doc.nodes = {}
       draft.doc.roots = []
+      for (const mark of draft.doc.marks ?? []) delete mark.groupId
       draft.selected = []
       draft.scope = null
     })

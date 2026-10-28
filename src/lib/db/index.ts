@@ -8,7 +8,7 @@ const db = new Dexie('LineNest') as Dexie & {
   templates: EntityTable<TemplateRecord, 'id'>
 }
 db.version(1).stores({ templates: 'id, imageId, updatedAt', images: 'id' })
-// Rewrite old records without original images, image thumbnails, crop or region marks.
+// Rewrite old records without original images, image thumbnails or crop.
 // Removing the images store releases the previously persisted originals as well.
 db.version(2).stores({ templates: 'id, updatedAt', images: null }).upgrade(async transaction => {
   const table = transaction.table('templates')
@@ -17,10 +17,10 @@ db.version(2).stores({ templates: 'id, updatedAt', images: null }).upgrade(async
 })
 
 export const listTemplates = () => db.templates.orderBy('updatedAt').reverse().toArray()
-export async function saveTemplate(name: string, source: DocumentData, checkedIds?: string[]) {
+export async function saveTemplate(name: string, source: DocumentData, checkedIds?: string[], checkedMarkIds?: string[]) {
   if (!name.trim()) throw new Error('请输入模板名称')
-  if (!Object.values(source.nodes).some(node => node.type === 'line')) throw new Error('请先绘制分割线，再保存模板')
-  const layout = lineTemplateFromDocument(checkedIds ? selectedTemplateDocument(source, checkedIds) : source)
+  const layout = lineTemplateFromDocument(checkedIds ? selectedTemplateDocument(source, checkedIds, checkedMarkIds) : source)
+  if (!Object.values(layout.nodes).some(node => node.type === 'line') && !layout.marks?.length) throw new Error('请先绘制线条或添加标记块，再保存模板')
   await db.templates.add({ id: crypto.randomUUID(), name: name.trim().slice(0, 80), layout, updatedAt: Date.now() })
 }
 export async function readTemplate(id: string) {

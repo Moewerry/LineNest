@@ -1,6 +1,6 @@
 import type { DocumentData, EditorNode } from '@/features/editor/model/types'
 
-export function selectedTemplateDocument(source: DocumentData, ids: string[]): DocumentData {
+export function selectedTemplateDocument(source: DocumentData, ids: string[], markIds?: string[]): DocumentData {
   const selected = new Set(ids), nodes: Record<string, EditorNode> = {}
   const visit = (id: string): boolean => {
     const node = source.nodes[id]
@@ -11,12 +11,14 @@ export function selectedTemplateDocument(source: DocumentData, ids: string[]): D
       return true
     }
     const children = node.children.filter(visit)
-    if (!children.length) return false
+    const hasMarks = source.marks?.some(mark => mark.groupId === id && (!markIds || markIds.includes(mark.id)))
+    if (!children.length && !hasMarks) return false
     // Keep ancestor transforms so checked lines retain their canvas positions.
     nodes[id] = { ...structuredClone(node), children }
     return true
   }
   const roots = source.roots.filter(visit)
-  if (!roots.length) throw new Error('请先勾选对象')
-  return { version: 1, image: source.image, nodes, roots, crop: null }
+  const marks = (source.marks ?? []).filter(mark => !markIds || markIds.includes(mark.id)).map(mark => structuredClone(mark))
+  if (!roots.length && !marks.length) throw new Error('请先勾选线条或标记块')
+  return { version: 1, image: source.image, nodes, roots, crop: null, marks }
 }

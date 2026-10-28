@@ -7,7 +7,7 @@ export type SplitAxis = 'horizontal' | 'vertical'
 export type LineNode = BaseNode & { type: 'line'; start: Point; end: Point; splitAxis?: SplitAxis }
 export type GroupNode = BaseNode & { type: 'group'; children: string[] }
 export type EditorNode = LineNode | GroupNode
-export type RegionMark = { id: string; rings: Point[][]; label: Point; color: string; opacity: number }
+export type RegionMark = { id: string; rings: Point[][]; label: Point; color: string; opacity: number; groupId?: string }
 export type DocumentData = {
   version: 1
   image: ImageInfo | null

@@ -43,8 +43,10 @@ export async function exportBatch(items: BatchItem[], templates: BatchTemplate[]
         const asset = getImageAsset(item.id)
         if (!asset) throw new Error('无法读取图片')
         const doc = batchDocument(item, templates, fit)
-        const result = await calculateSlices(doc, signal)
-        if (!result.regions.length || (result.regions.length < 2 && !doc.crop)) throw new Error('所选模板叠加后未分出多个区域，请检查尺寸和位置')
+        const marked = !!doc.marks?.length
+        const result = await calculateSlices(doc, signal, marked ? 'marked' : 'all')
+        if (!result.regions.length) throw new Error(marked ? '标记块未落在裁剪范围内，请调整模板位置' : '所选模板未形成可裁剪区域，请检查尺寸和位置')
+        if (!marked && result.regions.length < 2 && !doc.crop) throw new Error('所选模板叠加后未分出多个区域，请检查尺寸和位置')
         if (result.unusedEdges > 0) throw new Error('部分线条未围成区域，请调整位置后重试')
         for (const region of result.regions) {
           check()

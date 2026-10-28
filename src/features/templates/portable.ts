@@ -11,7 +11,7 @@ export async function importTemplate(file: File): Promise<LineTemplate> {
   const value = JSON.parse(await file.text())
   if (!value || value.format !== 'linenest') throw new Error('请选择 LineNest 模板文件')
   if (value.version === 2) return validateLineTemplate(value.layout)
-  // Legacy backups are accepted only for their lines; embedded images are ignored.
+  // Legacy backups retain geometry and marks; embedded images are ignored.
   if (value.version === 1) return lineTemplateFromDocument(validateDocument(value.document))
   throw new Error('模板格式无效或版本不受支持')
 }

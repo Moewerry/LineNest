@@ -40,5 +40,10 @@ export function validateDocument(value: unknown): DocumentData {
   }
   value.roots.forEach(id => visit(id, null, 0))
   if (visited.size !== ids.length) return fail()
+  for (const mark of (value.marks ?? []) as NonNullable<DocumentData['marks']>) {
+    if (!mark.groupId) continue
+    const group = nodes[mark.groupId]
+    if (!record(group) || group.type !== 'group') return fail()
+  }
   return structuredClone(value) as unknown as DocumentData
 }

@@ -43,6 +43,15 @@ export function scopeTarget(doc: DocumentData, id: string, scope: string | null)
   }
   return node?.id ?? null
 }
+export function belongsToSelection(doc: DocumentData, id: string, selected: ReadonlySet<string>): boolean {
+  let node = doc.nodes[id]
+  while (node) {
+    if (selected.has(node.id)) return true
+    if (!node.parentId) return false
+    node = doc.nodes[node.parentId]
+  }
+  return false
+}
 export type Segment = { id: string; start: Point; end: Point }
 export function segments(doc: DocumentData, ids = doc.roots): Segment[] {
   return ids.flatMap(id => {
@@ -76,10 +85,18 @@ export function normalizeSplitLines(doc: DocumentData) {
   }
 }
 export function bounds(doc: DocumentData, ids: string[]): Box | null {
-  const points = segments(doc, ids).flatMap(s => [s.start, s.end])
+  const selected = new Set(ids)
+  const points = [
+    ...segments(doc, ids).flatMap(s => [s.start, s.end]),
+    ...(doc.marks ?? []).filter(mark => mark.groupId && belongsToSelection(doc, mark.groupId, selected)).flatMap(mark => mark.rings.flat()),
+  ]
   if (!points.length) return null
-  const x = Math.min(...points.map(p => p.x)), y = Math.min(...points.map(p => p.y))
-  return { x, y, width: Math.max(...points.map(p => p.x)) - x, height: Math.max(...points.map(p => p.y)) - y }
+  let x = Infinity, y = Infinity, right = -Infinity, bottom = -Infinity
+  for (const point of points) {
+    x = Math.min(x, point.x); y = Math.min(y, point.y)
+    right = Math.max(right, point.x); bottom = Math.max(bottom, point.y)
+  }
+  return { x, y, width: right - x, height: bottom - y }
 }
 export function boxBetween(a: Point, b: Point): Box {
   return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), width: Math.abs(a.x - b.x), height: Math.abs(a.y - b.y) }

@@ -1,5 +1,6 @@
-import { segments } from '@/features/editor/geometry'
-import type { DocumentData, LineNode } from '@/features/editor/model/types'
+import { apply, segments } from '@/features/editor/geometry'
+import type { DocumentData, LineNode, Matrix, RegionMark } from '@/features/editor/model/types'
+import { transformRings } from '@/features/fill/geometry'
 import { templateDocument } from '@/features/templates/layout'
 import { centeredSquare, findBuiltinTemplate } from '@/features/templates/builtins'
 import type { BatchFit, BatchItem, BatchTemplate } from './types'
@@ -27,6 +28,17 @@ export function batchDocument(item: BatchItem, templates: BatchTemplate[], fit: 
       }
     })
   })
+  const marks = templates.flatMap(template => {
+    if (findBuiltinTemplate(template.id)) return []
+    const sx = fit === 'relative' ? item.width / template.layout.width : 1
+    const sy = fit === 'relative' ? item.height / template.layout.height : 1
+    const offset = item.templateOffsets?.[template.id] ?? { x: 0, y: 0 }
+    const matrix: Matrix = [sx, 0, 0, sy, item.offsetX + offset.x, item.offsetY + offset.y]
+    return (template.layout.marks ?? []).map((mark): RegionMark => ({
+      id: JSON.stringify([template.id, mark.id]), color: mark.color, opacity: mark.opacity,
+      rings: transformRings(mark.rings, matrix), label: apply(matrix, mark.label),
+    }))
+  })
   const square = templates.find(template => findBuiltinTemplate(template.id))
   const squareOffset = square ? item.templateOffsets?.[square.id] ?? { x: 0, y: 0 } : { x: 0, y: 0 }
   return {
@@ -35,5 +47,6 @@ export function batchDocument(item: BatchItem, templates: BatchTemplate[], fit: 
     crop: square ? centeredSquare(item.width, item.height, { x: item.offsetX + squareOffset.x, y: item.offsetY + squareOffset.y }) : null,
     roots: lines.map(line => line.id),
     nodes: Object.fromEntries(lines.map(line => [line.id, line])),
+    marks,
   }
 }

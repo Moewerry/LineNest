@@ -49,20 +49,31 @@ export function eraseStroke(draft: Snapshot, start: Point, end: Point, scale: nu
       const node = doc.nodes[id]
       if (node.type !== 'group') continue
       prune(node.children)
-      if (affectedGroups.has(id) && !node.children.length && !isLocked(doc, id)) {
+      if (affectedGroups.has(id) && !node.children.length && !doc.marks?.some(mark => mark.groupId === id) && !isLocked(doc, id)) {
         ids.splice(ids.indexOf(id), 1)
         delete doc.nodes[id]
       }
     }
   }
-  prune(doc.roots)
-  draft.selected = draft.selected.filter(id => !!doc.nodes[id])
-  if (draft.scope && !doc.nodes[draft.scope]) draft.scope = null
   const clippedStroke = clipToImage(start, end, imageBox)
   if (clippedStroke && doc.marks?.length) {
     const [a, b] = clippedStroke
-    doc.marks = (doc.marks ?? []).filter(mark => !containsPoint(mark.rings, a) && !containsPoint(mark.rings, b) && !mark.rings.some(ring => touchesRing(a, b, ring, radius)))
+    doc.marks = doc.marks.filter(mark => {
+      if (mark.groupId && isLocked(doc, mark.groupId)) return true
+      const erased = containsPoint(mark.rings, a) || containsPoint(mark.rings, b) || mark.rings.some(ring => touchesRing(a, b, ring, radius))
+      if (erased) {
+        let groupId = mark.groupId
+        while (groupId) {
+          affectedGroups.add(groupId)
+          groupId = doc.nodes[groupId].parentId ?? undefined
+        }
+      }
+      return !erased
+    })
   }
+  prune(doc.roots)
+  draft.selected = draft.selected.filter(id => !!doc.nodes[id])
+  if (draft.scope && !doc.nodes[draft.scope]) draft.scope = null
   if (doc.crop) {
     const { x, y, width, height } = doc.crop
     const ring = [{ x, y }, { x: x + width, y }, { x: x + width, y: y + height }, { x, y: y + height }]
