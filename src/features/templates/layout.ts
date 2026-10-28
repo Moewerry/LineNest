@@ -17,7 +17,7 @@ export function lineTemplateFromDocument(source: DocumentData): LineTemplate {
   const nodes: Record<string, EditorNode> = Object.fromEntries(Object.entries(doc.nodes).map(([id, node]): [string, EditorNode] => {
     const base = { id, name: node.name, parentId: node.parentId, matrix: node.matrix, locked: node.locked }
     return [id, node.type === 'group'
-      ? { ...base, type: 'group', children: node.children }
+      ? { ...base, type: 'group', children: node.children, ...(node.kind === 'mark' ? { kind: 'mark' as const } : {}) }
       : { ...base, type: 'line', start: { x: node.start.x, y: node.start.y }, end: { x: node.end.x, y: node.end.y }, ...(node.splitAxis ? { splitAxis: node.splitAxis } : {}) }]
   }))
   const marks = (doc.marks ?? []).map((mark): RegionMark => ({

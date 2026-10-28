@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { saveTemplate } from '@/lib/db'
 import { toast } from '@/lib/toast'
 import { useEditor } from '@/features/editor/model/store'
-import { lineIds } from '@/features/editor/model/object-checks'
+import { objectIds } from '@/features/editor/model/object-checks'
 import { lineTemplateFromDocument } from './layout'
 import { selectedTemplateDocument } from './selected-document'
 import { TemplateSaveRange, type TemplateRange } from './TemplateSaveRange'
@@ -19,10 +19,13 @@ export function SaveTemplateDialog({ disabled, initialRange, onClose, mode = 'sa
   const doc = useEditor(s => s.present.doc)
   const [checkedObjects, setCheckedObjects] = useState(() => {
     const state = useEditor.getState()
-    return state.checkedObjects.length ? [...state.checkedObjects] : lineIds(state.present.doc, state.present.selected)
+    return state.checkedObjects.length ? [...state.checkedObjects] : objectIds(state.present.doc, state.present.selected)
   })
   const [name, setName] = useState('')
-  const [checkedMarks, setCheckedMarks] = useState(() => (doc.marks ?? []).map(mark => mark.id))
+  const [checkedMarks, setCheckedMarks] = useState(() => {
+    if (!checkedObjects.length) return (doc.marks ?? []).map(mark => mark.id)
+    return (doc.marks ?? []).filter(mark => mark.groupId && checkedObjects.includes(mark.groupId)).map(mark => mark.id)
+  })
   const [range, setRange] = useState<TemplateRange>(initialRange)
   const [saving, setSaving] = useState(false)
   const operation = useRef(false)

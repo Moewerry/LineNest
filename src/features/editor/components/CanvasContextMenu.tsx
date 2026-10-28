@@ -4,11 +4,13 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 import { containsLocked, containsSplit } from '../geometry'
 import { useEditor } from '../model/store'
 import { deleteSelection, duplicateSelection, enterGroup, groupSelection, lockSelection, mirrorSelection, rotateSelection, ungroupSelection } from '../commands'
+import { isMarkObject } from '../model/mark-objects'
 
 export function CanvasContextMenu({ children, disabled, onReplaceImage, onDeleteImage }: { children: ReactNode; disabled: boolean; onReplaceImage: () => void; onDeleteImage: () => void }) {
   const { doc, selected, scope } = useEditor(s => s.present)
   const blocked = disabled || !doc.image || !selected.length || selected.some(id => containsLocked(doc, id))
-  const singleGroup = selected.length === 1 && doc.nodes[selected[0]].type === 'group'
+  const groups = selected.filter(id => doc.nodes[id].type === 'group' && !isMarkObject(doc.nodes[id]))
+  const singleGroup = selected.length === 1 && groups.length === 1
   const fixedDirection = containsSplit(doc, selected)
   return <ContextMenu><ContextMenuTrigger asChild disabled={disabled}>{children}</ContextMenuTrigger><ContextMenuContent className="w-52 [&_[data-disabled]]:pointer-events-auto">
     <ContextMenuItem disabled={disabled} onSelect={onReplaceImage}><ImagePlus />{doc.image ? '替换图片' : '导入图片'}</ContextMenuItem>
@@ -16,7 +18,7 @@ export function CanvasContextMenu({ children, disabled, onReplaceImage, onDelete
     <ContextMenuSeparator />
     <ContextMenuItem disabled={blocked} onSelect={duplicateSelection}><Copy />复制<ContextMenuShortcut>Ctrl+D</ContextMenuShortcut></ContextMenuItem>
     <ContextMenuItem disabled={blocked || selected.length < 2} onSelect={groupSelection}><Group />编组<ContextMenuShortcut>Ctrl+G</ContextMenuShortcut></ContextMenuItem>
-    <ContextMenuItem disabled={blocked || !selected.some(id => doc.nodes[id].type === 'group')} onSelect={ungroupSelection}><Ungroup />解组</ContextMenuItem>
+    <ContextMenuItem disabled={blocked || !groups.length} onSelect={ungroupSelection}><Ungroup />解组</ContextMenuItem>
     <ContextMenuItem disabled={disabled || !singleGroup} onSelect={() => enterGroup(selected[0])}>进入组内编辑</ContextMenuItem>
     <ContextMenuSeparator />
     <ContextMenuItem disabled={blocked || fixedDirection} onSelect={() => mirrorSelection('horizontal')}><FlipHorizontal2 />水平镜像</ContextMenuItem>

@@ -9,7 +9,7 @@ import { deleteTemplate, listTemplates, readTemplate, renameTemplate, type Templ
 import { useEditor } from '@/features/editor/model/store'
 import { exportTemplate, importTemplate } from './portable'
 import type { LineTemplate } from './layout'
-import { lineIds } from '@/features/editor/model/object-checks'
+import { objectIds } from '@/features/editor/model/object-checks'
 import { SaveTemplateDialog } from './SaveTemplateDialog'
 import type { TemplateRange } from './TemplateSaveRange'
 import { TemplateConfirmation, type TemplateConfirmationState } from './TemplateConfirmation'
@@ -57,7 +57,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
       onImport={() => fileInput.current?.click()}
       onExport={() => {
         const state = useEditor.getState()
-        setExportRange(state.checkedObjects.length || lineIds(state.present.doc, state.present.selected).length ? 'checked' : 'all')
+        setExportRange(state.checkedObjects.length || objectIds(state.present.doc, state.present.selected).length ? 'checked' : 'all')
       }}
     />
     {(rows.length > 4 || search) && <div data-editor-settings className="relative mx-4 mb-4"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索模板" aria-label="搜索我的模板" className="h-10 border-[var(--workspace-divider)] pl-9 shadow-none focus-visible:border-[var(--workspace-divider)] focus-visible:ring-[var(--workspace-divider)]" /></div>}

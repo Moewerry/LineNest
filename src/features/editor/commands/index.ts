@@ -3,6 +3,7 @@ import { belongsToSelection, bounds, childrenOf, containsLocked, identity, isLoc
 import { transformSelection, useEditor } from '../model/store'
 import type { EditorNode, Matrix, Snapshot } from '../model/types'
 import { MAX_MARK_POINTS, MAX_REGION_MARKS } from '@/features/fill/constants'
+import { isMarkObject } from '../model/mark-objects'
 
 const editable = (s: Snapshot) => s.selected.length > 0 && s.selected.every(id => !containsLocked(s.doc, id))
 export const canEditSelection = () => editable(useEditor.getState().present)
@@ -27,7 +28,7 @@ export function ungroupSelection() {
     const next: string[] = []
     for (const id of s.selected) {
       const node = s.doc.nodes[id]
-      if (node.type !== 'group') { next.push(id); continue }
+      if (node.type !== 'group' || isMarkObject(node)) { next.push(id); continue }
       const siblings = childrenOf(s.doc, node.parentId), index = siblings.indexOf(id)
       for (const childId of node.children) {
         const child = s.doc.nodes[childId]
@@ -131,7 +132,7 @@ export function lockSelection() {
 export function enterGroup(id: string) {
   useEditor.getState().commit(s => {
     const node = s.doc.nodes[id]
-    if (node?.type !== 'group' || node.parentId !== s.scope || isLocked(s.doc, id)) return
+    if (node?.type !== 'group' || isMarkObject(node) || node.parentId !== s.scope || isLocked(s.doc, id)) return
     s.scope = id; s.selected = []
   })
 }

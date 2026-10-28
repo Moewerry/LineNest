@@ -3,6 +3,7 @@ import { discardImageAsset, getImageAsset, registerImage } from '@/lib/images'
 import { toast } from '@/lib/toast'
 import { useEditor } from './store'
 import { emptySnapshot, type DocumentData } from './types'
+import { normalizeMarkObjects } from './mark-objects'
 
 let initialization: Promise<void> | undefined
 let writes = Promise.resolve()
@@ -31,6 +32,7 @@ async function initialize() {
         discardImageAsset(image.id)
         throw new Error('本地工作台图片尺寸不匹配')
       }
+      normalizeMarkObjects(draft.doc)
       useEditor.setState({ present: { ...emptySnapshot(), doc: { ...draft.doc, image } }, past: [], future: [], checkedObjects: [], heldTemplate: null })
     }
   } catch {

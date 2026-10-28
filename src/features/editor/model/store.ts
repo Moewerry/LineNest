@@ -4,7 +4,8 @@ import { emptySnapshot, type Box, type ImageInfo, type Matrix, type Point, type 
 import { rotateDocumentClockwise } from '../geometry/rotate-document'
 import { containsPoint, ringsKey, transformRings } from '@/features/fill/geometry'
 import { MAX_MARK_POINTS, MAX_REGION_MARKS } from '@/features/fill/constants'
-import { lineIds, retainedChecks } from './object-checks'
+import { objectIds, retainedChecks } from './object-checks'
+import { normalizeObjectSnapshot } from './mark-objects'
 import { appendTemplatePlacement, createTemplatePlacement, placementCenter, placementScale, type TemplatePlacement } from '@/features/templates/placement'
 import type { LineTemplate } from '@/features/templates/layout'
 import { isSameImageSource } from '@/lib/images'
@@ -44,6 +45,7 @@ type EditorState = {
 const eraseSnapshots = new WeakSet<Snapshot>()
 const templatePlacements = new WeakMap<Snapshot, TemplatePlacement>()
 function committedSnapshot(state: EditorState, next: Snapshot) {
+  normalizeObjectSnapshot(next)
   return { present: next, past: [...state.past, state.present].slice(-100), future: [], checkedObjects: retainedChecks(next.doc, state.checkedObjects) }
 }
 function carriedTemplate(held: TemplatePlacement | null, image: ImageInfo | null): TemplatePlacement | null {
@@ -106,8 +108,8 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   cancelTemplatePlacement: () => set({ heldTemplate: null }),
   checkObjects(ids, checked) {
-    const state = get(), lines = lineIds(state.present.doc, ids)
-    set({ checkedObjects: checked ? [...new Set([...state.checkedObjects, ...lines])] : state.checkedObjects.filter(id => !lines.includes(id)) })
+    const state = get(), objects = objectIds(state.present.doc, ids)
+    set({ checkedObjects: checked ? [...new Set([...state.checkedObjects, ...objects])] : state.checkedObjects.filter(id => !objects.includes(id)) })
   },
   commit(change, action) {
     const current = get().present, next = structuredClone(current)

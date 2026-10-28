@@ -28,7 +28,7 @@ export function validateDocument(value: unknown): DocumentData {
       if (!point(n.start) || !point(n.end)) return fail()
       if (n.splitAxis !== undefined && n.splitAxis !== 'horizontal' && n.splitAxis !== 'vertical') return fail()
     }
-    else if (n.type === 'group') { if (!strings(n.children)) return fail() }
+    else if (n.type === 'group') { if (!strings(n.children) || (n.kind !== undefined && n.kind !== 'mark')) return fail() }
     else return fail()
   }
   const visited = new Set<string>()
@@ -40,10 +40,16 @@ export function validateDocument(value: unknown): DocumentData {
   }
   value.roots.forEach(id => visit(id, null, 0))
   if (visited.size !== ids.length) return fail()
+  const markOwners = new Map<string, number>()
   for (const mark of (value.marks ?? []) as NonNullable<DocumentData['marks']>) {
     if (!mark.groupId) continue
     const group = nodes[mark.groupId]
     if (!record(group) || group.type !== 'group') return fail()
+    markOwners.set(mark.groupId, (markOwners.get(mark.groupId) ?? 0) + 1)
+  }
+  for (const id of ids) {
+    const node = nodes[id] as Record<string, unknown>
+    if (node.type === 'group' && node.kind === 'mark' && ((node.children as string[]).length || markOwners.get(id) !== 1)) return fail()
   }
   return structuredClone(value) as unknown as DocumentData
 }
