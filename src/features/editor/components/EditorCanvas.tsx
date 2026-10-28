@@ -4,6 +4,7 @@ import type Konva from 'konva'
 import { Button } from '@/components/ui/button'
 import { getImageAsset, isSameImageSource } from '@/lib/images'
 import { canvasColors } from '@/lib/canvas-colors'
+import { canvasStrokeWidth } from '@/lib/display-stroke'
 import { bounds, boxBetween, childrenOf, containsLocked, containsSplit, inBox, isLocked, rotationAround, scopeTarget, segmentIntersectsBox, segments } from '../geometry'
 import { resizeHandleFromId, selectionResizeMatrix, type SelectionResizeHandle } from '../geometry/resize-selection'
 import { transformSelection, useEditor } from '../model/store'
@@ -401,8 +402,8 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
       <Layer><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale} clipX={0} clipY={0} clipWidth={image.width} clipHeight={image.height}>
         <CanvasImage image={asset.element} width={image.width} height={image.height} listening={false} />
         <RegionMarkLayer marks={preview.doc.marks ?? []} scale={view.scale} selectable={tool === 'select' && !space && !busy && !heldTemplate} />
-        {preview.doc.crop && <Rect {...preview.doc.crop} stroke={canvasColors.selection} strokeWidth={1.5 / view.scale} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
-        {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={2 / view.scale} lineCap="round" listening={false} />}
+        {preview.doc.crop && <Rect {...preview.doc.crop} stroke={canvasColors.selection} strokeWidth={canvasStrokeWidth(view.scale)} dash={[6 / view.scale, 4 / view.scale]} fill={canvasColors.cropFill} listening={false} />}
+        {gesture?.type === 'line' && <Line points={[gesture.start.x, gesture.start.y, gesture.current.x, gesture.current.y]} stroke={canvasColors.selection} strokeWidth={canvasStrokeWidth(view.scale, 2)} lineCap="round" listening={false} />}
       </Group><Group x={view.x} y={view.y} scaleX={view.scale} scaleY={view.scale}>
         <NodeLayer snapshot={preview} scale={view.scale} delta={delta} endpoint={endpoint} viewport={viewport} />
         {tool !== 'erase' && !heldTemplate && <SelectionLayer snapshot={preview} scale={view.scale} delta={delta} marquee={marquee} endpoint={endpoint} interactive={tool === 'select' && !space && !busy} />}

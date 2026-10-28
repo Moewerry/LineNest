@@ -5,6 +5,7 @@ import { canvasColors } from '@/lib/canvas-colors'
 import { RegionMarkLayer } from '@/features/fill/RegionMarkLayer'
 import { templateDocument } from './layout'
 import type { TemplatePlacement } from './placement'
+import { canvasStrokeWidth } from '@/lib/display-stroke'
 
 export function TemplatePlacementPreview({ placement, viewScale }: { placement: TemplatePlacement; viewScale: number }) {
   const lines = useMemo(() => segments(templateDocument(placement.layout)), [placement.layout])
@@ -12,8 +13,8 @@ export function TemplatePlacementPreview({ placement, viewScale }: { placement: 
   const box = placement.bounds, scale = placement.scale * viewScale
   return <Group x={placement.center.x} y={placement.center.y} scaleX={placement.scale} scaleY={placement.scale}
     offsetX={box.x + box.width / 2} offsetY={box.y + box.height / 2} listening={false} opacity={0.8}>
-    <Rect {...box} fill={canvasColors.cropFill} stroke={canvasColors.selection} strokeWidth={1 / scale} dash={[5 / scale, 4 / scale]} />
+    <Rect {...box} fill={canvasColors.cropFill} stroke={canvasColors.selection} strokeWidth={canvasStrokeWidth(scale, 1)} dash={[5 / scale, 4 / scale]} />
     <RegionMarkLayer marks={placement.layout.marks ?? []} scale={scale} />
-    {lines.map(line => <Line key={line.id} points={[line.start.x, line.start.y, line.end.x, line.end.y]} stroke={canvasColors.selection} strokeWidth={2 / scale} lineCap="round" />)}
+    {lines.map(line => <Line key={line.id} points={[line.start.x, line.start.y, line.end.x, line.end.y]} stroke={canvasColors.selection} strokeWidth={canvasStrokeWidth(scale, 2)} lineCap="round" />)}
   </Group>
 }

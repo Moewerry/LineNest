@@ -1,6 +1,7 @@
 import { Group, Shape } from 'react-konva'
 import type Konva from 'konva'
 import type { RegionMark } from '@/features/editor/model/types'
+import { canvasStrokeWidth } from '@/lib/display-stroke'
 
 export function RegionMarkLayer({ marks, scale, selectable = false }: { marks: RegionMark[]; scale: number; selectable?: boolean }) {
   return <>{marks.map(mark => {
@@ -19,8 +20,8 @@ export function RegionMarkLayer({ marks, scale, selectable = false }: { marks: R
     const listening = selectable && !!mark.groupId
     return <Group key={mark.id} listening={listening}>
       <Shape id={listening ? mark.groupId : undefined} sceneFunc={draw} fillRule="evenodd" fill={mark.color} opacity={mark.opacity} strokeEnabled={false} listening={listening} />
-      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={light ? '#000000' : '#ffffff'} strokeWidth={3 / scale} lineJoin="round" listening={false} />
-      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={mark.color} strokeWidth={1.5 / scale} lineJoin="round" listening={false} />
+      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={light ? '#000000' : '#ffffff'} strokeWidth={canvasStrokeWidth(scale, 3)} lineJoin="round" listening={false} />
+      <Shape sceneFunc={draw} fillRule="evenodd" fillEnabled={false} stroke={mark.color} strokeWidth={canvasStrokeWidth(scale)} lineJoin="round" listening={false} />
     </Group>
   })}</>
 }
