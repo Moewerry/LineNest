@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { registerImage, validateImage } from '@/lib/images'
 import { useEditor } from '../model/store'
+import { waitForWorkspaceSave } from '../model/workspace-session'
 import { useShortcuts } from '../hooks/use-shortcuts'
 import { useMissingImageHint } from '../hooks/use-missing-image-hint'
 import { EditorCanvas } from './EditorCanvas'
@@ -44,7 +45,7 @@ export function Editor() {
   const entering = useEditor(state => typeof importedImageId === 'string' && importedImageId === state.present.doc.image?.id)
   useEffect(() => {
     if (typeof location.state?.importedImageId !== 'string' || entering) return
-    // A refresh can retain navigation state after the in-memory image is gone.
+    // Navigation state can refer to an image that has since been cleared or replaced.
     const { importedImageId: _, ...state } = location.state
     navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state })
   }, [entering, location, navigate])
@@ -65,6 +66,7 @@ export function Editor() {
       validateImage(file)
       const image = await registerImage(file, file.name)
       useEditor.getState().setImage(image)
+      await waitForWorkspaceSave()
       setImportGuide(null)
       toast.success('图片已导入')
     } catch (error) { toast.error(error instanceof Error ? error.message : '导入失败') }

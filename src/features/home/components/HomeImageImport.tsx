@@ -5,6 +5,7 @@ import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useEditor } from '@/features/editor/model/store'
+import { waitForWorkspaceSave } from '@/features/editor/model/workspace-session'
 import { registerImage, validateImage } from '@/lib/images'
 import { useImageDrop } from '@/hooks/use-image-drop'
 import { ImageDropOverlay } from '@/components/ImageDropOverlay'
@@ -33,6 +34,7 @@ export function HomeImageImport({ children }: { children: ReactNode }) {
       validateImage(file)
       const image = await registerImage(file, file.name)
       useEditor.getState().setImage(image)
+      await waitForWorkspaceSave()
       navigate('/editor', { state: { importedImageId: image.id } })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '导入失败')

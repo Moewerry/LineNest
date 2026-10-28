@@ -4,8 +4,12 @@ import { lineTemplateFromDocument, validateLineTemplate, type LineTemplate } fro
 import { selectedTemplateDocument } from '@/features/templates/selected-document'
 
 export type TemplateRecord = { id: string; name: string; layout: LineTemplate; updatedAt: number }
+type WorkspaceDraftRecord = { id: 'current'; doc: DocumentData }
+type WorkspaceImageRecord = { id: string; blob: Blob }
 const db = new Dexie('LineNest') as Dexie & {
   templates: EntityTable<TemplateRecord, 'id'>
+  workspaceDrafts: EntityTable<WorkspaceDraftRecord, 'id'>
+  workspaceImages: EntityTable<WorkspaceImageRecord, 'id'>
 }
 db.version(1).stores({ templates: 'id, imageId, updatedAt', images: 'id' })
 // Rewrite old records without original images, image thumbnails or crop.
@@ -15,6 +19,36 @@ db.version(2).stores({ templates: 'id, updatedAt', images: null }).upgrade(async
   const rows = await table.toArray() as { id: string; name: string; doc: DocumentData; updatedAt: number }[]
   await table.bulkPut(rows.map(row => ({ id: row.id, name: row.name, layout: lineTemplateFromDocument(row.doc), updatedAt: row.updatedAt })))
 })
+db.version(3).stores({ workspaceDrafts: 'id', workspaceImages: 'id' })
+
+export async function readWorkspaceDraft() {
+  return db.transaction('r', db.workspaceDrafts, db.workspaceImages, async () => {
+    const draft = await db.workspaceDrafts.get('current')
+    if (!draft) return null
+    if (draft.doc.version !== 1 || !draft.doc.image) throw new Error('本地工作台数据无效')
+    const image = await db.workspaceImages.get(draft.doc.image.id)
+    if (!image) throw new Error('本地工作台图片缺失')
+    return { doc: draft.doc, blob: image.blob }
+  })
+}
+
+export async function saveWorkspaceDraft(doc: DocumentData, blob?: Blob) {
+  await db.transaction('rw', db.workspaceDrafts, db.workspaceImages, async () => {
+    const image = doc.image
+    if (!image) {
+      await db.workspaceDrafts.delete('current')
+      await db.workspaceImages.clear()
+      return
+    }
+    if (!blob) throw new Error('找不到工作台图片，无法自动保存')
+    // Keep the image binary separate so editing geometry only writes the document.
+    if (!await db.workspaceImages.where('id').equals(image.id).count()) {
+      await db.workspaceImages.put({ id: image.id, blob })
+    }
+    await db.workspaceDrafts.put({ id: 'current', doc })
+    await db.workspaceImages.where('id').notEqual(image.id).delete()
+  })
+}
 
 export const listTemplates = () => db.templates.orderBy('updatedAt').reverse().toArray()
 export async function saveTemplate(name: string, source: DocumentData, checkedIds?: string[], checkedMarkIds?: string[]) {

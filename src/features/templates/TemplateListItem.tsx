@@ -19,7 +19,7 @@ export function TemplateListItem({ template, disabled, hasImage, onApply, onBatc
   return <article className="relative border-b border-solid border-[var(--workspace-divider)] bg-card last:border-b-0">
     <Button data-template-row variant="ghost" disabled={disabled || !hasImage} {...cardHandlers}
       aria-label={`套用模板：${template.name}`} title={hasImage ? '单击自动居中放置，拖动到画布指定位置' : '请先导入图片'}
-      className="h-auto w-full justify-start gap-3 rounded-none p-3.5 pr-12 text-left whitespace-normal shadow-none enabled:cursor-grab enabled:active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-100">
+      className="h-auto w-full justify-start gap-3 rounded-none px-3.5 py-6 pr-12 text-left whitespace-normal shadow-none enabled:cursor-grab enabled:active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-100">
       <TemplateThumbnail layout={template.layout} className="h-16 w-20 rounded-lg p-2" />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">{template.name}</span>
