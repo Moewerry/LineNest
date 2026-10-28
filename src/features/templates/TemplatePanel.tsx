@@ -63,10 +63,10 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
     />
     {(rows.length > 4 || search) && <div data-editor-settings className="relative mx-4 mb-4"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索模板" aria-label="搜索我的模板" className="h-10 pl-9 shadow-none" /></div>}
     {loading || loadError || !rows.length ? <div role="status" className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-6 py-8 text-center">
-      {loading ? <LoaderCircle aria-hidden="true" className="size-6 animate-spin text-muted-foreground/50 motion-reduce:animate-none" /> : <FolderOpen aria-hidden="true" className="size-8 text-muted-foreground/35" />}
+      {loading ? <LoaderCircle aria-hidden="true" className="size-6 animate-spin text-muted-foreground motion-reduce:animate-none" /> : <FolderOpen aria-hidden="true" className="size-8 text-muted-foreground" />}
       <div className="space-y-1.5">
         <p className="text-sm text-muted-foreground">{loading ? '正在读取模板' : loadError ? '暂时无法读取模板' : '暂无模板'}</p>
-        {!loading && <p className="text-xs leading-5 text-muted-foreground/70">{loadError ? '请刷新页面重试' : image ? '画线或标记后，点击上方「保存为模板」' : '导入图片后即可创建和套用'}</p>}
+        {!loading && <p className="text-xs leading-5 text-muted-foreground">{loadError ? '请刷新页面重试' : image ? '画线或标记后，点击上方「保存为模板」' : '导入图片后即可创建和套用'}</p>}
       </div>
     </div> : <ScrollArea className="min-h-0 flex-1">
       <div data-editor-settings className="space-y-3 px-4 pb-4">
@@ -85,7 +85,7 @@ export function TemplatePanel({ disabled, onCountChange }: { disabled: boolean; 
       if (file) void run(async () => prepareApply(await importTemplate(file), file.name.replace(/\.json$/i, '')))
       event.target.value = ''
     }} />
-    <p className="shrink-0 border-t px-4 py-3 text-center text-[11px] leading-5 text-muted-foreground/70">模板保存在此浏览器，建议定期导出备份</p>
+    <p className="shrink-0 border-t px-4 py-3 text-center text-[11px] leading-5 text-muted-foreground">模板保存在此浏览器，建议定期导出备份</p>
     <TemplateConfirmation confirmation={confirmation} busy={busy} disabled={disabled} onCancel={() => setConfirmation(null)} onConfirm={confirm} />
     {exportRange && <SaveTemplateDialog mode="export" disabled={disabled || busy} initialRange={exportRange} onClose={() => setExportRange(null)} />}
   </>

@@ -7,7 +7,7 @@ export function HomeHeader() {
     <div className="min-w-0">
       <div className="flex items-center gap-2.5">
         <Link to="/" aria-label="LineNest 首页" className="shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"><img src={`${import.meta.env.BASE_URL}linenest.svg`} alt="" aria-hidden="true" width={40} height={40} className="home-brand-icon size-10" /></Link>
-        <Link to="/" className="w-fit rounded-sm font-brand text-3xl font-bold leading-none tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-[34px]">LineNest</Link>
+        <Link to="/" className="w-fit rounded-sm font-brand text-3xl font-bold leading-none tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-[34px]"><HomeAnimatedText delay={360} stagger={55}>LineNest</HomeAnimatedText></Link>
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-2">

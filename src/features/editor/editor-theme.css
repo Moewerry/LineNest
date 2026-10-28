@@ -1,12 +1,12 @@
 /* Apply at body level so menus and dialogs rendered in portals share the workspace theme. */
 body:has(.editor-workspace) {
   --background: #f5f5f3;
-  --foreground: #292b28;
+  --foreground: #000000;
   --card: #ffffff;
   --primary-foreground: #ffffff;
   --secondary: #f1f1ed;
   --accent: #f6eee8;
-  --muted-foreground: #73766e;
+  --muted-foreground: var(--foreground);
   --border: #e5e6df;
 }
 
