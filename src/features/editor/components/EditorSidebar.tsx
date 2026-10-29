@@ -33,9 +33,7 @@ export function EditorSidebar({ disabled }: { disabled: boolean }) {
     return () => observer.disconnect()
   }, [])
 
-  const toggleClassName = open
-    ? 'bg-foreground text-card hover:bg-primary hover:text-primary-foreground focus-visible:bg-primary focus-visible:text-primary-foreground active:bg-primary active:text-primary-foreground'
-    : 'bg-primary text-primary-foreground hover:bg-foreground hover:text-card focus-visible:bg-foreground focus-visible:text-card active:bg-foreground active:text-card'
+  const toggleClassName = 'bg-foreground text-card hover:bg-primary hover:text-primary-foreground focus-visible:bg-primary focus-visible:text-primary-foreground active:bg-primary active:text-primary-foreground'
   const toggle = <Button data-sidebar-toggle variant="ghost" size="icon" className={`shrink-0 border-0 shadow-none focus-visible:ring-0 ${toggleClassName}`} aria-label={open ? '收起侧边栏' : '展开侧边栏'} aria-expanded={open} aria-controls={contentId} title={open ? '收起侧边栏' : '展开侧边栏'} onClick={() => setOpen(current => !current)}>{open ? <ChevronsRight aria-hidden="true" /> : <ChevronsLeft aria-hidden="true" />}</Button>
 
   return <aside ref={sidebar} aria-label="模板与图层" className={`absolute inset-y-0 right-0 z-30 flex min-h-0 min-w-0 shrink-0 flex-col md:relative md:inset-auto md:z-auto ${open ? 'max-md:w-[min(304px,calc(100%-3rem))]! border-l border-[var(--workspace-divider)] bg-card' : ''}`} style={{ width: open ? Math.min(width, maxWidth) : 0 }}>
