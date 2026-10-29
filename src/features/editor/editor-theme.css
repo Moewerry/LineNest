@@ -105,6 +105,15 @@ body:has(.editor-workspace) :is([data-slot="dialog-overlay"], [data-slot="image-
   backdrop-filter: none;
 }
 
+/* Fill settings keeps its actions borderless, including disabled and hover states. */
+body:has(.editor-workspace) [data-fill-settings] [data-slot="button"] {
+  border: 0 !important;
+}
+
+body:has(.editor-workspace) [data-fill-settings] [data-slot="button"]:hover {
+  outline: none !important;
+}
+
 .fill-settings-reveal[data-state="open"] {
   animation: fill-settings-expand 180ms ease-out;
 }

@@ -53,8 +53,8 @@ export function FloatingFillSettings(props: Props) {
     setPosition(constrain({ left: active.position.left + event.clientX - active.x, bottom: active.position.bottom - event.clientY + active.y }))
   }
 
-  return <Collapsible ref={panel} open={open} onOpenChange={setOpen} data-editor-settings
-    aria-label="标记设置" className="pointer-events-auto absolute z-10 w-[340px] max-w-[calc(100%-44px)] overflow-hidden rounded-xl border bg-card"
+  return <Collapsible ref={panel} open={open} onOpenChange={setOpen} data-editor-settings data-fill-settings
+    aria-label="标记设置" className="pointer-events-auto absolute z-10 w-[340px] max-w-[calc(100%-44px)] overflow-hidden rounded-xl bg-card"
     style={position} onContextMenu={event => event.stopPropagation()}>
     <CollapsibleContent id={contentId} className="fill-settings-reveal overflow-hidden">
       <div className="overflow-y-auto p-4" style={{ maxHeight: contentHeight }}><FillSettings {...props} /></div>
