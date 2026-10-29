@@ -13,7 +13,7 @@ export function BatchWorkflow({ busy, running, importing, count, selected, total
     { label: running ? '取消裁剪' : total ? '重新裁剪' : '裁剪', description: running ? status : '按所选模板批量分图', icon: Scissors, action: running ? onCancel : onCrop, disabled: !running && (busy || !count || !selected) },
     { label: '下载', description: total ? `${status} · ZIP` : '裁剪完成后下载 ZIP', icon: Download, action: onDownload, disabled: busy || !total },
   ]
-  return <footer className="shrink-0 border-t border-[var(--workspace-divider)] bg-card px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-8 sm:pb-[max(1rem,env(safe-area-inset-bottom))] sm:pt-4">
+  return <footer className="shrink-0 bg-card px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-8 sm:pb-[max(1rem,env(safe-area-inset-bottom))] sm:pt-4">
     <div className="mx-auto max-w-7xl">
       <ol aria-label="批量裁剪操作流程" className="grid grid-cols-4 gap-1 sm:gap-3 md:gap-4">
         {steps.map(({ label, description, icon: Icon, action, disabled }, index) => {
