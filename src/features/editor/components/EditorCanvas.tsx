@@ -24,6 +24,7 @@ import { displaySegment } from '../geometry/display-segment'
 import { splitLineAt, splitMoveAxis } from '../geometry/split-line'
 import { SplitLinePreview } from './SplitLinePreview'
 import { CanvasViewControls } from './CanvasViewControls'
+import { CanvasDocumentStatus } from './CanvasDocumentStatus'
 import { emptyCanvasGuides } from './CanvasGuideControls'
 import { CanvasGuideLayer } from './CanvasGuideLayer'
 import { CanvasEmptyState } from './CanvasEmptyState'
@@ -77,8 +78,10 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value); if (!value) { setSplitHover(null); setSelectionHover(null) } }
   const fit = () => {
     if (!image) return
-    const scale = Math.max(0.01, Math.min((size.width - RULER_SIZE - 96) / image.width, (size.height - RULER_SIZE - 96) / image.height, 1))
-    setView({ scale, x: RULER_SIZE + (size.width - RULER_SIZE - image.width * scale) / 2, y: RULER_SIZE + (size.height - RULER_SIZE - image.height * scale) / 2 })
+    const compact = size.width < 640
+    const padding = compact ? 32 : 96, bottom = compact ? 88 : 0
+    const scale = Math.max(0.01, Math.min((size.width - RULER_SIZE - padding) / image.width, (size.height - RULER_SIZE - padding - bottom) / image.height, 1))
+    setView({ scale, x: RULER_SIZE + (size.width - RULER_SIZE - image.width * scale) / 2, y: RULER_SIZE + (size.height - RULER_SIZE - bottom - image.height * scale) / 2 })
   }
   useEffect(() => {
     if (!container.current) return
@@ -250,6 +253,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     }
     if (tool === 'crop') {
       if (!inBox(p, { x: 0, y: 0, width: image.width, height: image.height })) return
+      capture()
       updateGesture({ type: tool, start, current: start, additive: false }); return
     }
     if (tool === 'line' && !hit) {
@@ -371,7 +375,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     }}
     onPointerLeave={() => { setSplitHover(null); setSelectionHover(null); setPointerInside(false) }}
     onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
-    {image && asset ? <Stage ref={stage} width={size.width} height={size.height} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
+    {image && asset ? <Stage ref={stage} width={size.width} height={size.height} style={{ touchAction: 'none' }} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (busy || tool !== 'select' || spaceRef.current || useEditor.getState().heldTemplate) return
       const hit = e.target.id()
       const id = hit === 'selection-move' && snapshot.selected.length === 1 ? snapshot.selected[0] : scopeTarget(snapshot.doc, hit, snapshot.scope)
@@ -417,7 +421,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     {!image && <CanvasEmptyState onPick={onReplaceImage} busy={busy} />}
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
-      <div className="pointer-events-none absolute left-10 right-5 top-10 flex flex-wrap items-start gap-2">
+      <div className="pointer-events-none absolute left-7 right-14 top-7 flex flex-wrap items-start gap-2 sm:left-10 sm:top-10 md:right-5">
         {heldTemplate ? <TemplatePlacementStatus placement={heldTemplate} dragging={templateDragOver} temporaryView={space || gesture?.type === 'pan'} onCancel={() => useEditor.getState().cancelTemplatePlacement()} /> : modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
           <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
         </div>}
@@ -426,11 +430,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
       </div>
       {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}
       {tool === 'erase' && <EraserSettings busy={busy} onDeleteImage={onDeleteImage} />}
-      <div className="pointer-events-none absolute bottom-5 left-10 flex max-w-[calc(100%-300px)] flex-wrap items-center gap-x-3 gap-y-1 rounded bg-card px-2 py-1 text-[11px] text-[var(--workspace-muted-foreground)]">
-        <span>{image.width} × {image.height} px</span>
-        {snapshot.selected.length > 0 && <span>已选 {snapshot.selected.length} 项</span>}
-        {!!snapshot.doc.marks?.length && <span>标记 {snapshot.doc.marks.length} 块</span>}
-      </div>
+      <CanvasDocumentStatus snapshot={snapshot} />
       <CanvasViewControls scale={view.scale} busy={busy} rotating={rotating} guides={guides} onGuidesChange={setGuides} onZoom={zoom} onFit={fit} onRotate={() => void rotateImage()} />
     </>}
   </div></CanvasContextMenu>

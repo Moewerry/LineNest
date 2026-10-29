@@ -21,7 +21,7 @@ export function ExportButton({ disabled }: { disabled: boolean }) {
     try { await exportImage(pending.doc, pending.cropOnly, options); toast.success('已发起图片下载') }
     finally { setExporting(false) }
   }
-  return <><DropdownMenu><DropdownMenuTrigger asChild><Button disabled={disabled || !doc.image || exporting}><Download />{exporting ? '正在导出' : '导出'}</Button></DropdownMenuTrigger><DropdownMenuContent align="end">
+  return <><DropdownMenu><DropdownMenuTrigger asChild><Button className="max-sm:size-9 max-sm:p-0 max-sm:has-[>svg]:px-0" aria-label={exporting ? '正在导出' : '导出'} disabled={disabled || !doc.image || exporting}><Download /><span className="hidden sm:inline">{exporting ? '正在导出' : '导出'}</span></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
     <DropdownMenuItem disabled={!doc.marks?.length} onSelect={() => openSlices('marked')}><ScanLine />导出标记区域{doc.marks?.length ? ` · ${doc.marks.length} 块` : ''}</DropdownMenuItem>
     <DropdownMenuItem onSelect={() => openSlices('all')}><Scissors />按线切图</DropdownMenuItem>
     <DropdownMenuItem disabled={!doc.crop} onSelect={() => setPending({ doc: structuredClone(doc), cropOnly: true })}><Crop />导出裁剪选区</DropdownMenuItem><DropdownMenuItem onSelect={() => setPending({ doc: structuredClone(doc), cropOnly: false })}><Image />导出完整图片</DropdownMenuItem>

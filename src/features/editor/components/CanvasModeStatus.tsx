@@ -28,17 +28,17 @@ export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false 
         ]
         : mode.instructions
 
-  return <Collapsible data-tool-guide onKeyDown={event => event.stopPropagation()} className="pointer-events-auto w-[360px] max-w-full overflow-hidden rounded-xl bg-card text-foreground">
-    <div className="flex items-start gap-2.5 px-4 pb-2.5 pt-4">
+  return <Collapsible data-tool-guide onKeyDown={event => event.stopPropagation()} className="pointer-events-auto max-w-full overflow-hidden rounded-xl bg-card text-foreground sm:w-[360px]">
+    <div className="flex items-center gap-1 p-1 sm:items-start sm:gap-2.5 sm:px-4 sm:pb-2.5 sm:pt-4">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon aria-hidden="true" className="size-[18px]" /></span>
-      <div className="min-w-0 flex-1">
+      <div className="sr-only min-w-0 flex-1 sm:not-sr-only">
         <div className="flex items-center justify-between gap-2">
           <p id="canvas-mode-status" role="status" aria-atomic="true" className="text-base font-semibold leading-5">{temporary ? '临时移动画布' : tool === 'fill' && erasing ? '清除色块标记' : mode.label}</p>
           {!temporary && <ShortcutKeys keys={[mode.shortcut]} variant="highlight" />}
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{temporary ? '松开后继续使用当前工具。' : mode.description}</p>
       </div>
-      <CollapsibleTrigger asChild><Button variant="ghost" size="icon-xs" aria-label="操作说明" title="展开或收起操作说明" className="text-muted-foreground [&[data-state=open]_svg]:rotate-180"><ChevronDown className="size-3 transition-transform" /></Button></CollapsibleTrigger>
+      <CollapsibleTrigger asChild><Button variant="ghost" size="icon-xs" aria-label={`${mode.label}：操作说明`} title="展开或收起操作说明" className="max-sm:size-9 text-muted-foreground [&[data-state=open]_svg]:rotate-180"><ChevronDown className="size-3 transition-transform" /></Button></CollapsibleTrigger>
     </div>
     <CollapsibleContent className="max-h-[40dvh] overflow-y-auto pb-3">
     <div className="mx-3 space-y-2.5 rounded-lg border border-dashed border-primary px-3 py-3 text-primary">

@@ -7,12 +7,19 @@ import { ObjectPanel } from './ObjectPanel'
 import { SidebarResizeHandle } from './SidebarResizeHandle'
 
 export function EditorSidebar({ disabled }: { disabled: boolean }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(() => window.matchMedia('(min-width: 768px)').matches)
   const [width, setWidth] = useState(304)
   const [maxWidth, setMaxWidth] = useState(560)
   const sidebar = useRef<HTMLElement>(null)
   const contentId = useId()
   const [templateCount, setTemplateCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px)')
+    const change = () => setOpen(media.matches)
+    media.addEventListener('change', change)
+    return () => media.removeEventListener('change', change)
+  }, [])
 
   useEffect(() => {
     const parent = sidebar.current?.parentElement
@@ -31,8 +38,8 @@ export function EditorSidebar({ disabled }: { disabled: boolean }) {
     : 'bg-primary text-primary-foreground hover:bg-foreground hover:text-card focus-visible:bg-foreground focus-visible:text-card active:bg-foreground active:text-card'
   const toggle = <Button data-sidebar-toggle variant="ghost" size="icon" className={`shrink-0 border-0 shadow-none focus-visible:ring-0 ${toggleClassName}`} aria-label={open ? '收起侧边栏' : '展开侧边栏'} aria-expanded={open} aria-controls={contentId} title={open ? '收起侧边栏' : '展开侧边栏'} onClick={() => setOpen(current => !current)}>{open ? <ChevronsRight aria-hidden="true" /> : <ChevronsLeft aria-hidden="true" />}</Button>
 
-  return <aside ref={sidebar} aria-label="模板与图层" className={`relative flex min-h-0 min-w-0 shrink-0 flex-col ${open ? 'border-l border-[var(--workspace-divider)] bg-card' : ''}`} style={{ width: open ? Math.min(width, maxWidth) : 0 }}>
-    {open && <SidebarResizeHandle width={width} minWidth={260} maxWidth={maxWidth} onWidthChange={setWidth} controls={contentId} />}
+  return <aside ref={sidebar} aria-label="模板与图层" className={`absolute inset-y-0 right-0 z-30 flex min-h-0 min-w-0 shrink-0 flex-col md:relative md:inset-auto md:z-auto ${open ? 'max-md:w-[min(304px,calc(100%-3rem))]! border-l border-[var(--workspace-divider)] bg-card' : ''}`} style={{ width: open ? Math.min(width, maxWidth) : 0 }}>
+    {open && <div className="hidden md:block"><SidebarResizeHandle width={width} minWidth={260} maxWidth={maxWidth} onWidthChange={setWidth} controls={contentId} /></div>}
     <Tabs defaultValue="templates" className="min-h-0 flex-1 gap-0">
       <div className={`flex shrink-0 items-center gap-2 ${open ? 'px-2 py-2' : 'absolute right-3 top-10 z-30'}`}>
         {toggle}

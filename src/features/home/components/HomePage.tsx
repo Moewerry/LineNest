@@ -9,7 +9,7 @@ export function HomePage() {
   return <HomeImageImport>
     <HomeBatchEntry>
       <HomeHeader />
-      <main className="mx-auto flex min-h-[calc(100dvh-6rem)] w-full max-w-[1320px] flex-1 flex-col px-6 pb-6 sm:px-10 lg:px-14 [@media(max-height:900px)]:pb-[20px]">
+      <main className="mx-auto flex min-h-[calc(100dvh-6rem)] w-full max-w-[1320px] flex-1 flex-col px-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] sm:px-10 sm:pb-6 lg:px-14 sm:[@media(max-height:900px)]:pb-[20px]">
         <HomeHero />
         <HomeWorkflow />
       </main>

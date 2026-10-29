@@ -6,8 +6,8 @@ import { toolGuides, toolOrder } from './tool-guide'
 import { BuiltinTemplateButton } from '@/features/templates/BuiltinTemplateButton'
 export function ToolBar({ busy }: { busy: boolean }) {
   const tool = useEditor(s => s.tool), ready = useEditor(s => !!s.present.doc.image)
-  return <nav data-canvas-shortcuts aria-label="编辑工具" className="flex min-h-0 w-16 shrink-0 flex-col border-r border-[var(--workspace-divider)] bg-card">
-    <div className="flex min-h-0 flex-1 flex-col items-center gap-1.5 overflow-y-auto px-1.5 py-3">
+  return <nav data-canvas-shortcuts aria-label="编辑工具" className="flex min-h-0 w-12 shrink-0 flex-col border-r border-[var(--workspace-divider)] bg-card sm:w-16">
+    <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto px-0.5 py-2 sm:gap-1.5 sm:px-1.5 sm:py-3">
     {toolOrder.map(id => {
       const { label, shortcut, description, icon: Icon } = toolGuides[id]
       return <Tooltip key={id}>
