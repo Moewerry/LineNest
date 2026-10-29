@@ -21,16 +21,17 @@ export function FloatingFillSettings(props: Props) {
   const constrain = (value: Position): Position => {
     const element = panel.current, parent = element?.parentElement
     if (!element || !parent) return value
+    const minBottom = window.matchMedia('(max-width: 639px)').matches ? 104 : 12
     return {
       left: Math.max(32, Math.min(value.left, Math.max(32, parent.clientWidth - element.offsetWidth - 12))),
-      bottom: Math.max(12, Math.min(value.bottom, Math.max(12, parent.clientHeight - element.offsetHeight - 32))),
+      bottom: Math.max(minBottom, Math.min(value.bottom, Math.max(minBottom, parent.clientHeight - element.offsetHeight - 32))),
     }
   }
   useEffect(() => {
     const element = panel.current, parent = element?.parentElement
     if (!element || !parent) return
     const observer = new ResizeObserver(() => {
-      setContentHeight(Math.max(0, parent.clientHeight - 100))
+      setContentHeight(Math.max(0, parent.clientHeight - (window.matchMedia('(max-width: 639px)').matches ? 200 : 100)))
       setPosition(value => {
         const next = constrain(value)
         return next.left === value.left && next.bottom === value.bottom ? value : next

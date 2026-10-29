@@ -38,12 +38,12 @@ export function BatchPage() {
   }
 
   return <div className="editor-workspace flex h-dvh flex-col overflow-hidden bg-background">
-    <header className="shrink-0 border-b bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4 sm:px-8">
+    <header className="shrink-0 border-b bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-8 sm:py-4">
       <div className="flex items-center gap-3"><Button asChild={!busy} disabled={busy} variant="ghost" size="icon-sm" aria-label="返回首页">{busy ? <ArrowLeft /> : <Link to="/"><ArrowLeft /></Link>}</Button><span className="font-brand text-xl font-semibold">LineNest</span></div>
       <WorkspaceModeSwitch mode="batch" disabled={busy} />
     </div></header>
     <main className="min-h-0 flex-1 overflow-y-auto" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (!busy) void batch.addFiles(Array.from(event.dataTransfer.files)) }}>
-      <div className="mx-auto flex min-h-full max-w-7xl flex-col gap-7 px-6 py-8 sm:px-8">
+      <div className="mx-auto flex min-h-full max-w-7xl flex-col gap-4 px-3 py-4 sm:gap-7 sm:px-8 sm:py-8">
         {currentStep === 1 && <div><h1 className="text-2xl font-semibold tracking-tight">批量裁剪</h1><p className="mt-2 text-sm leading-6 text-muted-foreground">添加图片，套用模板，预览后统一导出。</p></div>}
         {active ? <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
           <section className="min-w-0 rounded-2xl border bg-card p-4"><div className="mb-4 flex items-center justify-between"><h2 className="text-sm font-semibold">图片 <span className="ml-1 text-xs font-normal text-muted-foreground">{batch.items.length} / 100</span></h2><Button variant="ghost" size="sm" disabled={busy} onClick={batch.clear}>清空</Button></div><BatchImageList items={batch.items} active={active.id} disabled={busy} onActive={setActiveId} onRemove={batch.remove} /></section>
