@@ -27,7 +27,7 @@ body:has(.editor-workspace) [data-slot="scroll-area-thumb"] {
   background-color: var(--foreground);
 }
 
-body:has(.editor-workspace) :is([data-slot="button"][data-variant="ghost"], [data-slot="button"][data-variant="outline"]):not(:disabled):not([data-sidebar-toggle]):not([data-template-row]):hover,
+body:has(.editor-workspace) :is([data-slot="button"][data-variant="ghost"], [data-slot="button"][data-variant="outline"]):not(:disabled):not([data-sidebar-toggle]):not([data-template-row]):not([data-batch-template-card]):hover,
 body:has(.editor-workspace) label:has(> [data-slot="checkbox"]:not(:disabled)):hover {
   outline: 1px solid currentColor;
   outline-offset: -1px;

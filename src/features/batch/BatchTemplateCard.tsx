@@ -7,8 +7,8 @@ import type { BatchTemplate } from './types'
 export function BatchTemplateCard({ template, selected, disabled, onToggle }: {
   template: BatchTemplate; selected: boolean; disabled: boolean; onToggle: () => void
 }) {
-  return <Button variant="outline" disabled={disabled} aria-pressed={selected} aria-label={`${template.name}，${selected ? '已选中，点击取消' : '点击选择'}`} onClick={onToggle}
-    className={cn('group relative h-auto min-w-0 flex-col items-stretch gap-0 overflow-hidden rounded-xl bg-transparent p-0 text-left whitespace-normal shadow-none transition-colors hover:border-primary/50 hover:bg-transparent active:bg-transparent dark:bg-transparent dark:hover:bg-transparent', selected && 'border-primary')}>
+  return <Button data-batch-template-card variant="outline" disabled={disabled} aria-pressed={selected} aria-label={`${template.name}，${selected ? '已选中，点击取消' : '点击选择'}`} onClick={onToggle}
+    className="group relative h-auto min-w-0 flex-col items-stretch gap-0 overflow-hidden rounded-xl bg-transparent p-0 text-left whitespace-normal shadow-none transition-colors [--border:var(--workspace-divider)] hover:bg-transparent active:bg-transparent dark:bg-transparent dark:hover:bg-transparent">
     <TemplateThumbnail layout={template.layout} className="h-32 w-full rounded-none border-b bg-transparent p-4" />
     <span aria-hidden="true" className={cn('absolute right-3 top-3 flex size-5 items-center justify-center rounded-full border bg-background shadow-xs', selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-transparent')}><Check className="size-3" strokeWidth={2.5} /></span>
     <span className="flex min-w-0 items-center justify-between gap-2 p-3.5">

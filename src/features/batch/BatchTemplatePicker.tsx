@@ -20,7 +20,7 @@ export function BatchTemplatePicker({ templates, selected, fit, disabled, onTogg
         return <BuiltinTemplateCard key={template.id} template={builtin} selected={selected.includes(template.id)} disabled={disabled} onSelect={() => onToggle(template.id)} />
       })}</div>
     </div>
-    <div className="space-y-4 border-t pt-5">
+    <div className="space-y-4 border-t border-[var(--workspace-divider)] pt-5">
     <div className="flex items-center justify-between gap-3">
       <h2 className="text-sm font-semibold">我的模板 <span className="ml-1 text-xs font-normal text-muted-foreground">{mine.length}</span></h2>
       <p role="status" className="text-xs text-muted-foreground">已选 {selectedCount} 个</p>
