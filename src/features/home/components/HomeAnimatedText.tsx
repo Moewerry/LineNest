@@ -15,7 +15,6 @@ export function HomeAnimatedText({ children, delay = 0, stagger = 30, repeatDela
   const [visibleCount, setVisibleCount] = useState(characterCount)
 
   useEffect(() => {
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
     let interval: ReturnType<typeof setInterval> | undefined
     let timeout: ReturnType<typeof setTimeout> | undefined
     const stop = () => {
@@ -23,7 +22,7 @@ export function HomeAnimatedText({ children, delay = 0, stagger = 30, repeatDela
       clearInterval(interval)
     }
     const showAll = () => { stop(); setVisibleCount(characterCount) }
-    if (motion.matches || !container.current) { showAll(); return }
+    if (!container.current) { showAll(); return }
 
     // Read the resolved CSS delay to stay in sync with the card entrance sequence.
     const computedDelay = getComputedStyle(container.current).animationDelay.split(',')[0].trim()
@@ -46,9 +45,7 @@ export function HomeAnimatedText({ children, delay = 0, stagger = 30, repeatDela
     }
     setVisibleCount(0)
     timeout = setTimeout(typeText, Number.isFinite(startDelay) ? Math.max(0, startDelay) : delay)
-    const onMotionChange = () => { if (motion.matches) showAll() }
-    motion.addEventListener('change', onMotionChange)
-    return () => { stop(); motion.removeEventListener('change', onMotionChange) }
+    return stop
   }, [children, characterCount, delay, stagger, repeatDelay])
 
   let characterIndex = 0

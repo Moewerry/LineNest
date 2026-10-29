@@ -282,6 +282,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  [class*="home-"] { animation: none !important; }
+  /* Keep the homepage entrance sequence enabled regardless of system motion settings. */
+  *:not(:where(.home-page, .home-page *)),
+  *:not(:where(.home-page, .home-page *))::before,
+  *:not(:where(.home-page, .home-page *))::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
