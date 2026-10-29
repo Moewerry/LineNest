@@ -54,13 +54,13 @@ export function FloatingFillSettings(props: Props) {
   }
 
   return <Collapsible ref={panel} open={open} onOpenChange={setOpen} data-editor-settings data-fill-settings
-    aria-label="标记设置" className="pointer-events-auto absolute z-10 w-[340px] max-w-[calc(100%-44px)] overflow-hidden rounded-xl bg-card"
+    aria-label="标记设置" className={`pointer-events-auto absolute z-10 ${open ? 'w-[340px]' : 'w-fit sm:w-[340px]'} max-w-[calc(100%-44px)] overflow-hidden rounded-xl bg-card`}
     style={position} onContextMenu={event => event.stopPropagation()}>
     <CollapsibleContent id={contentId} className="fill-settings-reveal overflow-hidden">
       <div className="overflow-y-auto p-4" style={{ maxHeight: contentHeight }}><FillSettings {...props} /></div>
     </CollapsibleContent>
-    <div className="flex items-center gap-1 bg-primary px-2 py-1.5 text-white">
-      <Button variant="ghost" size="icon-sm" aria-label="拖动标记设置，方向键移动" title="拖动标记设置" className="touch-none cursor-grab text-white hover:bg-white/15 hover:text-white active:cursor-grabbing"
+    <div className={`flex items-center gap-1 bg-primary text-white ${open ? 'px-2 py-1.5' : 'p-1 sm:px-2 sm:py-1.5'}`}>
+      <Button variant="ghost" size="icon-sm" aria-label="拖动标记设置，方向键移动" title="拖动标记设置" className={`touch-none cursor-grab text-white hover:bg-white/15 hover:text-white active:cursor-grabbing ${open ? '' : 'hidden sm:inline-flex'}`}
         onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={() => { drag.current = null }} onPointerCancel={() => { drag.current = null }} onLostPointerCapture={() => { drag.current = null }}
         onKeyDown={event => {
           const step = event.shiftKey ? 32 : 8
@@ -71,14 +71,14 @@ export function FloatingFillSettings(props: Props) {
           event.stopPropagation()
           setPosition(value => constrain({ left: value.left + offset.left, bottom: value.bottom + offset.bottom }))
         }}><GripHorizontal className="size-4" /></Button>
-      <CollapsibleTrigger asChild><Button className="flex-1 justify-between text-white hover:bg-white/15" variant="ghost" aria-controls={contentId}>
+      <CollapsibleTrigger asChild><Button className={`flex-1 text-white hover:bg-white/15 ${open ? 'justify-between' : 'size-11 justify-center p-2 sm:h-9 sm:w-auto sm:justify-between sm:px-4'}`} variant="ghost" aria-label={open ? '收起标记设置' : `展开标记设置，${colorLabel}`} title={open ? '收起标记设置' : '展开标记设置'} aria-controls={contentId}>
         <span className="flex items-center gap-2">
-          <Settings2 className="size-4" />标记设置
+          <Settings2 className={`size-4 ${open ? '' : 'hidden sm:block'}`} /><span className={open ? '' : 'hidden sm:inline'}>标记设置</span>
           <span role="img" aria-label={colorLabel} title={colorLabel} className="size-4 shrink-0 overflow-hidden rounded-sm border border-white/70 bg-white ring-1 ring-black/15">
             <span aria-hidden="true" className="block size-full" style={{ backgroundColor: color, opacity }} />
           </span>
         </span>
-        {open ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+        {open ? <ChevronDown className="size-4" /> : <ChevronUp className="hidden size-4 sm:block" />}
       </Button></CollapsibleTrigger>
     </div>
   </Collapsible>

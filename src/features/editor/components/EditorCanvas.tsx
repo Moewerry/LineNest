@@ -12,6 +12,7 @@ import type { Box, ImageInfo, Point, Snapshot, SplitAxis } from '../model/types'
 import { isTextTarget } from '../hooks/use-shortcuts'
 import { useModeGuide } from '../hooks/use-mode-guide'
 import { useCanvasRotation } from '../hooks/use-canvas-rotation'
+import { useCanvasTouch } from '../hooks/use-canvas-touch'
 import { useTemplateDrop } from '../hooks/use-template-drop'
 import { NodeLayer } from './NodeLayer'
 import { SelectionLayer } from './SelectionLayer'
@@ -76,6 +77,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
   const { dragOver: templateDragOver, dropHandlers: templateDropHandlers } = useTemplateDrop(view, busy || !asset)
   const viewport: Box = { x: (RULER_SIZE - view.x) / view.scale, y: (RULER_SIZE - view.y) / view.scale, width: Math.max(0, size.width - RULER_SIZE) / view.scale, height: Math.max(0, size.height - RULER_SIZE) / view.scale }
   const updateGesture = (value: Gesture | null) => { gestureRef.current = value; setGesture(value); if (!value) { setSplitHover(null); setSelectionHover(null) } }
+  const touch = useCanvasTouch({ enabled: !!image && !!asset && !busy, setView, onCancel: () => updateGesture(null) })
   const fit = () => {
     if (!image) return
     const compact = size.width < 640
@@ -113,7 +115,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
   }, [onImageReady, image, asset, size.width, size.height, view])
   useEffect(() => { spaceRef.current = false; setSpace(false); setHorizontal(false); updateGesture(null) }, [image?.id, busy])
   useLayoutEffect(() => {
-    if (!heldTemplate || !pointerInside || space || gestureRef.current?.type === 'pan' || !pointerScreen.current) return
+    if (!heldTemplate || !pointerInside || space || touch.blocked() || gestureRef.current?.type === 'pan' || !pointerScreen.current) return
     const p = pointerScreen.current
     useEditor.getState().moveHeldTemplate({ x: (p.x - view.x) / view.scale, y: (p.y - view.y) / view.scale })
   }, [view, space, pointerInside, heldTemplate?.layout, heldTemplate?.imageId])
@@ -179,8 +181,9 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
   }
   const clamp = (p: Point): Point => image ? { x: Math.max(0, Math.min(image.width, p.x)), y: Math.max(0, Math.min(image.height, p.y)) } : p
   const begin = (event: Konva.KonvaEventObject<PointerEvent>) => {
-    if (!image || busy || (event.evt.button !== 0 && event.evt.button !== 1)) return
+    if (!image || busy || touch.blocked() || (event.evt.button !== 0 && event.evt.button !== 1)) return
     const p = pointer(), start = clamp(p), state = useEditor.getState()
+    const confirm = (action: () => void) => { if (event.evt.pointerType === 'touch') touch.defer(action); else action() }
     const capture = () => {
       event.evt.preventDefault()
       if (event.evt.target instanceof Element) event.evt.target.setPointerCapture(event.evt.pointerId)
@@ -197,8 +200,10 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     if (state.heldTemplate) {
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey) return
       event.evt.preventDefault()
-      try { state.placeHeldTemplate(p) }
-      catch (error) { toast.error(error instanceof Error ? error.message : '模板放置失败') }
+      confirm(() => {
+        try { state.placeHeldTemplate(p) }
+        catch (error) { toast.error(error instanceof Error ? error.message : '模板放置失败') }
+      })
       return
     }
     const hit = event.target.id()
@@ -213,12 +218,14 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     }
     if (tool === 'fill') {
       if (event.evt.ctrlKey || event.evt.metaKey || event.evt.altKey || !inBox(p, { x: 0, y: 0, width: image.width, height: image.height })) return
-      if (fillAction === 'erase') { state.eraseRegionMark(p); return }
+      if (fillAction === 'erase') { confirm(() => state.eraseRegionMark(p)); return }
       if (!fillRegions.ready) return
       const region = fillRegions.regions.find(candidate => containsPoint(candidate.rings, p))
       if (!region) return
-      try { state.markRegion(region.rings, region.label) }
-      catch (error) { toast.error(error instanceof Error ? error.message : '无法标记区域') }
+      confirm(() => {
+        try { state.markRegion(region.rings, region.label) }
+        catch (error) { toast.error(error instanceof Error ? error.message : '无法标记区域') }
+      })
       return
     }
     if (tool === 'split') {
@@ -279,6 +286,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     } else updateGesture({ type: 'box', start: p, current: p, additive: event.evt.shiftKey })
   }
   const track = (event: Konva.KonvaEventObject<PointerEvent>) => {
+    if (touch.blocked()) return
     const active = gestureRef.current
     const p = pointer()
     pointerScreen.current = stage.current?.getPointerPosition() ?? null
@@ -309,6 +317,7 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     } else updateGesture({ ...active, current: active.type === 'crop' ? clamp(p) : p })
   }
   const finish = () => {
+    if (touch.blocked()) return
     const active = gestureRef.current
     if (!active) return
     const { start } = active, state = useEditor.getState()
@@ -368,13 +377,15 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
       if (!editorBusy && !spaceRef.current) useEditor.getState().moveHeldTemplate({ x: (screen.x - view.x) / view.scale, y: (screen.y - view.y) / view.scale })
     }}
     onPointerMoveCapture={event => {
+      if (touch.move(event)) return
       const rect = event.currentTarget.getBoundingClientRect()
       const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top }
       pointerScreen.current = screen
       if (!editorBusy && !spaceRef.current && gestureRef.current?.type !== 'pan') useEditor.getState().moveHeldTemplate({ x: (screen.x - view.x) / view.scale, y: (screen.y - view.y) / view.scale })
     }}
     onPointerLeave={() => { setSplitHover(null); setSelectionHover(null); setPointerInside(false) }}
-    onPointerDownCapture={e => { if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}>
+    onPointerDownCapture={e => { touch.down(e); if (e.target instanceof Element && !e.target.closest('button, input')) e.currentTarget.focus({ preventScroll: true }) }}
+    onPointerUpCapture={touch.end} onPointerCancelCapture={touch.end} onLostPointerCaptureCapture={touch.end}>
     {image && asset ? <Stage ref={stage} width={size.width} height={size.height} style={{ touchAction: 'none' }} onPointerDown={begin} onPointerMove={track} onPointerUp={finish} onDblClick={e => {
       if (busy || tool !== 'select' || spaceRef.current || useEditor.getState().heldTemplate) return
       const hit = e.target.id()
@@ -422,10 +433,10 @@ export function EditorCanvas({ busy: editorBusy, onReplaceImage, onDeleteImage, 
     {image && <>
       <CanvasRulers image={image} view={view} size={size} />
       <div className="pointer-events-none absolute left-7 right-14 top-7 flex flex-wrap items-start gap-2 sm:left-10 sm:top-10 md:right-5">
-        {heldTemplate ? <TemplatePlacementStatus placement={heldTemplate} dragging={templateDragOver} temporaryView={space || gesture?.type === 'pan'} onCancel={() => useEditor.getState().cancelTemplatePlacement()} /> : modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
-          <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
+        {heldTemplate ? <TemplatePlacementStatus placement={heldTemplate} dragging={templateDragOver} temporaryView={touch.active || space || gesture?.type === 'pan'} onCancel={() => useEditor.getState().cancelTemplatePlacement()} /> : modeGuideVisible && <div className="flex min-w-0 max-w-full flex-col gap-2">
+          <CanvasModeStatus tool={tool} horizontal={horizontal} erasing={fillAction === 'erase'} panSource={touch.active ? 'touch' : gesture?.type === 'pan' && gesture.source === 'middle' ? 'middle' : space ? 'space' : null} />
         </div>}
-        {!heldTemplate && tool === 'select' && !busy && !space && gesture?.type !== 'pan' && <SelectionEditControls snapshot={preview} />}
+        {!heldTemplate && tool === 'select' && !busy && !space && !touch.active && gesture?.type !== 'pan' && <SelectionEditControls snapshot={preview} />}
         {snapshot.scope && tool !== 'select' && <Button variant="outline" size="sm" className="pointer-events-auto bg-card text-xs" disabled={busy} onClick={leaveGroup}>退出组内编辑（Esc）</Button>}
       </div>
       {tool === 'fill' && <FloatingFillSettings busy={busy} loading={fillRegions.loading} error={fillRegions.error} />}

@@ -5,10 +5,15 @@ import type { Tool } from '../model/types'
 import { ShortcutKeys } from './ShortcutKeys'
 import { toolGuides, type ToolInstruction } from './tool-guide'
 
-export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false }: { tool: Tool; panSource: 'space' | 'middle' | null; horizontal: boolean; erasing?: boolean }) {
+export function CanvasModeStatus({ tool, panSource, horizontal, erasing = false }: { tool: Tool; panSource: 'space' | 'middle' | 'touch' | null; horizontal: boolean; erasing?: boolean }) {
   const mode = toolGuides[tool], temporary = tool !== 'pan' && panSource !== null
   const Icon = temporary ? Hand : mode.icon
-  const instructions: ToolInstruction[] = temporary
+  const instructions: ToolInstruction[] = panSource === 'touch'
+    ? [
+      { action: '双指拖动或捏合', result: '移动或缩放整张画布' },
+      { action: '双指全部松开', result: `继续使用「${mode.label}」` },
+    ]
+    : temporary
     ? [
       panSource === 'middle'
         ? { action: '按住鼠标中键', result: '拖动整张画布' }
