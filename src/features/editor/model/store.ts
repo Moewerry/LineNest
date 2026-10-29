@@ -187,10 +187,11 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   clearAll() {
     get().commit(draft => {
-      if (!Object.keys(draft.doc.nodes).length && !draft.doc.marks?.length) return
+      if (!Object.keys(draft.doc.nodes).length && !draft.doc.marks?.length && !draft.doc.crop) return
       draft.doc.nodes = {}
       draft.doc.roots = []
       draft.doc.marks = []
+      draft.doc.crop = null
       draft.selected = []
       draft.scope = null
     })
