@@ -1,11 +1,12 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useDraggableFooter } from './use-draggable-footer'
 
 export function HomeFooter() {
   const [expanded, setExpanded] = useState(false)
   const linkId = useId()
-  const footerRef = useRef<HTMLElement>(null)
+  const { footerRef, dragging, style, shouldSuppressClick, dragHandlers } = useDraggableFooter()
 
   useEffect(() => {
     if (!expanded) return
@@ -20,9 +21,12 @@ export function HomeFooter() {
     return () => document.removeEventListener('pointerdown', onPointerDown, true)
   }, [expanded])
 
-  return <footer ref={footerRef} className="fixed bottom-4 right-4 z-30 sm:bottom-6 sm:left-6 sm:right-auto">
+  return <footer ref={footerRef} style={style} className="fixed bottom-4 right-4 z-30 sm:bottom-6 sm:left-6 sm:right-auto">
     <div data-expanded={expanded} onKeyDown={event => { if (event.key === 'Escape') setExpanded(false) }} className="group flex h-10 w-10 items-center overflow-hidden rounded-full bg-primary text-white shadow-md transition-[width] duration-300 ease-out hover:w-44 has-[:focus-visible]:w-44 data-[expanded=true]:w-44 motion-reduce:transition-none">
-      <Button type="button" size="icon" aria-label={expanded ? '收起作者信息' : '展开作者信息'} aria-expanded={expanded} aria-controls={linkId} onClick={() => setExpanded(value => !value)} className="size-10 shrink-0 rounded-full p-0 text-white shadow-none focus-visible:ring-inset">
+      <Button {...dragHandlers} type="button" size="icon" aria-label={expanded ? '收起作者信息' : '展开作者信息'} title="点击展开或收起，拖动调整位置" aria-expanded={expanded} aria-controls={linkId} onClick={event => {
+        if (event.detail > 0 && shouldSuppressClick()) { event.preventDefault(); return }
+        setExpanded(value => !value)
+      }} className={`size-10 shrink-0 touch-none select-none rounded-full p-0 text-white shadow-none focus-visible:ring-inset ${dragging ? 'cursor-grabbing!' : 'cursor-grab!'}`}>
         <span aria-hidden="true" className="pointer-events-none flex size-5 shrink-0 origin-center items-center justify-center transform-gpu transition-transform duration-300 group-hover:rotate-12 group-data-[expanded=true]:rotate-12 motion-reduce:transition-none">
           <Github className="block size-5" />
         </span>
