@@ -13,18 +13,18 @@ export function BatchWorkflow({ busy, running, importing, count, selected, total
     { label: running ? '取消裁剪' : total ? '重新裁剪' : '裁剪', description: running ? status : '按所选模板批量分图', icon: Scissors, action: running ? onCancel : onCrop, disabled: !running && (busy || !count || !selected) },
     { label: '下载', description: total ? `${status} · ZIP` : '裁剪完成后下载 ZIP', icon: Download, action: onDownload, disabled: busy || !total },
   ]
-  return <footer className="shrink-0 border-t bg-card px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-8 sm:pb-[max(1rem,env(safe-area-inset-bottom))] sm:pt-4">
+  return <footer className="shrink-0 border-t border-[var(--workspace-divider)] bg-card px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-8 sm:pb-[max(1rem,env(safe-area-inset-bottom))] sm:pt-4">
     <div className="mx-auto max-w-7xl">
       <ol aria-label="批量裁剪操作流程" className="grid grid-cols-4 gap-1 sm:gap-3 md:gap-4">
         {steps.map(({ label, description, icon: Icon, action, disabled }, index) => {
           const active = currentStep === index + 1
           return <li key={index} aria-current={active ? 'step' : undefined}>
-            <Button variant={active ? 'default' : 'ghost'} disabled={disabled} onClick={action} aria-label={`${index + 1}. ${label}，${description}`} title={label} className={cn(
-              'h-full min-h-12 w-full justify-center gap-1 rounded-xl px-1 py-2 text-left whitespace-normal shadow-none sm:min-h-16 sm:justify-start sm:gap-3 sm:px-4 sm:py-3',
+            <Button data-batch-step variant={active ? 'default' : 'ghost'} disabled={disabled} onClick={action} aria-label={`${index + 1}. ${label}，${description}`} title={label} className={cn(
+              'h-full min-h-12 w-full justify-center gap-1 rounded-xl px-1 py-2 text-left whitespace-normal shadow-none disabled:border-0 disabled:bg-neutral-100 disabled:text-neutral-400 disabled:opacity-100 sm:min-h-16 sm:justify-start sm:gap-3 sm:px-4 sm:py-3',
               !active && 'text-muted-foreground',
             )}>
-              <span aria-hidden="true" className={cn('flex size-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs tabular-nums', active ? 'bg-white/15' : 'bg-secondary')}>{String(index + 1).padStart(2, '0')}</span>
-              <span className="min-w-0"><span className="flex items-center gap-2 text-sm"><Icon aria-hidden="true" /><span className="hidden sm:inline">{label}</span></span><span className={cn('mt-1 hidden text-[11px] font-normal leading-4 sm:block', active ? 'text-primary-foreground/75' : 'text-muted-foreground')}>{description}</span></span>
+              <span aria-hidden="true" className={cn('flex size-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs tabular-nums', disabled ? 'bg-transparent' : active ? 'bg-white/15' : 'bg-secondary')}>{String(index + 1).padStart(2, '0')}</span>
+              <span className="min-w-0"><span className="flex items-center gap-2 text-sm"><Icon aria-hidden="true" /><span className="hidden sm:inline">{label}</span></span><span className={cn('mt-1 hidden text-[11px] font-normal leading-4 sm:block', disabled ? 'text-inherit' : active ? 'text-primary-foreground/75' : 'text-muted-foreground')}>{description}</span></span>
             </Button>
           </li>
         })}

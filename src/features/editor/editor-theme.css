@@ -44,7 +44,7 @@ body:has(.editor-workspace) [role^="menuitem"][data-highlighted]:not([data-disab
 }
 
 /* Use dashed edges, rather than faded text, to distinguish unavailable controls. */
-body:has(.editor-workspace) :is([data-slot="button"], [data-slot="input"], [data-slot="checkbox"], [data-slot="radio-group-item"], [data-slot="tabs-trigger"]):disabled:not([data-template-row]):not([data-variant="toolbar"]),
+body:has(.editor-workspace) :is([data-slot="button"], [data-slot="input"], [data-slot="checkbox"], [data-slot="radio-group-item"], [data-slot="tabs-trigger"]):disabled:not([data-template-row]):not([data-variant="toolbar"]):not([data-batch-step]),
 body:has(.editor-workspace) [role^="menuitem"][data-disabled] {
   border: 1px dashed currentColor;
   opacity: 1;

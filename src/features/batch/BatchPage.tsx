@@ -38,7 +38,7 @@ export function BatchPage() {
   }
 
   return <div className="editor-workspace flex h-dvh flex-col overflow-hidden bg-background">
-    <header className="shrink-0 border-b bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-8 sm:py-4">
+    <header className="shrink-0 border-b border-[var(--workspace-divider)] bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-8 sm:py-4">
       <div className="flex items-center gap-3"><Button asChild={!busy} disabled={busy} variant="ghost" size="icon-sm" aria-label="返回首页">{busy ? <ArrowLeft /> : <Link to="/"><ArrowLeft /></Link>}</Button><span className="font-brand text-xl font-semibold">LineNest</span></div>
       <WorkspaceModeSwitch mode="batch" disabled={busy} />
     </div></header>
